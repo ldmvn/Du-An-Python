@@ -1,118 +1,158 @@
-📱 Phone Store – Django Web Application
-1. Giới thiệu dự án
+# Website Bán Điện Thoại Di Động (Python – Django)
 
-Dự án Phone Store là website bán điện thoại di động được xây dựng bằng Python Django.
-Hệ thống hỗ trợ hiển thị danh sách sản phẩm, quản lý sản phẩm qua trang quản trị, đăng nhập – đăng ký người dùng và sử dụng layout giao diện chung cho toàn bộ website.
+## 1. Giới thiệu đề tài
+Dự án **Website bán điện thoại di động** được xây dựng bằng ngôn ngữ lập trình **Python** sử dụng framework **Django**.  
+Hệ thống mô phỏng quy trình kinh doanh điện thoại trực tuyến từ quản lý sản phẩm, người dùng đến đặt hàng và thống kê, đáp ứng yêu cầu của một ứng dụng web hoàn chỉnh có thể triển khai thực tế.
 
-Dự án được thực hiện nhằm đáp ứng yêu cầu học phần về xây dựng ứng dụng web với Python.
+---
 
-2. Mục tiêu
+## 2. Mục tiêu & phạm vi
 
-Xây dựng ứng dụng web hoàn chỉnh bằng Django
+### 🎯 Mục tiêu
+- Xây dựng ứng dụng web hoàn chỉnh cho một bài toán nghiệp vụ cụ thể
+- Có cơ sở dữ liệu, giao diện người dùng, xử lý nghiệp vụ
+- Có thể chạy và demo thực tế
 
-Thiết kế cơ sở dữ liệu với các bảng dữ liệu chính
+### 📌 Phạm vi
+- Quản lý tối thiểu **5 thực thể dữ liệu có quan hệ**, ví dụ:
+  - Người dùng (User)
+  - Sản phẩm (Product)
+  - Danh mục (Category)
+  - Đơn hàng (Order)
+  - Chi tiết đơn hàng / Bình luận (OrderItem / Review)
 
-Hiển thị dữ liệu động từ database
+### ✅ Kết quả mong đợi
+- Hệ thống hoạt động ổn định
+- Có dữ liệu mẫu (seed data)
+- Minh họa được quy trình nghiệp vụ đầu – cuối
+- Có tài liệu và mã nguồn rõ ràng
 
-Áp dụng template inheritance (layout chung)
+---
 
-Triển khai chức năng đăng nhập – đăng ký người dùng
+## 3. Vai trò người dùng
 
-3. Công nghệ sử dụng
+### 👤 Khách (Guest)
+- Đăng ký tài khoản
+- Đăng nhập
+- Xem danh sách sản phẩm
+- Tìm kiếm sản phẩm
 
-  Ngôn ngữ: Python 3
+### 👥 Người dùng đã đăng nhập
+- Cập nhật thông tin cá nhân
+- Thực hiện các nghiệp vụ được phân quyền (đặt hàng, bình luận, quản lý dữ liệu của mình)
 
-  Framework: Django
+### 🛠 Quản trị viên (Admin)
+- Quản lý người dùng
+- Quản lý sản phẩm, danh mục
+- Phân quyền hệ thống
+- Xem thống kê, báo cáo
 
-  Cơ sở dữ liệu: SQLite
+---
 
-  Frontend: HTML, CSS, Bootstrap
+## 4. Yêu cầu chức năng
 
-  Quản lý dữ liệu: Django Admin
+### a) Xác thực & phân quyền
+- Đăng ký
+- Đăng nhập / đăng xuất
+- Quên mật khẩu (cơ bản)
+- Kiểm soát truy cập theo vai trò
 
-4. Các chức năng chính
+### b) CRUD dữ liệu
+- Thêm – Xem – Sửa – Xóa (CRUD) cho:
+  - Người dùng
+  - Sản phẩm
+- Hỗ trợ:
+  - Tìm kiếm
+  - Lọc
+  - Sắp xếp dữ liệu
 
-  Hiển thị danh sách sản phẩm điện thoại
+### c) Nghiệp vụ đặc thù
+- Đặt hàng sản phẩm
+- Quản lý trạng thái đơn hàng:
+  - `Pending`
+  - `Approved`
+  - `Rejected`
 
-  Thêm, sửa, xoá sản phẩm (Admin)
+### d) Thống kê – báo cáo
+- Thống kê số lượng sản phẩm
+- Thống kê đơn hàng theo thời gian (ngày/tháng)
+- Hiển thị bằng bảng hoặc biểu đồ
 
-  Đăng ký tài khoản người dùng
+### e) Upload tệp / ảnh
+- Upload ảnh sản phẩm
+- Giới hạn định dạng và kích thước tệp
+- Lưu trữ an toàn trong hệ thống
 
-  Đăng nhập / đăng xuất
+---
 
-  Phân quyền người dùng (User / Admin)
+## 5. Kiến trúc & công nghệ
 
-  Sử dụng template inheritance với base.html
+- **Ngôn ngữ**: Python 3
+- **Framework**: Django
+- **Cơ sở dữ liệu**: SQLite (có thể mở rộng MySQL / PostgreSQL)
+- **Frontend**:
+  - HTML, CSS, Bootstrap
+  - Django Template Engine
+- **Mô hình kiến trúc**: MVT (Model – View – Template)
 
-  Menu điều hướng, header thống nhất trên toàn website
+---
 
-5. Cấu trúc dữ liệu
+## 6. Tiến độ thực hiện hiện tại
 
-User (sử dụng hệ thống xác thực mặc định của Django)
+✔️ Dự án được tạo thành công bằng Django, cấu trúc thư mục đúng chuẩn  
+✔️ Thiết kế giao diện chính (Home, Login, Dashboard, CRUD)  
+✔️ Giao diện bố cục hợp lý, responsive, dễ sử dụng  
+✔️ Kết nối thành công với cơ sở dữ liệu  
+✔️ Tạo ít nhất 2 bảng dữ liệu chính với model đầy đủ  
+✔️ Hiển thị dữ liệu mẫu (seed data) trên website  
+✔️ Chức năng đăng nhập – đăng ký hoạt động  
+✔️ Có menu điều hướng, header, footer thống nhất  
+✔️ Áp dụng template inheritance (layout chung)  
+✔️ Cập nhật README.md mô tả tiến độ và hướng dẫn chạy thử  
 
-Product
+---
 
-  name
+## 7. Cấu trúc thư mục (rút gọn)
 
-  price
+Du-An-Python/
+│── config/
+│── store/
+│── templates/
+│── static/
+│── media/
+│── venv/
+│── db.sqlite3
+│── manage.py
+│── README.md
 
-  image
 
-  description
+---
 
-  created_at
+## 8. Hướng dẫn chạy dự án
 
-6. Tiến độ thực hiện
+### Bước 1: Clone project
+```bash
+git clone https://github.com/ldmnv/Du-An-Python.git
+cd Du-An-Python
 
-✔ Tạo project và app Django
-
-✔ Thiết kế model và database
-
-✔ Thêm dữ liệu mẫu (seed data)
-
-✔ Hiển thị dữ liệu trên trang web
-
-✔ Cài đặt đăng nhập – đăng ký
-
-✔ Template inheritance (layout chung)
-
-✔ Hoàn thiện giao diện cơ bản
-
-7. Hướng dẫn cài đặt và chạy thử
-Bước 1: Clone project
-  git clone <link-github>
-  cd Du-An-Python
-
-Bước 2: Tạo môi trường ảo
-  python -m venv venv
-  venv\Scripts\activate
+Bước 2: Tạo và kích hoạt môi trường ảo
+python -m venv venv
+venv\Scripts\activate
 
 Bước 3: Cài đặt thư viện
-  pip install -r requirements.txt
+pip install django
 
-Bước 4: Khởi tạo database
-  python manage.py migrate
-  python manage.py createsuperuser
+Bước 4: Migrate database
+python manage.py migrate
 
-Bước 5: Chạy server
-  python manage.py runserver
+Bước 5: Tạo tài khoản admin
+python manage.py createsuperuser
 
+Bước 6: Chạy server
+python manage.py runserver
 
-Truy cập website tại:
-👉 http://127.0.0.1:8000/
+Bước 7: Truy cập hệ thống
 
-8. Tài khoản mẫu
+Trang chủ: http://127.0.0.1:8000/
 
-  Admin: tạo bằng createsuperuser
-
-  User: đăng ký trực tiếp trên website
-
-9. Hướng phát triển
-
-  hêm chức năng đặt hàng
-
-  Thêm thống kê – báo cáo
-
-  Cải thiện giao diện người dùng
-
-  Tích hợp thanh toán online
+Trang quản trị: http://127.0.0.1:8000/admin/
