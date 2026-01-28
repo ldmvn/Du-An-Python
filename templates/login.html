@@ -1,17 +1,38 @@
-{% extends 'base.html' %}
-{% block title %}Đăng nhập{% endblock %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <h3 class="text-center mb-3">🔐 Đăng nhập</h3>
+<div style="max-width:400px;margin:60px auto;">
+    <h2 style="text-align:center;">🔐 Đăng nhập</h2>
 
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
+    <form method="post">
+        {% csrf_token %}
 
-            <button class="btn btn-primary w-100">Đăng nhập</button>
-        </form>
-    </div>
+        <div style="margin-bottom:15px;">
+            <label>Tên đăng nhập</label>
+            <input
+                type="text"
+                name="username"
+                required
+                class="form-control"
+                placeholder="Nhập username">
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label>Mật khẩu</label>
+            <input
+                type="password"
+                name="password"
+                required
+                class="form-control"
+                placeholder="Nhập mật khẩu">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">
+            Đăng nhập
+        </button>
+    </form>
+    <p>Chưa có tài khoản? <a href="/register/">Đăng ký</a></p>
+
 </div>
 {% endblock %}

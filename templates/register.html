@@ -1,15 +1,36 @@
-{% extends 'base.html' %}
-{% block title %}Đăng ký{% endblock %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký</title>
+</head>
+<body>
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <h3 class="text-center">📝 Đăng ký</h3>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button class="btn btn-success w-100">Đăng ký</button>
-        </form>
-    </div>
-</div>
-{% endblock %}
+<h2>Đăng ký tài khoản</h2>
+
+{% if error %}
+<p style="color:red">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <p>
+        <input type="text" name="username" placeholder="Username" required>
+    </p>
+
+    <p>
+        <input type="password" name="password" placeholder="Mật khẩu" required>
+    </p>
+
+    <p>
+        <input type="password" name="password2" placeholder="Nhập lại mật khẩu" required>
+    </p>
+
+    <button type="submit">Đăng ký</button>
+</form>
+
+<p>Đã có tài khoản? <a href="/login/">Đăng nhập</a></p>
+
+</body>
+</html>

@@ -1,32 +1,61 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Product
 from .forms import ProductForm
 
+
 def is_admin(user):
     return user.is_staff
 
+
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
             return redirect('/')
+        return render(request, 'login.html', {'error': 'Sai tài khoản hoặc mật khẩu'})
+
     return render(request, 'login.html')
+
+
+def register_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        password2 = request.POST.get('password2')
+
+        if password != password2:
+            return render(request, 'register.html', {'error': 'Mật khẩu không khớp'})
+
+        if User.objects.filter(username=username).exists():
+            return render(request, 'register.html', {'error': 'Username đã tồn tại'})
+
+        user = User.objects.create_user(username=username, password=password)
+        login(request, user)
+        return redirect('/')
+
+    return render(request, 'register.html')
+
 
 @login_required
 def home(request):
     products = Product.objects.all()
     return render(request, 'product_list.html', {'products': products})
 
+
+# ===== ADMIN DASHBOARD =====
 @login_required
 @user_passes_test(is_admin)
 def dashboard(request):
     products = Product.objects.all()
     return render(request, 'dashboard.html', {'products': products})
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -36,6 +65,7 @@ def product_create(request):
         form.save()
         return redirect('/dashboard/')
     return render(request, 'product_form.html', {'form': form})
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -47,12 +77,14 @@ def product_update(request, pk):
         return redirect('/dashboard/')
     return render(request, 'product_form.html', {'form': form})
 
+
 @login_required
 @user_passes_test(is_admin)
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
     return redirect('/dashboard/')
+
 
 def logout_view(request):
     logout(request)

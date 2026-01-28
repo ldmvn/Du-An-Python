@@ -4,24 +4,25 @@
 {% block content %}
 <h3>📊 Dashboard quản trị</h3>
 
-<a href="/create/" class="btn btn-primary mb-3">➕ Thêm sản phẩm</a>
+<a href="/dashboard/create/" class="btn btn-primary mb-3">➕ Thêm sản phẩm</a>
 
 <table class="table table-bordered">
-<tr>
-    <th>Tên</th>
-    <th>Giá</th>
-    <th>Hành động</th>
-</tr>
+    <tr>
+        <th>Tên</th>
+        <th>Giá</th>
+        <th>Hành động</th>
+    </tr>
 
-{% for p in products %}
-<tr>
-    <td>{{ p.name }}</td>
-    <td>{{ p.price }}</td>
-    <td>
-        <a href="/update/{{ p.id }}/" class="btn btn-sm btn-warning">Sửa</a>
-        <a href="/delete/{{ p.id }}/" class="btn btn-sm btn-danger">Xoá</a>
-    </td>
-</tr>
-{% endfor %}
+    {% for p in products %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.price }}</td>
+        <td>
+            <a href="/dashboard/edit/{{ p.id }}/" class="btn btn-sm btn-warning">Sửa</a>
+            <a href="/dashboard/delete/{{ p.id }}/" class="btn btn-sm btn-danger"
+               onclick="return confirm('Xoá sản phẩm này?')">Xoá</a>
+        </td>
+    </tr>
+    {% endfor %}
 </table>
 {% endblock %}
