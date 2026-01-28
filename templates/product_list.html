@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">🔥 Điện thoại nổi bật</h3>
+
+<div class="row g-4">
+    {% for product in products %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm">
+
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top p-3" style="height:220px; object-fit:contain">
+            {% else %}
+                <img src="https://via.placeholder.com/200" class="card-img-top">
+            {% endif %}
+
+            <div class="card-body">
+                <h6 class="card-title">{{ product.name }}</h6>
+                <p class="text-danger fw-bold">{{ product.price }} đ</p>
+            </div>
+
+        </div>
+    </div>
+    {% empty %}
+        <p>Chưa có sản phẩm</p>
+    {% endfor %}
+</div>
+{% endblock %}
