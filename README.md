@@ -113,7 +113,7 @@ Hệ thống mô phỏng quy trình kinh doanh điện thoại trực tuyến t�
 ---
 
 ## 7. Cấu trúc thư mục (rút gọn)
-
+```
 Du-An-Python/
 │── config/
 │── store/
@@ -124,7 +124,7 @@ Du-An-Python/
 │── db.sqlite3
 │── manage.py
 │── README.md
-
+```
 
 ---
 
