@@ -129,9 +129,8 @@ Du-An-Python/
 ---
 
 ## 8. Hướng dẫn chạy dự án
-
-### Bước 1: Clone project
 ```bash
+ Bước 1: Clone project
 git clone https://github.com/ldmnv/Du-An-Python.git
 cd Du-An-Python
 
