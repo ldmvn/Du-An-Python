@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% load humanize %}
 
 {% block content %}
 <h3>📊 Dashboard quản trị</h3>
@@ -7,7 +7,7 @@
 <a href="/dashboard/create/" class="btn btn-primary mb-3">➕ Thêm sản phẩm</a>
 
 <table class="table table-bordered">
-    <tr>
+    <tr class="table-dark">
         <th>Tên</th>
         <th>Giá</th>
         <th>Hành động</th>
@@ -16,10 +16,11 @@
     {% for p in products %}
     <tr>
         <td>{{ p.name }}</td>
-        <td>{{ p.price }}</td>
+        <td>{{ p.price|intcomma }} đ</td>
         <td>
             <a href="/dashboard/edit/{{ p.id }}/" class="btn btn-sm btn-warning">Sửa</a>
-            <a href="/dashboard/delete/{{ p.id }}/" class="btn btn-sm btn-danger"
+            <a href="/dashboard/delete/{{ p.id }}/"
+               class="btn btn-sm btn-danger"
                onclick="return confirm('Xoá sản phẩm này?')">Xoá</a>
         </td>
     </tr>

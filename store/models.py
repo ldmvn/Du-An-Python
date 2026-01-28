@@ -70,3 +70,16 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.rating}⭐"
+class ProductSpecification(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='specs'
+    )
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.key}"
+
+    

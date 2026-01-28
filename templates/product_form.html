@@ -1,11 +1,49 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<h2>Thêm sản phẩm</h2>
+<h2>
+    {% if product %}✏️ Sửa sản phẩm{% else %}➕ Thêm sản phẩm{% endif %}
+</h2>
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+
     {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Lưu</button>
+
+    <hr>
+
+    <h5>⚙️ Thông số kỹ thuật</h5>
+
+    <div id="spec-container">
+        {% if specs %}
+            {% for s in specs %}
+            <div class="row mb-2 spec-row">
+                <div class="col">
+                    <input type="text" name="spec_key[]" class="form-control"
+                           placeholder="Tên thông số" value="{{ s.key }}">
+                </div>
+                <div class="col">
+                    <input type="text" name="spec_value[]" class="form-control"
+                           placeholder="Giá trị" value="{{ s.value }}">
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-danger remove-spec">✖</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <button type="button" id="add-spec-btn" class="btn btn-outline-primary mb-3">
+        ➕ Thêm thông số
+    </button>
+
+    <br>
+    <button type="submit" class="btn btn-success">💾 Lưu</button>
 </form>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

@@ -1,22 +1,37 @@
+/* Card sản phẩm */
 .product-card {
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 10px;
-    transition: 0.2s;
-    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 12px;
 }
 
+/* Hiệu ứng khi di chuột */
 .product-card:hover {
-    box-shadow: 0 0 12px rgba(0,0,0,.1);
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
 
+/* Ảnh sản phẩm */
 .product-img {
-    height: 200px;
+    width: 100%;
+    height: 180px;
     object-fit: contain;
+    padding: 10px;
+    transition: transform 0.3s ease;
 }
 
-.price {
-    color: red;
-    font-weight: bold;
-    font-size: 16px;
+/* Ảnh zoom nhẹ khi hover */
+.product-card:hover .product-img {
+    transform: scale(1.08);
+}
+
+/* Badge HOT */
+.badge-hot {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: red;
+    color: white;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 6px;
 }

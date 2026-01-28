@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<h3>🛒 Giỏ hàng</h3>
+
+{% if products %}
+<table class="table">
+    <tr>
+        <th>Sản phẩm</th>
+        <th>Số lượng</th>
+        <th>Tạm tính</th>
+        <th>Hành động</th>
+    </tr>
+
+    {% for p in products %}
+    <tr>
+        <td>{{ p.name }}</td>
+        <td>{{ p.quantity }}</td>
+        <td>{{ p.subtotal|intcomma }} đ</td>
+        <td>
+            <a href="{% url 'remove_from_cart' p.id %}"
+               class="btn btn-sm btn-danger"
+               onclick="return confirm('Xoá sản phẩm này khỏi giỏ hàng?')">
+               ❌
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+
+    <tr>
+        <th colspan="2">Tổng cộng</th>
+        <th class="text-danger">{{ total|intcomma }} đ</th>
+        <th></th>
+    </tr>
+</table>
+{% else %}
+<p>Giỏ hàng trống.</p>
+{% endif %}
+{% endblock %}

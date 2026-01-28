@@ -1,36 +1,58 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng ký</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load static %}
 
-<h2>Đăng ký tài khoản</h2>
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height:70vh;">
+    <div style="width:360px;">
 
-{% if error %}
-<p style="color:red">{{ error }}</p>
-{% endif %}
+        <h3 class="text-center mb-4">
+            📝 Đăng ký
+        </h3>
 
-<form method="post">
-    {% csrf_token %}
+      <form method="post" action="{% url 'register' %}">
 
-    <p>
-        <input type="text" name="username" placeholder="Username" required>
-    </p>
+            {% csrf_token %}
 
-    <p>
-        <input type="password" name="password" placeholder="Mật khẩu" required>
-    </p>
+            <div class="mb-3">
+                <label class="form-label">Tên đăng nhập</label>
+                <input
+                    type="text"
+                    name="username"
+                    class="form-control"
+                    placeholder="Nhập username"
+                    required>
+            </div>
 
-    <p>
-        <input type="password" name="password2" placeholder="Nhập lại mật khẩu" required>
-    </p>
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu</label>
+                <input
+                    type="password"
+                    name="password1"
+                    class="form-control"
+                    placeholder="Nhập mật khẩu"
+                    required>
+            </div>
 
-    <button type="submit">Đăng ký</button>
-</form>
+            <div class="mb-3">
+                <label class="form-label">Nhập lại mật khẩu</label>
+                <input
+                    type="password"
+                    name="password2"
+                    class="form-control"
+                    placeholder="Nhập lại mật khẩu"
+                    required>
+            </div>
 
-<p>Đã có tài khoản? <a href="/login/">Đăng nhập</a></p>
+            <button type="submit" class="btn btn-primary w-100">
+                Đăng ký
+            </button>
+        </form>
 
-</body>
-</html>
+        <div class="text-center mt-3">
+            Đã có tài khoản?
+            <a href="{% url 'login' %}">Đăng nhập</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
