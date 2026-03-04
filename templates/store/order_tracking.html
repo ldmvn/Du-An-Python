@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}LỊCH SỬ ĐƠN HÀNG - MOBILE STORE{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <!-- Back button -->
+    <a href="{% url 'store:home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        ← Quay lại
+    </a>
+
+    <!-- Page header -->
+    <div style="padding: 40px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 30px;">
+        <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0;">📦 Lịch sử đơn hàng</h1>
+        <p style="margin: 0; opacity: 0.9;">Tất cả đơn hàng bạn đã đặt</p>
+    </div>
+
+    {% if orders %}
+    <!-- Orders table -->
+    <div style="background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
+        <div style="padding: 30px;">
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #333;">Đơn hàng của bạn ({{ orders|length }} đơn)</h3>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Mã đơn hàng</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Sản phẩm</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">SL</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Đơn giá</th>
+                            <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Thành tiền</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Trạng thái SP</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Ngày đặt</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                            {% for item in order.items.all %}
+                            <tr style="border-bottom: 1px solid #f1f3f4;">
+                                {% if forloop.first %}
+                                <td style="padding: 12px; font-weight: 600; color: #667eea;" rowspan="{{ order.items.all|length }}">
+                                    {{ order.order_number }}
+                                </td>
+                                {% endif %}
+                                
+                                <td style="padding: 12px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                        {% else %}
+                                        <div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px;"></div>
+                                        {% endif %}
+                                        <div>
+                                            <div style="font-weight: 600; color: #333; font-size: 14px;">{{ item.product.name }}</div>
+                                            {% if item.product.category %}
+                                            <div style="font-size: 12px; color: #6c757d;">{{ item.product.category.name }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <td style="padding: 12px; text-align: center; font-size: 14px;">{{ item.quantity }}</td>
+                                <td style="padding: 12px; text-align: right; font-size: 14px;">{{ item.price|intcomma }} VND</td>
+                                <td style="padding: 12px; text-align: right; font-weight: 600; font-size: 14px;">{{ item.get_total|intcomma }} VND</td>
+                                
+                                <!-- Product status (based on order status) -->
+                                <td style="padding: 12px; text-align: center;">
+                                    {% if order.status == 'pending' %}
+                                        <span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Chờ xử lý</span>
+                                    {% elif order.status == 'approved' %}
+                                        <span style="background: #d1ecf1; color: #0c5460; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Đã duyệt</span>
+                                    {% elif order.status == 'shipped' %}
+                                        <span style="background: #cfe2ff; color: #084298; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Đang giao</span>
+                                    {% elif order.status == 'completed' %}
+                                        <span style="background: #d1e7dd; color: #0f5138; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Hoàn tất</span>
+                                    {% elif order.status == 'cancelled' %}
+                                        <span style="background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Đã hủy</span>
+                                    {% else %}
+                                        <span style="background: #e2e3e5; color: #383d41; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">{{ order.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+
+                                {% if forloop.first %}
+                                <td style="padding: 12px; text-align: center; font-size: 13px;" rowspan="{{ order.items.all|length }}">
+                                    {{ order.created_at|date:"d/m/Y" }}<br>
+                                    <span style="color: #6c757d;">{{ order.created_at|time:"H:i" }}</span>
+                                </td>
+
+                                <td style="padding: 12px; text-align: center;" rowspan="{{ order.items.all|length }}">
+                                    {% if order.status == 'pending' %}
+                                        <form method="post" action="{% url 'store:cancel_order' order.id %}" style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?');">
+                                            {% csrf_token %}
+                                            <button type="submit" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 500; transition: background 0.2s;">
+                                                Hủy đơn
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span style="color: #6c757d; font-size: 12px;">-</span>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Order total row -->
+                            <tr style="background: #f8f9fa;">
+                                <td colspan="8" style="padding: 12px; text-align: right; font-weight: 600; border-top: 1px solid #dee2e6;">
+                                    Tổng: {{ order.total_amount|intcomma }} VND
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div style="background: white; padding: 60px 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
+        <h3 style="margin-bottom: 10px; color: #333; font-size: 20px;">Chưa có đơn hàng nào</h3>
+        <p style="margin-bottom: 20px; color: #6c757d;">Bạn chưa đặt đơn hàng nào. Hãy bắt đầu mua sắm!</p>
+        <a href="{% url 'store:home' %}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+            🛒 Mua sắm ngay
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

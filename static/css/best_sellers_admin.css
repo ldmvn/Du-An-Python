@@ -1,0 +1,263 @@
+/* ==================== BEST SELLERS ADMIN PAGE - Inline Styles from best_sellers_admin.html ==================== */
+.qh-bestseller-stats-page {
+    min-height: calc(100vh - 140px);
+    background: var(--qh-bg);
+    padding: 20px;
+}
+
+.qh-bestseller-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.qh-bestseller-header {
+    background: var(--qh-white);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.qh-bestseller-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--qh-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qh-bestseller-title svg {
+    width: 32px;
+    height: 32px;
+}
+
+.qh-bestseller-subtitle {
+    color: #666;
+    font-size: 14px;
+}
+
+.qh-bestseller-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.qh-stat-card {
+    background: var(--qh-white);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.qh-stat-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.qh-stat-card-icon.purple {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.qh-stat-card-icon.green {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.qh-stat-card-icon.orange {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.qh-stat-card-icon.blue {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.qh-stat-card-icon svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+}
+
+.qh-stat-card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--qh-text);
+}
+
+.qh-stat-card-label {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.qh-bestseller-table-container {
+    background: var(--qh-white);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.qh-table-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--qh-text);
+    margin-bottom: 20px;
+}
+
+.qh-bestseller-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.qh-bestseller-table th {
+    text-align: left;
+    padding: 14px 16px;
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.qh-bestseller-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.qh-bestseller-table tr:hover {
+    background: #f8fafc;
+}
+
+.qh-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.qh-rank-badge.top-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+}
+
+.qh-rank-badge.top-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A0A0A0);
+    color: white;
+}
+
+.qh-rank-badge.top-3 {
+    background: linear-gradient(135deg, #CD7F32, #8B4513);
+    color: white;
+}
+
+.qh-rank-badge.top-4, .qh-rank-badge.top-5 {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+}
+
+.qh-rank-badge.other {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+.qh-product-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.qh-product-thumb {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f1f5f9;
+}
+
+.qh-product-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.qh-product-name {
+    font-weight: 600;
+    color: var(--qh-text);
+    font-size: 14px;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qh-product-brand {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.qh-sold-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #fef3c7;
+    color: #d97706;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.qh-sold-count svg {
+    width: 16px;
+    height: 16px;
+}
+
+.qh-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--qh-primary);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.qh-view-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.qh-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #f1f5f9;
+    color: #64748b;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+}
+
+.qh-back-btn:hover {
+    background: #e2e8f0;
+    color: var(--qh-text);
+}

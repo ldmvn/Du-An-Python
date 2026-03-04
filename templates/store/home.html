@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}TRANG CHỦ - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="qh-home">
+
+    <!-- Slider video hero -->
+    <section class="qh-hero-slider">
+        <div class="qh-hero-slider-wrap">
+            <div class="qh-hero-stage" id="qhHeroSlider">
+                <div class="qh-hero-slide active" data-slide="0">
+                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+                        <source src="/static/videos/applv1.mp4" type="video/mp4">
+                    </video>
+                    <div class="qh-hero-overlay">
+                        <div class="qh-hero-text">
+                            <h2>IPHONE</h2>
+                            <p>Trải nghiệm công nghệ vượt trội</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qh-hero-slide" data-slide="1">
+                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+                        <source src="/static/videos/sams.mp4" type="video/mp4">
+                    </video>
+                    <div class="qh-hero-overlay">
+                        <div class="qh-hero-text">
+                            <h2>SAMSUNG</h2>
+                            <p>Camera siêu zoom 100x</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qh-hero-slide" data-slide="2">
+                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+                        <source src="/static/videos/xiao.mp4" type="video/mp4">
+                    </video>
+                    <div class="qh-hero-overlay">
+                        <div class="qh-hero-text">
+                            <h2>XIAOMI</h2>
+                            <p>Snapdragon 8 Elite – Hiệu năng vượt xa</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="qh-hero-nav prev" id="qhHeroPrev" aria-label="Slide trước">
+                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button type="button" class="qh-hero-nav next" id="qhHeroNext" aria-label="Slide sau">
+                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+
+                <div class="qh-hero-dots" id="qhHeroDots">
+                    <button type="button" class="qh-hero-dot active" data-slide="0" aria-label="Slide 1"></button>
+                    <button type="button" class="qh-hero-dot" data-slide="1" aria-label="Slide 2"></button>
+                    <button type="button" class="qh-hero-dot" data-slide="2" aria-label="Slide 3"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tất cả sản phẩm -->
+    <section class="qh-products-section" style="padding: 40px 20px; background: #f5f5f5;">
+        <div class="qh-container">
+            <h2 style="text-align: center; margin-bottom: 40px; font-size: 28px; font-weight: 600;">📱 SẢN PHẨM NỔI BẬT</h2>
+            
+            {% if products %}
+            <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+                {% for product in products %}
+                <div class="qh-product-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative;">
+                    <!-- Discount Badge -->
+                    {% if product.discount > 0 %}
+                    <div style="position: absolute; top: 10px; left: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">
+                        Giảm {{ product.discount }}%
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Wishlist button -->
+                    <button class="qh-wishlist-btn" onclick="toggleWishlist({{ product.id }})" style="position: absolute; top: 10px; right: 10px; background: white; border: none; padding: 8px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10; transition: all 0.2s;">
+                        <svg id="wishlist-{{ product.id }}" style="width: 20px; height: 20px; color: #ddd;" fill="currentColor" stroke="none" viewBox="0 0 24 24">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </button>
+
+                    <a href="{% url 'store:product_detail' product.id %}" style="text-decoration: none; color: inherit; display: block;">
+                        <!-- Ảnh sản phẩm -->
+                        <div style="width: 100%; height: 250px; background: #f0f0f0; overflow: hidden;">
+                            {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">
+                                <svg style="width: 64px; height: 64px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Thông tin sản phẩm -->
+                        <div style="padding: 15px;">
+                            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; height: 40px; overflow: hidden; text-overflow: ellipsis;">{{ product.name }}</h3>
+                            
+                            <!-- Giá -->
+                            <div style="margin-bottom: 10px;">
+                                {% if product.discount > 0 %}
+                                <div style="font-size: 12px; color: #999; text-decoration: line-through; margin-bottom: 2px;">{{ product.price|intcomma }} VND</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #dc3545;">{{ product.get_discounted_price|intcomma }} VND</div>
+                                {% else %}
+                                <div style="font-size: 16px; font-weight: 700; color: #2563eb;">{{ product.price|intcomma }} VND</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Rating & Review Count -->
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px;">
+                                {% if product.get_avg_rating > 0 %}
+                                <div style="display: flex; align-items: center; gap: 3px;">
+                                    <span style="color: #ffc107;">★</span>
+                                    <span style="font-weight: 600; color: #333;">{{ product.get_avg_rating }}</span>
+                                    <span style="color: #999;">({{ product.get_review_count }})</span>
+                                </div>
+                                {% else %}
+                                <div style="color: #999;">Chưa có đánh giá</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Member discount info -->
+                            {% if product.discount > 0 %}
+                            <div style="background: #f0f0f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; color: #666; text-align: center; margin-bottom: 8px;">
+                                Smember giảm đến {{ product.discount|add:5 }}.00đ
+                            </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 60px 20px;">
+                <p style="font-size: 18px; color: #666;">Chưa có sản phẩm. Vui lòng quay lại sau!</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Phần USP -->
+    <section class="qh-usp-section" style="padding: 60px 20px; background: #ffffff;">
+        <div class="qh-container" style="max-width: 1200px; margin: 0 auto;">
+            <h2 style="text-align: center; margin-bottom: 40px; font-size: 28px; font-weight: 600;">TẠI SAO NÊN CHỌN CHÚNG TÔI?</h2>
+            <div class="qh-usp-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Hàng Chính Hãng</h3>
+                    <p style="font-size: 13px; color: #666;">Cam kết 100% sản phẩm chính hãng, đầy đủ phụ kiện.</p>
+                </div>
+                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Đổi Trả Dễ Dàng</h3>
+                    <p style="font-size: 13px; color: #666;">Hỗ trợ đổi trả trong 7 ngày nếu lỗi kỹ thuật.</p>
+                </div>
+                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Giao Hàng Nhanh</h3>
+                    <p style="font-size: 13px; color: #666;">Giao hàng toàn quốc từ 1-2 ngày làm việc.</p>
+                </div>
+                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Bảo Hành Uy Tín</h3>
+                    <p style="font-size: 13px; color: #666;">Bảo hành chính hãng từ 6-12 tháng.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- JavaScript điều khiển Hero Slider -->
+<script>
+(function() {
+    const slider = document.getElementById('qhHeroSlider');
+    if (!slider) return;
+
+    const slides = Array.from(slider.querySelectorAll('.qh-hero-slide'));
+    const dotsWrap = document.getElementById('qhHeroDots');
+    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.qh-hero-dot')) : [];
+    const prevBtn = document.getElementById('qhHeroPrev');
+    const nextBtn = document.getElementById('qhHeroNext');
+    const total = slides.length;
+
+    let idx = 0;
+    let timer = null;
+
+    function playVideo(video) {
+        if (!video) return;
+        video.muted = true;
+        video.playsInline = true;
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.log('Video autoplay was prevented:', error);
+            });
+        }
+    }
+
+    function pauseVideo(video) {
+        if (!video) return;
+        try {
+            video.pause();
+        } catch(e) {}
+    }
+
+    function setActive(nextIdx) {
+        idx = (nextIdx + total) % total;
+        slides.forEach((s, i) => {
+            const active = i === idx;
+            s.classList.toggle('active', active);
+            const v = s.querySelector('video');
+            if (v) {
+                if (active) {
+                    playVideo(v);
+                } else {
+                    pauseVideo(v);
+                }
+            }
+        });
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+
+    function next() { setActive(idx + 1); }
+    function prev() { setActive(idx - 1); }
+
+    function start() {
+        stop();
+        timer = setInterval(next, 7000);
+    }
+
+    function stop() {
+        if (timer) clearInterval(timer);
+        timer = null;
+    }
+
+    prevBtn && prevBtn.addEventListener('click', () => { prev(); start(); });
+    nextBtn && nextBtn.addEventListener('click', () => { next(); start(); });
+
+    dots.forEach((d) => {
+        d.addEventListener('click', () => {
+            const n = parseInt(d.getAttribute('data-slide') || '0', 10);
+            setActive(isNaN(n) ? 0 : n);
+            start();
+        });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stop();
+            slides.forEach(s => {
+                const v = s.querySelector('video');
+                if (v) pauseVideo(v);
+            });
+        } else {
+            const activeSlide = slides[idx];
+            if (activeSlide) {
+                const v = activeSlide.querySelector('video');
+                if (v) playVideo(v);
+            }
+            start();
+        }
+    });
+
+    setActive(0);
+    
+    setTimeout(() => {
+        const firstVideo = slides[0]?.querySelector('video');
+        if (firstVideo) playVideo(firstVideo);
+        start();
+    }, 500);
+})();
+
+// Wishlist toggle function
+function toggleWishlist(productId) {
+    const icon = document.getElementById('wishlist-' + productId);
+    const button = event.currentTarget;
+    
+    // Send request to toggle wishlist
+    fetch(`/wishlist/toggle/?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'added') {
+                icon.style.color = '#dc3545';
+                button.style.transform = 'scale(1.1)';
+            } else {
+                icon.style.color = '#ddd';
+                button.style.transform = 'scale(1)';
+            }
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 200);
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Initialize wishlist icons on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    wishlist.forEach(id => {
+        const icon = document.getElementById('wishlist-' + id);
+        if (icon) icon.style.color = '#dc3545';
+    });
+});
+</script>
+
+{% endblock %}

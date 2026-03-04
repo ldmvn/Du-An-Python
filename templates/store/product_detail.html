@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 40px auto; padding: 20px;">
+    <a href="{% url 'store:home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        ← Quay lại
+    </a>
+</div>
+<div class="product-detail-container">
+    <!-- Breadcrumb -->
+    <div class="product-detail-breadcrumb">
+        <a href="{% url 'store:home' %}">Trang chủ</a>
+        <span> › </span>
+        <span>{{ product.name }}</span>
+    </div>
+    
+    <!-- Product Grid -->
+    <div class="product-detail-grid">
+        <!-- Left: Image -->
+        <div class="product-detail-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div style="display: flex; align-items: center; justify-content: center; height: 400px; background: #f0f0f0; border-radius: 8px;">
+                    <svg style="width: 100px; height: 100px; color: #ccc;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right: Info -->
+        <div class="product-detail-info">
+            <!-- Category -->
+            {% if product.category %}
+                <span class="product-detail-category">{{ product.category.name }}</span>
+            {% endif %}
+            
+            <!-- Name -->
+            <h1>{{ product.name }}</h1>
+            
+            <!-- Price -->
+            <div class="product-detail-price">
+                <div class="product-price-current">
+                    {{ product.price|floatformat:0|add:0 }}
+                    <span class="product-price-currency">₫</span>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            {% if product.description %}
+                <div class="product-detail-description">
+                    {{ product.description }}
+                </div>
+            {% endif %}
+            
+            <!-- Specifications -->
+            {% if product.specs.all %}
+                <div class="product-detail-specs">
+                    <h3>📋 Thông số kỹ thuật</h3>
+                    {% for spec in product.specs.all %}
+                        <div class="spec-row">
+                            <span class="spec-label">{{ spec.key }}</span>
+                            <span class="spec-value">{{ spec.value }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- Actions -->
+            <div class="product-detail-actions">
+                <button class="btn-buy-now" onclick="buyNow({{ product.id }})">
+                    <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    Mua ngay
+                </button>
+                <button class="btn-add-cart" onclick="addToCart({{ product.id }})">
+                    <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+                    </svg>
+                    Thêm giỏ hàng
+                </button>
+                <button class="btn-wishlist" id="wishlistBtn" onclick="toggleWishlist({{ product.id }})">
+                    <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    Thêm vào danh sách yêu thích
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="related-products">
+        <h2>🛍️ Sản phẩm tương tự</h2>
+        <div class="related-grid">
+            {% for p in related_products %}
+                <div class="product-card">
+                    <div class="product-card-image">
+                        {% if p.image %}
+                            <img src="{{ p.image.url }}" alt="{{ p.name }}">
+                        {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f0f0f0;">
+                                <svg style="width: 48px; height: 48px; color: #ccc;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-card-info">
+                        <div class="product-card-name">{{ p.name }}</div>
+                        <div class="product-card-price">{{ p.price|floatformat:0|add:0 }}₫</div>
+                        <a href="{% url 'store:product_detail' p.id %}" class="product-card-link">Xem chi tiết</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function addToCart(productId) {
+    // Add to cart and redirect to home with message
+    window.location.href = `{% url 'store:add_to_cart' 0 %}`.replace('0', productId);
+}
+
+function buyNow(productId) {
+    // Redirect to checkout page
+    window.location.href = `{% url 'store:checkout' %}?product_id=${productId}&quantity=1`;
+}
+
+function toggleWishlist(productId) {
+    const btn = document.getElementById('wishlistBtn');
+    const url = `{% url 'store:wishlist_toggle' %}?product_id=${productId}`;
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'added') {
+                btn.classList.add('active');
+                showMessage('✓ Đã thêm vào danh sách yêu thích', 'success');
+            } else {
+                btn.classList.remove('active');
+                showMessage('✓ Đã bỏ khỏi danh sách yêu thích', 'info');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('❌ Lỗi khi cập nhật danh sách yêu thích', 'error');
+        });
+}
+
+// Check if product is in wishlist
+document.addEventListener('DOMContentLoaded', function() {
+    const productId = {{ product.id }};
+    const wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    const btn = document.getElementById('wishlistBtn');
+    
+    if (wishlist.includes(productId)) {
+        btn.classList.add('active');
+    }
+});
+
+function showMessage(message, type) {
+    if (window.QHToast && typeof window.QHToast.show === 'function') {
+        window.QHToast.show(message, type);
+    }
+}
+</script>
+
+{% endblock %}

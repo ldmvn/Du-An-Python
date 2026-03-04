@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QUẢN LÝ HÃNG - MOBILE STORE Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="qh-brand-container">
+    <div class="qh-brand-header">
+        <h1 class="qh-brand-title">QUẢN LÝ HÃNG SẢN PHẨM</h1>
+        <div class="qh-brand-search">
+            <form method="GET" style="display: flex; gap: 10px;">
+                <input type="text" name="search" placeholder="Tìm kiếm hãng..." value="{{ search }}">
+                <button type="submit" class="qh-brand-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Tìm
+                </button>
+            </form>
+            <button class="qh-brand-btn" onclick="openAddModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Thêm hãng
+            </button>
+        </div>
+    </div>
+    
+    <table class="qh-brand-table">
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên hãng</th>
+                <th>Mô tả</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for brand in brands_paginated %}
+            <tr>
+                <td>{{ forloop.counter0|add:brands_paginated.start_index }}</td>
+                <td><strong>{{ brand.name }}</strong></td>
+                <td>{{ brand.description|truncatechars:50 }}</td>
+                <td>
+                    {% if brand.is_active %}
+                    <span style="background: #d1fae5; color: #047857; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Hoạt động</span>
+                    {% else %}
+                    <span style="background: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Không hoạt động</span>
+                    {% endif %}
+                </td>
+                <td>{{ brand.created_at|date:"d/m/Y" }}</td>
+                <td>
+                    <div class="qh-brand-actions">
+                        <button class="qh-brand-btn-edit" onclick="openEditModal({{ brand.id }}, '{{ brand.name }}', '{{ brand.description|escapejs }}')">Sửa</button>
+                        <button class="qh-brand-btn-delete" onclick="deleteBrand({{ brand.id }}, '{{ brand.name }}')">Xóa</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="qh-empty">Chưa có hãng nào. Thêm hãng mới!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if brands_paginated.has_other_pages %}
+    <div class="qh-brand-pagination">
+        {% if brands_paginated.has_previous %}
+        <a href="?brand_page={{ brands_paginated.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">&laquo; Trước</a>
+        {% endif %}
+        
+        {% for num in brands_paginated.paginator.page_range %}
+            {% if brands_paginated.number == num %}
+            <span class="active">{{ num }}</span>
+            {% elif num > brands_paginated.number|add:'-2' and num < brands_paginated.number|add:'2' %}
+            <a href="?brand_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if brands_paginated.has_next %}
+        <a href="?brand_page={{ brands_paginated.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Sau &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal thêm hãng -->
+<div class="qh-modal" id="addModal">
+    <div class="qh-modal-content">
+        <span class="qh-modal-close" onclick="closeAddModal()">&times;</span>
+        <h3 class="qh-modal-title">Thêm hãng mới</h3>
+        <form id="addBrandForm">
+            <div class="qh-form-group">
+                <label>Tên hãng *</label>
+                <input type="text" name="name" required placeholder="Nhập tên hãng...">
+            </div>
+            <div class="qh-form-group">
+                <label>Mô tả</label>
+                <textarea name="description" placeholder="Mô tả hãng (tùy chọn)..."></textarea>
+            </div>
+            <div class="qh-form-actions">
+                <button type="button" class="qh-btn-cancel" onclick="closeAddModal()">Hủy</button>
+                <button type="submit" class="qh-btn-save">Thêm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal sửa hãng -->
+<div class="qh-modal" id="editModal">
+    <div class="qh-modal-content">
+        <span class="qh-modal-close" onclick="closeEditModal()">&times;</span>
+        <h3 class="qh-modal-title">Sửa hãng</h3>
+        <form id="editBrandForm">
+            <input type="hidden" name="brand_id" id="editBrandId">
+            <div class="qh-form-group">
+                <label>Tên hãng *</label>
+                <input type="text" name="name" id="editBrandName" required placeholder="Nhập tên hãng...">
+            </div>
+            <div class="qh-form-group">
+                <label>Mô tả</label>
+                <textarea name="description" id="editBrandDesc" placeholder="Mô tả hãng (tùy chọn)..."></textarea>
+            </div>
+            <div class="qh-form-actions">
+                <button type="button" class="qh-btn-cancel" onclick="closeEditModal()">Hủy</button>
+                <button type="submit" class="qh-btn-save">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Add Brand - GIỮ NGUYÊN: Chứa Django template tag {% url %} và {{ csrf_token }}
+document.getElementById('addBrandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{% url "store:brand_add" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.QHToast.show(data.message, 'success');
+            closeAddModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            window.QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(err => {
+        window.QHToast.show('Có lỗi xảy ra!', 'error');
+    });
+});
+
+// Edit Brand - GIỮ NGUYÊN: Chứa Django template tag {% url %} và {{ csrf_token }}
+document.getElementById('editBrandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{% url "store:brand_edit" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.QHToast.show(data.message, 'success');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            window.QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(err => {
+        window.QHToast.show('Có lỗi xảy ra!', 'error');
+    });
+});
+
+// Delete Brand - GIỮ NGUYÊN: Chứa Django template tag {% url %} và {{ csrf_token }}
+function deleteBrand(id, name) {
+    if (confirm(`Bạn có chắc muốn xóa hãng "${name}"?`)) {
+        const formData = new FormData();
+        formData.append('brand_id', id);
+        
+        fetch('{% url "store:brand_delete" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.QHToast.show(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                window.QHToast.show(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            window.QHToast.show('Có lỗi xảy ra!', 'error');
+        });
+    }
+}
+</script>
+
+{% block extra_js %}
+<script src="{% static 'js/brand_list.js' %}"></script>
+{% endblock %}
+{% endblock %}
