@@ -16,10 +16,11 @@ class ProductSpecificationInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category', 'price', 'created_at')
-    list_filter = ('category', 'created_at')
+    # show discount and allow inline editing of price and discount for quick adjustments
+    list_display = ('id', 'name', 'category', 'ram', 'rom', 'price', 'discount', 'created_at')
+    list_filter = ('category', 'ram', 'rom', 'created_at')
     search_fields = ('name',)
-    list_editable = ('price',)
+    list_editable = ('ram', 'rom', 'price','discount',)
     inlines = [ProductSpecificationInline]
 
 # ================== CATEGORY ==================

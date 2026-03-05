@@ -24,7 +24,11 @@
             <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 10px;">Kết Quả Tìm Kiếm</h1>
             {% if search_query %}
             <p style="font-size: 16px; margin: 0;">Tìm kiếm cho: <span style="font-weight: 600;">"{{ search_query }}"</span></p>
-            {% else %}
+            {% endif %}
+            {% if brand %}
+            <p style="font-size: 16px; margin: 0;">Nhà sản xuất: <span style="font-weight: 600;">{{ brand }}</span></p>
+            {% endif %}
+            {% if not search_query and not brand %}
             <p style="font-size: 16px; margin: 0;">Danh sách tất cả sản phẩm</p>
             {% endif %}
         </div>

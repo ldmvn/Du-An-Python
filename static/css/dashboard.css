@@ -1,19 +1,21 @@
-/* ==================== DASHBOARD PAGE - Inline Styles from dashboard.html ==================== */
+/* ==================== DASHBOARD PAGE ==================== */
 .dashboard-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 40px auto;
     padding: 20px;
 }
 
+/* Dashboard Header */
 .dashboard-header {
+    margin-bottom: 40px;
+    padding: 30px;
+    background: linear-gradient(135deg, #A9CCF0 0%, #D3BAFF 100%);
+    color: #333;
+    border-radius: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(169, 204, 240, 0.2);
 }
 
 .dashboard-header h1 {
@@ -22,16 +24,17 @@
 }
 
 .btn-add-product {
-    background-color: #fff;
-    color: #667eea;
-    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
     text-decoration: none;
     display: inline-block;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .btn-add-product:hover {

@@ -19,6 +19,13 @@ urlpatterns = [
     path('dashboard/create/', views.product_create, name='product_create'),
     path('dashboard/edit/<int:pk>/', views.dashboard_edit_product, name='dashboard_edit_product'),
     path('dashboard/delete/<int:pk>/', views.product_delete, name='product_delete'),
+    path('dashboard/categories/', views.category_list, name='category_list'),
+    path('dashboard/categories/create/', views.category_create, name='category_create'),
+    path('dashboard/categories/edit/<int:pk>/', views.category_edit, name='category_edit'),
+    path('dashboard/categories/delete/<int:pk>/', views.category_delete, name='category_delete'),
+    path('dashboard/users/', views.user_list, name='user_list'),
+    path('dashboard/users/edit/<int:pk>/', views.user_edit, name='user_edit'),
+    path('dashboard/users/delete/<int:pk>/', views.user_delete, name='user_delete'),
 
     # ========== CART & CHECKOUT ==========
     path('cart/', views.cart_view, name='cart_detail'),

@@ -37,6 +37,24 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    RAM_CHOICES = [
+        ('4GB', '4GB'),
+        ('6GB', '6GB'),
+        ('8GB', '8GB'),
+        ('12GB', '12GB'),
+        ('16GB', '16GB'),
+        ('32GB', '32GB'),
+    ]
+    
+    ROM_CHOICES = [
+        ('32GB', '32GB'),
+        ('64GB', '64GB'),
+        ('128GB', '128GB'),
+        ('256GB', '256GB'),
+        ('512GB', '512GB'),
+        ('1TB', '1TB'),
+    ]
+    
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -46,6 +64,8 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     price = models.IntegerField()
     discount = models.IntegerField(default=0, help_text="Giảm giá theo %")
+    ram = models.CharField(max_length=10, choices=RAM_CHOICES, default='8GB', help_text="Bộ nhớ RAM")
+    rom = models.CharField(max_length=10, choices=ROM_CHOICES, default='128GB', help_text="Bộ nhớ ROM")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

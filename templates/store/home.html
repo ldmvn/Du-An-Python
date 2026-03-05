@@ -71,11 +71,34 @@
         </div>
     </section>
 
-    <!-- Tất cả sản phẩm -->
+    <!-- Tất cả sản phẩm (homepage now starts with brand filter links) -->
     <section class="qh-products-section" style="padding: 40px 20px; background: #f5f5f5;">
         <div class="qh-container">
-            <h2 style="text-align: center; margin-bottom: 40px; font-size: 28px; font-weight: 600;">📱 SẢN PHẨM NỔI BẬT</h2>
-            
+            <!-- list of manufacturers / categories -->
+            {% if categories %}
+            <div class="qh-brand-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:30px;">
+                {% for cat in categories %}
+                    <a href="?brand={{ cat.name }}{% if search_query %}&q={{ search_query }}{% endif %}" class="qh-brand-pill {% if selected_brand == cat.name %}qh-brand-pill-active{% endif %}" style="padding:8px 16px; border:1px solid #ccc; border-radius:999px; color:#333; text-decoration:none; font-weight:500; transition:background 0.2s;{% if selected_brand == cat.name %} background: #2563eb; color: white; border-color: #2563eb;{% endif %}">{{ cat.name }}</a>
+                {% endfor %}
+                <a href="{% url 'store:home' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="qh-brand-pill {% if not selected_brand %}qh-brand-pill-active{% endif %}" style="padding:8px 16px; border:1px solid #ccc; border-radius:999px; color:#333; text-decoration:none; font-weight:500; transition:background 0.2s;{% if not selected_brand %} background: #2563eb; color: white; border-color: #2563eb;{% endif %}">Xem tất cả</a>
+            </div>
+            {% endif %}
+
+            <!-- Section title -->
+            {% if search_query or selected_brand %}
+                {% if search_query and selected_brand %}
+                <h2 style="text-align: center; margin-bottom: 10px; font-size: 24px; font-weight: 600;">Kết quả tìm kiếm</h2>
+                <p style="text-align: center; margin-bottom: 30px; font-size: 14px; color: #666;">Từ khóa: <strong>"{{ search_query }}"</strong> | Nhà sản xuất: <strong>{{ selected_brand }}</strong></p>
+                {% elif search_query %}
+                <h2 style="text-align: center; margin-bottom: 10px; font-size: 24px; font-weight: 600;">Kết quả tìm kiếm</h2>
+                <p style="text-align: center; margin-bottom: 30px; font-size: 14px; color: #666;">Từ khóa: <strong>"{{ search_query }}"</strong></p>
+                {% else %}
+                <h2 style="text-align: center; margin-bottom: 30px; font-size: 24px; font-weight: 600;">Sản phẩm {{ selected_brand }}</h2>
+                {% endif %}
+            {% else %}
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 24px; font-weight: 600;">Tất cả sản phẩm</h2>
+            {% endif %}
+
             {% if products %}
             <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
                 {% for product in products %}
@@ -87,12 +110,7 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Wishlist button -->
-                    <button class="qh-wishlist-btn" onclick="toggleWishlist({{ product.id }})" style="position: absolute; top: 10px; right: 10px; background: white; border: none; padding: 8px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 10; transition: all 0.2s;">
-                        <svg id="wishlist-{{ product.id }}" style="width: 20px; height: 20px; color: #ddd;" fill="currentColor" stroke="none" viewBox="0 0 24 24">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                        </svg>
-                    </button>
+                    <!-- Wishlist button was moved lower to align with rating -->
 
                     <a href="{% url 'store:product_detail' product.id %}" style="text-decoration: none; color: inherit; display: block;">
                         <!-- Ảnh sản phẩm -->
@@ -122,8 +140,8 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Rating & Review Count -->
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px;">
+                            <!-- Rating & Review Count plus wishlist button -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: 13px;">
                                 {% if product.get_avg_rating > 0 %}
                                 <div style="display: flex; align-items: center; gap: 3px;">
                                     <span style="color: #ffc107;">★</span>
@@ -133,14 +151,15 @@
                                 {% else %}
                                 <div style="color: #999;">Chưa có đánh giá</div>
                                 {% endif %}
+
+                                <!-- Wishlist icon placed alongside rating -->
+                                <button class="wishlist-btn-inline" onclick="toggleWishlist({{ product.id }})" style="background: none; border: none; padding: 0; cursor: pointer; color: #ddd; transition: color 0.2s;">
+                                    <svg id="wishlist-{{ product.id }}" style="width: 20px; height: 20px;" fill="currentColor" stroke="none" viewBox="0 0 24 24">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                </button>
                             </div>
 
-                            <!-- Member discount info -->
-                            {% if product.discount > 0 %}
-                            <div style="background: #f0f0f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; color: #666; text-align: center; margin-bottom: 8px;">
-                                Smember giảm đến {{ product.discount|add:5 }}.00đ
-                            </div>
-                            {% endif %}
                         </div>
                     </a>
                 </div>

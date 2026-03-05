@@ -1,78 +1,381 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Panel - MOBILE STORE{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    .qh-dashboard-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .qh-dashboard-header {
+        margin-bottom: 30px;
+    }
+    
+    .qh-dashboard-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0 0 5px 0;
+    }
+    
+    .qh-dashboard-header p {
+        color: #6b7280;
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    .qh-dashboard-main {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 20px;
+    }
+    
+    .qh-dashboard-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .qh-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+    
+    .qh-stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .qh-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+    
+    .qh-stat-card.card-blue::before { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+    .qh-stat-card.card-green::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .qh-stat-card.card-orange::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .qh-stat-card.card-red::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .qh-stat-card.card-purple::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+    
+    .qh-stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 12px;
+    }
+    
+    .qh-stat-title {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .qh-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    
+    .qh-stat-card.card-blue .qh-stat-icon { background: #dbeafe; }
+    .qh-stat-card.card-green .qh-stat-icon { background: #dcfce7; }
+    .qh-stat-card.card-orange .qh-stat-icon { background: #fed7aa; }
+    .qh-stat-card.card-red .qh-stat-icon { background: #fee2e2; }
+    .qh-stat-card.card-purple .qh-stat-icon { background: #ede9fe; }
+    
+    .qh-stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+    
+    .qh-stat-label {
+        font-size: 13px;
+        color: #6b7280;
+    }
+    
+    .qh-products-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .qh-products-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .qh-products-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .qh-products-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .qh-products-table thead { background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    .qh-products-table th {
+        padding: 12px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .qh-products-table td {
+        padding: 12px 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .qh-products-table tbody tr:hover { background: #f9fafb; }
+    
+    .qh-product-name { font-weight: 600; color: #1f2937; }
+    .qh-product-category { font-size: 13px; color: #6b7280; }
+    .qh-product-price { font-weight: 700; color: #3b82f6; }
+    
+    .qh-action-buttons { display: flex; gap: 6px; }
+    .qh-btn-edit, .qh-btn-delete {
+        padding: 4px 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .qh-btn-edit { background: #dbeafe; color: #1e40af; }
+    .qh-btn-edit:hover { background: #bfdbfe; }
+    .qh-btn-delete { background: #fee2e2; color: #991b1b; }
+    .qh-btn-delete:hover { background: #fecaca; }
+    
+    .qh-dashboard-sidebar { display: flex; flex-direction: column; gap: 12px; }
+    .qh-dashboard-sidebar-section {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .qh-sidebar-title {
+        padding: 12px 16px;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .qh-sidebar-actions { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    
+    .qh-sidebar-btn {
+        padding: 10px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    .qh-sidebar-btn-users { background: #ede9fe; color: #6d28d9; }
+    .qh-sidebar-btn-users:hover { background: #ddd6fe; }
+    .qh-sidebar-btn-categories { background: #dcfce7; color: #166534; }
+    .qh-sidebar-btn-categories:hover { background: #bbf7d0; }
+    .qh-sidebar-btn-products { background: #dbeafe; color: #1e40af; }
+    .qh-sidebar-btn-products:hover { background: #bfdbfe; }
+    
+    .qh-empty-message { text-align: center; padding: 40px 20px; color: #6b7280; }
+    
+    @media (max-width: 1024px) {
+        .qh-dashboard-main { grid-template-columns: 1fr; }
+        .qh-stats-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 
-<div class="dashboard-container">
-    <!-- Messages -->
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
-            {{ message }}
+<div class="qh-dashboard-wrapper">
+    <div class="qh-dashboard-header">
+        <h1>Dashboard</h1>
+        <p>Tong quan he thong - Thong ke nhanh - Quan tri dich vu</p>
+    </div>
+    
+    <div class="qh-dashboard-main">
+        <div class="qh-dashboard-content">
+            <div class="qh-stats-grid">
+                <div class="qh-stat-card card-blue">
+                    <div class="qh-stat-header">
+                        <div class="qh-stat-title">San pham</div>
+                        <div class="qh-stat-icon">P</div>
+                    </div>
+                    <div class="qh-stat-value">{{ total_products }}</div>
+                    <div class="qh-stat-label">Tong so san pham</div>
+                </div>
+                
+                <div class="qh-stat-card card-green">
+                    <div class="qh-stat-header">
+                        <div class="qh-stat-title">Thanh vien</div>
+                        <div class="qh-stat-icon">U</div>
+                    </div>
+                    <div class="qh-stat-value">{{ total_users }}</div>
+                    <div class="qh-stat-label">Tai khoan da tao</div>
+                </div>
+                
+                <div class="qh-stat-card card-orange">
+                    <div class="qh-stat-header">
+                        <div class="qh-stat-title">Nha san xuat</div>
+                        <div class="qh-stat-icon">C</div>
+                    </div>
+                    <div class="qh-stat-value">{{ total_categories }}</div>
+                    <div class="qh-stat-label">Thuong hieu</div>
+                </div>
+                
+                <div class="qh-stat-card card-red">
+                    <div class="qh-stat-header">
+                        <div class="qh-stat-title">Don hang</div>
+                        <div class="qh-stat-icon">O</div>
+                    </div>
+                    <div class="qh-stat-value">{{ total_orders }}</div>
+                    <div class="qh-stat-label">Don hang tao</div>
+                </div>
+                
+                <div class="qh-stat-card card-purple">
+                    <div class="qh-stat-header">
+                        <div class="qh-stat-title">Doanh thu</div>
+                        <div class="qh-stat-icon">M</div>
+                    </div>
+                    <div class="qh-stat-value">{{ total_revenue|intcomma }}</div>
+                    <div class="qh-stat-label">Tong doanh thu</div>
+                </div>
+            </div>
+            
+            {% if products %}
+            <div class="qh-products-section">
+                <div class="qh-products-header">
+                    <h2>San pham gan day</h2>
+                    <a href="{% url 'store:product_create' %}" style="color: #3b82f6; text-decoration: none; font-weight: 600; font-size: 13px;">+ Them moi</a>
+                </div>
+                <table class="qh-products-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Anh</th>
+                            <th>Ten san pham</th>
+                            <th style="width: 120px;">Nha san xuat</th>
+                            <th style="width: 100px;">Gia</th>
+                            <th style="width: 100px;">Hanh dong</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products|slice:":10" %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px;"></div>
+                                {% endif %}
+                            </td>
+                            <td class="qh-product-name">{{ product.name|truncatewords:6 }}</td>
+                            <td class="qh-product-category">
+                                {% if product.category %}
+                                    {{ product.category.name }}
+                                {% else %}
+                                    <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="qh-product-price">{{ product.price|intcomma }}</td>
+                            <td>
+                                <div class="qh-action-buttons">
+                                    <a href="{% url 'store:dashboard_edit_product' product.id %}" class="qh-btn-edit">Sua</a>
+                                    <form method="post" action="{% url 'store:product_delete' product.id %}" style="display: inline;" onsubmit="return confirm('Xoa?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="qh-btn-delete">Xoa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="qh-empty-message">
+                <p>Chua co san pham nao</p>
+                <a href="{% url 'store:product_create' %}" style="color: #3b82f6; text-decoration: none; font-weight: 600;">+ Them san pham dau tien</a>
+            </div>
+            {% endif %}
         </div>
-        {% endfor %}
+        
+        <div class="qh-dashboard-sidebar">
+            <div class="qh-dashboard-sidebar-section">
+                <div class="qh-sidebar-title">Quan ly</div>
+                <div class="qh-sidebar-actions">
+                    <a href="{% url 'store:user_list' %}" class="qh-sidebar-btn qh-sidebar-btn-users">
+                        <span>U</span>
+                        <span>Thanh vien</span>
+                    </a>
+                    <a href="{% url 'store:category_list' %}" class="qh-sidebar-btn qh-sidebar-btn-categories">
+                        <span>C</span>
+                        <span>Nha san xuat</span>
+                    </a>
+                    <a href="{% url 'store:product_create' %}" class="qh-sidebar-btn qh-sidebar-btn-products">
+                        <span>+</span>
+                        <span>Them san pham</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="qh-dashboard-sidebar-section">
+                <div class="qh-sidebar-title">Thong tin</div>
+                <div style="padding: 12px;">
+                    <div style="margin-bottom: 10px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">San pham</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">{{ total_products }}</div>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">Thanh vien</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #10b981;">{{ total_users }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">Don hang</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #ef4444;">{{ total_orders }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
-    
-    <div class="dashboard-header">
-        <h1>Admin Dashboard - Product Management</h1>
-        <a href="{% url 'store:product_create' %}" class="btn-add-product">+ Add New Product</a>
-    </div>
-    
-    {% if products %}
-    <table class="products-table">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
-            <tr>
-                <td>
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
-                    {% else %}
-                        <img src="{% static 'logos/placeholder.png' %}" alt="No image" class="product-image">
-                    {% endif %}
-                </td>
-                <td class="product-name">{{ product.name }}</td>
-                <td class="product-category">
-                    {% if product.category %}
-                        {{ product.category.name }}
-                    {% else %}
-                        <span style="color: #999;">Uncategorized</span>
-                    {% endif %}
-                </td>
-                <td class="product-price">${{ product.price }}</td>
-                <td class="action-buttons">
-                    <a href="{% url 'store:dashboard_edit_product' product.id %}" class="btn-edit">Edit</a>
-                    <form method="post" action="{% url 'store:product_delete' product.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-delete" style="background: none; border: none; color: #dc2626; cursor: pointer; text-decoration: underline;">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="empty-message">
-        <p>No products found. Create your first product!</p>
-        <a href="{% url 'store:product_create' %}" class="btn-add-product">+ Add New Product</a>
-    </div>
-    {% endif %}
 </div>
 
 {% endblock %}

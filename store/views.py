@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 
-from .models import Product, ProductSpecification, UserProfile
-from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm
+from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem
+from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm
 
 
 # ================== UTILS ==================
@@ -105,14 +105,25 @@ def register_view(request):
 @login_required(login_url='store:login')
 def home(request):
     q = request.GET.get('q')
+    brand = request.GET.get('brand', '').strip()
     products = Product.objects.all()
 
     if q:
         products = products.filter(name__icontains=q)
 
+    # Filter by brand (category) if provided
+    if brand:
+        products = products.filter(category__name__iexact=brand)
+
+    # pull all categories (used as "brands"/manufacturers on the homepage)
+    categories = Category.objects.all()
+
     context = get_base_context(request)
     context.update({
-        'products': products
+        'products': products,
+        'categories': categories,
+        'selected_brand': brand,
+        'search_query': q,
     })
     return render(request, 'store/home.html', context)
 
@@ -139,17 +150,22 @@ def product_detail(request, id):
 @login_required(login_url='store:login')
 def product_search(request):
     q = request.GET.get('q', '')
-    brand = request.GET.get('brand', '')
+    brand = request.GET.get('brand', '').strip()
     
     products = Product.objects.all()
     
     if q:
         products = products.filter(name__icontains=q)
-    
+
+    # if a brand (category name) was specified, filter accordingly
+    if brand:
+        products = products.filter(category__name__iexact=brand)
+
     context = get_base_context(request)
     context.update({
         'products': products,
-        'search_query': q
+        'search_query': q,
+        'brand': brand,
     })
     return render(request, 'store/search.html', context)
 
@@ -410,8 +426,26 @@ def order_success(request):
 @user_passes_test(is_admin, login_url='store:login')
 def dashboard(request):
     products = Product.objects.all()
+    users = User.objects.all()
+    categories = Category.objects.all()
+    orders = Order.objects.all()
+    
+    # Calculate statistics
+    total_products = products.count()
+    total_users = users.count()
+    total_categories = categories.count()
+    total_orders = orders.count()
+    total_revenue = sum(order.total_amount for order in orders)
+    
     context = get_base_context(request)
-    context['products'] = products
+    context.update({
+        'products': products,
+        'total_products': total_products,
+        'total_users': total_users,
+        'total_categories': total_categories,
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+    })
     return render(request, 'store/dashboard.html', context)
 
 
@@ -465,6 +499,124 @@ def product_delete(request, pk):
     product.delete()
     messages.success(request, '🗑️ Đã xoá sản phẩm')
     return redirect('store:dashboard')
+
+
+# ================== CATEGORY MANAGEMENT ==================
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def category_list(request):
+    """List all categories/brands"""
+    categories = Category.objects.all().order_by('name')
+    context = get_base_context(request)
+    context['categories'] = categories
+    return render(request, 'store/category_list.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def category_create(request):
+    """Create a new category/brand"""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Thêm nhà sản xuất thành công')
+            return redirect('store:category_list')
+    else:
+        form = CategoryForm()
+
+    context = get_base_context(request)
+    context['form'] = form
+    context['title'] = 'Thêm nhà sản xuất mới'
+    return render(request, 'store/category_form.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def category_edit(request, pk):
+    """Edit an existing category/brand"""
+    category = get_object_or_404(Category, pk=pk)
+    
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Cập nhật nhà sản xuất thành công')
+            return redirect('store:category_list')
+    else:
+        form = CategoryForm(instance=category)
+
+    context = get_base_context(request)
+    context['form'] = form
+    context['category'] = category
+    context['title'] = 'Chỉnh sửa nhà sản xuất'
+    return render(request, 'store/category_form.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def category_delete(request, pk):
+    """Delete a category/brand"""
+    category = get_object_or_404(Category, pk=pk)
+    
+    # Check if category has products
+    product_count = category.products.count()
+    if product_count > 0:
+        messages.error(request, f'❌ Không thể xoá. Nhà sản xuất này có {product_count} sản phẩm')
+        return redirect('store:category_list')
+    
+    category.delete()
+    messages.success(request, '🗑️ Đã xoá nhà sản xuất')
+    return redirect('store:category_list')
+
+
+# ================== USER MANAGEMENT ==================
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def user_list(request):
+    """List all users"""
+    users = User.objects.all().order_by('-date_joined')
+    context = get_base_context(request)
+    context['users'] = users
+    return render(request, 'store/user_list.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def user_edit(request, pk):
+    """Edit user account"""
+    user = get_object_or_404(User, pk=pk)
+    
+    if request.method == 'POST':
+        form = UserManagementForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Cập nhật thành viên thành công')
+            return redirect('store:user_list')
+    else:
+        form = UserManagementForm(instance=user)
+
+    context = get_base_context(request)
+    context['form'] = form
+    context['edit_user'] = user
+    return render(request, 'store/user_form.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def user_delete(request, pk):
+    """Delete a user account"""
+    user = get_object_or_404(User, pk=pk)
+    
+    # Prevent deleting self
+    if user.id == request.user.id:
+        messages.error(request, '❌ Bạn không thể xoá tài khoản của chính mình')
+        return redirect('store:user_list')
+    
+    username = user.username
+    user.delete()
+    messages.success(request, f'🗑️ Đã xoá thành viên {username}')
+    return redirect('store:user_list')
 
 
 # ================== LOGOUT ==================

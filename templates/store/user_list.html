@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý thành viên - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qh-admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .qh-admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .qh-admin-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+    
+    .qh-btn-add {
+        padding: 10px 20px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    
+    .qh-btn-add:hover {
+        background: #1d4ed8;
+    }
+    
+    .qh-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .qh-table thead {
+        background: #f5f5f5;
+        border-bottom: 2px solid #ddd;
+    }
+    
+    .qh-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .qh-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .qh-table tr:hover {
+        background: #fafafa;
+    }
+    
+    .qh-action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .qh-btn-edit, .qh-btn-delete {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+    
+    .qh-btn-edit {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .qh-btn-edit:hover {
+        background: #2563eb;
+    }
+    
+    .qh-btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .qh-btn-delete:hover {
+        background: #dc2626;
+    }
+    
+    .qh-badge-staff {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .qh-badge-active {
+        background: #dcfce7;
+        color: #166534;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .qh-badge-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .qh-empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qh-admin-container">
+    <!-- Header -->
+    <div class="qh-admin-header">
+        <h1>👥 Quản lý thành viên</h1>
+    </div>
+    
+    <!-- Danh sách -->
+    {% if users %}
+    <table class="qh-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">ID</th>
+                <th style="width: 150px;">Tên đăng nhập</th>
+                <th style="width: 200px;">Email</th>
+                <th style="width: 150px;">Tên đầy đủ</th>
+                <th style="width: 100px;">Trạng thái</th>
+                <th style="width: 120px;">Quyền</th>
+                <th style="width: 150px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td><strong>#{{ user.id }}</strong></td>
+                <td><strong>{{ user.username }}</strong></td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.first_name or user.last_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% else %}
+                        <span style="color: #999;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.is_active %}
+                        <span class="qh-badge-active">✓ Hoạt động</span>
+                    {% else %}
+                        <span class="qh-badge-inactive">✗ Vô hiệu</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.is_staff %}
+                        <span class="qh-badge-staff">⚙️ Admin</span>
+                    {% else %}
+                        <span style="color: #999;">Khách</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="qh-action-btns">
+                        <a href="{% url 'store:user_edit' user.id %}" class="qh-btn-edit">✏️ Sửa</a>
+                        {% if user.id != request.user.id %}
+                        <a href="{% url 'store:user_delete' user.id %}" class="qh-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️ Xóa</a>
+                        {% else %}
+                        <button class="qh-btn-delete" disabled style="opacity: 0.5; cursor: not-allowed;">🗑️ Xóa</button>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="qh-empty-state">
+        <p>Chưa có thành viên nào</p>
+    </div>
+    {% endif %}
+    
+    <!-- Liên kết quay lại dashboard -->
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'store:dashboard' %}" style="color: #2563eb; text-decoration: none; font-weight: 600;">← Quay lại Dashboard</a>
+    </div>
+</div>
+{% endblock %}

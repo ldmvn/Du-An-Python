@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý nhà sản xuất - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qh-admin-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .qh-admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .qh-admin-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+    
+    .qh-btn-add {
+        padding: 10px 20px;
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    
+    .qh-btn-add:hover {
+        background: #1d4ed8;
+    }
+    
+    .qh-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .qh-table thead {
+        background: #f5f5f5;
+        border-bottom: 2px solid #ddd;
+    }
+    
+    .qh-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .qh-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .qh-table tr:hover {
+        background: #fafafa;
+    }
+    
+    .qh-action-btns {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .qh-btn-edit, .qh-btn-delete {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+    
+    .qh-btn-edit {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .qh-btn-edit:hover {
+        background: #2563eb;
+    }
+    
+    .qh-btn-delete {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .qh-btn-delete:hover {
+        background: #dc2626;
+    }
+    
+    .qh-empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .qh-empty-state svg {
+        width: 80px;
+        height: 80px;
+        color: #ccc;
+        margin-bottom: 20px;
+    }
+    
+    .qh-empty-state p {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .qh-badge-product-count {
+        background: #e0e7ff;
+        color: #2563eb;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qh-admin-container">
+    <!-- Header -->
+    <div class="qh-admin-header">
+        <h1>⚙️ Quản lý nhà sản xuất</h1>
+        <a href="{% url 'store:category_create' %}" class="qh-btn-add">+ Thêm nhà sản xuất</a>
+    </div>
+    
+    <!-- Danh sách -->
+    {% if categories %}
+    <table class="qh-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">ID</th>
+                <th>Tên nhà sản xuất</th>
+                <th style="width: 120px;">Số sản phẩm</th>
+                <th style="width: 150px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td><strong>#{{ category.id }}</strong></td>
+                <td><strong>{{ category.name }}</strong></td>
+                <td><span class="qh-badge-product-count">{{ category.products.count }} sản phẩm</span></td>
+                <td>
+                    <div class="qh-action-btns">
+                        <a href="{% url 'store:category_edit' category.id %}" class="qh-btn-edit">✏️ Sửa</a>
+                        <a href="{% url 'store:category_delete' category.id %}" class="qh-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️ Xóa</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="qh-empty-state">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4m0 0L4 7m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0L12 3m0 0L4 7m0 0v10a2 2 0 002 2h12a2 2 0 002-2V7"/>
+        </svg>
+        <p>Chưa có nhà sản xuất nào</p>
+        <a href="{% url 'store:category_create' %}" class="qh-btn-add">+ Thêm cái đầu tiên</a>
+    </div>
+    {% endif %}
+    
+    <!-- Liên kết quay lại dashboard -->
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'store:dashboard' %}" style="color: #2563eb; text-decoration: none; font-weight: 600;">← Quay lại Dashboard</a>
+    </div>
+</div>
+{% endblock %}

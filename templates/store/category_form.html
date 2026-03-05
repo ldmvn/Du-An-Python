@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qh-admin-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .qh-admin-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 30px;
+    }
+    
+    .qh-admin-card h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .qh-admin-card > p {
+        color: #666;
+        margin-bottom: 30px;
+    }
+    
+    .qh-form-group {
+        margin-bottom: 20px;
+    }
+    
+    .qh-form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .qh-form-group input[type="text"],
+    .qh-form-group textarea,
+    .qh-form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.2s;
+    }
+    
+    .qh-form-group input[type="text"]:focus,
+    .qh-form-group textarea:focus,
+    .qh-form-group select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    .qh-form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .qh-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+    
+    .qh-btn-submit {
+        background: #2563eb;
+        color: white;
+        flex: 1;
+    }
+    
+    .qh-btn-submit:hover {
+        background: #1d4ed8;
+    }
+    
+    .qh-btn-cancel {
+        background: #e5e7eb;
+        color: #333;
+        flex: 1;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .qh-btn-cancel:hover {
+        background: #d1d5db;
+    }
+    
+    .qh-error-msg {
+        color: #dc2626;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+    
+    .qh-form-group.error input,
+    .qh-form-group.error textarea {
+        border-color: #dc2626;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qh-admin-container">
+    <div class="qh-admin-card">
+        <h1>{{ title }}</h1>
+        <p>Quản lý thông tin nhà sản xuất / thương hiệu</p>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Name Field -->
+            <div class="qh-form-group {% if form.name.errors %}error{% endif %}">
+                <label for="id_name">Tên nhà sản xuất</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="qh-error-msg">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Form errors -->
+            {% if form.non_field_errors %}
+                <div style="background: #fee; color: #c33; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+                    {{ form.non_field_errors.0 }}
+                </div>
+            {% endif %}
+            
+            <!-- Buttons -->
+            <div class="qh-form-actions">
+                <button type="submit" class="qh-btn qh-btn-submit">
+                    {% if category %}✅ Cập nhật{% else %}➕ Thêm{% endif %}
+                </button>
+                <a href="{% url 'store:category_list' %}" class="qh-btn qh-btn-cancel">← Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

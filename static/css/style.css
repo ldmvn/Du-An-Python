@@ -222,6 +222,41 @@ body {
     color: var(--qh-text);
 }
 
+/* Admin icon styling - match other icons */
+.qh-admin-icon {
+    padding: 10px 16px;
+    border-radius: var(--qh-radius);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* circle background same as normal icons */
+.qh-admin-icon .qh-icon-circle {
+    background: var(--qh-bg);
+}
+
+.qh-admin-icon .qh-icon-svg {
+    color: var(--qh-text-light);
+    width: 22px;
+    height: 22px;
+}
+
+.qh-admin-icon .qh-icon-text .qh-icon-label {
+    color: var(--qh-text-light);
+}
+
+.qh-admin-icon .qh-icon-text .qh-icon-title {
+    color: var(--qh-text-light);
+    font-weight: 600;
+}
+
+.qh-admin-icon:hover {
+    background: rgba(0,0,0,0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(169, 204, 240, 0.3);
+}
+/* no red-specific styles here anymore; admin icon inherits header-icon rules */
 .qh-icon-badge {
     position: absolute;
     top: -4px;

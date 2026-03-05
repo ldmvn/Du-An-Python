@@ -53,6 +53,7 @@
 }
 
 /* ==================== Wishlist Heart Button ==================== */
+/* default absolute-style used in product listings on other pages */
 .wishlist-btn {
     position: absolute;
     top: 14px;
@@ -96,6 +97,29 @@
     fill: #ef4444;
 }
 
+/* ==================== Inline wishlist button (for home page) ==================== */
+.wishlist-btn-inline {
+    position: static;
+    width: auto;
+    height: auto;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.wishlist-btn-inline:hover {
+    color: #ef4444;
+}
+
+.wishlist-btn-inline.liked svg,
+.wishlist-btn-inline.liked {
+    color: #ef4444;
+    fill: #ef4444;
+}
+
 /* ==================== Out of Stock Overlay ==================== */
 .out-of-stock-overlay {
     position: absolute;
@@ -120,6 +144,39 @@
 /* ==================== Compare Button ==================== */
 .qh-compare-btn {
     font-family: 'Signika', sans-serif;
+}
+
+/* ==================== Brand list (homepage) ==================== */
+.qh-brand-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.qh-brand-pill {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.qh-brand-pill:hover {
+    background: #f0f0f0;
+}
+
+.qh-brand-pill-active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.qh-brand-pill-active:hover {
+    background: #1d4ed8;
 }
 
 .qh-compare-btn:hover {

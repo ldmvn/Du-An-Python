@@ -90,7 +90,7 @@
 
                 <!-- Thanh tìm kiếm -->
                 <div class="qh-search">
-                    <form action="{% url 'store:product_search' %}" method="GET" class="qh-search-form">
+                    <form action="{% url 'store:home' %}" method="GET" class="qh-search-form">
                         <input type="text"
                                name="q"
                                placeholder="Nhập sản phẩm mà bạn muốn tìm..."
@@ -151,15 +151,36 @@
 
                     <!-- Dashboard (chỉ cho Admin) -->
                     {% if user.is_authenticated and user.is_staff %}
-                        <a href="{% url 'store:dashboard' %}" class="qh-header-icon">
+                        <a href="{% url 'store:dashboard' %}" class="qh-header-icon qh-admin-icon">
                             <div class="qh-icon-circle">
-                                <svg class="qh-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                <!-- Gear/Cog icon -->
+                                <svg class="qh-icon-svg" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <!-- Center circle -->
+                                    <circle cx="12" cy="12" r="2.5" />
+                                    <!-- Gear teeth - 8 teeth -->
+                                    <!-- Top -->
+                                    <rect x="10.5" y="1.5" width="3" height="2.5" />
+                                    <!-- Top-right -->
+                                    <rect x="16.9" y="3.5" width="2.5" height="3" transform="rotate(45 18.65 5)" />
+                                    <!-- Right -->
+                                    <rect x="20" y="10.5" width="2.5" height="3" />
+                                    <!-- Bottom-right -->
+                                    <rect x="16.9" y="16.9" width="2.5" height="3" transform="rotate(45 18.65 18.9)" />
+                                    <!-- Bottom -->
+                                    <rect x="10.5" y="20" width="3" height="2.5" />
+                                    <!-- Bottom-left -->
+                                    <rect x="3.6" y="16.9" width="2.5" height="3" transform="rotate(45 5.35 18.9)" />
+                                    <!-- Left -->
+                                    <rect x="1.5" y="10.5" width="2.5" height="3" />
+                                    <!-- Top-left -->
+                                    <rect x="3.6" y="3.5" width="2.5" height="3" transform="rotate(45 5.35 5)" />
+                                    <!-- Outer ring connecting teeth -->
+                                    <circle cx="12" cy="12" r="7" />
                                 </svg>
                             </div>
                             <div class="qh-icon-text">
                                 <span class="qh-icon-label">Quản Lý</span>
-                                <span class="qh-icon-title">Dashboard</span>
+                                <span class="qh-icon-title">Admin Panel</span>
                             </div>
                         </a>
                     {% endif %}

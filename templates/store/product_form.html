@@ -53,6 +53,39 @@
                 {% endif %}
             </div>
 
+            <!-- RAM -->
+            <div class="qh-form-group {% if form.ram.errors %}has-error{% endif %}">
+                <label for="id_ram">Bộ nhớ RAM</label>
+                {{ form.ram }}
+                {% if form.ram.errors %}
+                    {% for error in form.ram.errors %}
+                        <div class="qh-error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- ROM -->
+            <div class="qh-form-group {% if form.rom.errors %}has-error{% endif %}">
+                <label for="id_rom">Bộ nhớ ROM</label>
+                {{ form.rom }}
+                {% if form.rom.errors %}
+                    {% for error in form.rom.errors %}
+                        <div class="qh-error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Giảm giá -->
+            <div class="qh-form-group {% if form.discount.errors %}has-error{% endif %}">
+                <label for="id_discount">Giảm giá (%)</label>
+                {{ form.discount }}
+                {% if form.discount.errors %}
+                    {% for error in form.discount.errors %}
+                        <div class="qh-error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
             <!-- Mô tả -->
             <div class="qh-form-group {% if form.description.errors %}has-error{% endif %}">
                 <label for="id_description">Mô tả sản phẩm</label>
