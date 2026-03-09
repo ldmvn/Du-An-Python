@@ -1,7 +1,8 @@
 from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Product, ProductSpecification, UserProfile, Category
+from .models import Product, ProductSpecification, UserProfile, Category, Banner
+import re
 
 
 class CategoryForm(forms.ModelForm):
@@ -93,6 +94,29 @@ class ProductForm(forms.ModelForm):
         if discount is not None and (discount < 0 or discount > 100):
             raise forms.ValidationError('Giảm giá phải từ 0 đến 100%')
         return discount
+    
+    def clean_image(self):
+        """Kiểm tra định dạng và kích thước file ảnh"""
+        image = self.cleaned_data.get('image')
+        
+        if image:
+            # Kiểm tra định dạng file
+            allowed_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            file_extension = image.name.split('.')[-1].lower()
+            
+            if file_extension not in allowed_formats:
+                raise forms.ValidationError(
+                    f'❌ Định dạng file không hợp lệ! Chỉ chấp nhận: {", ".join(allowed_formats).upper()}'
+                )
+            
+            # Kiểm tra kích thước file (max 5MB)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if image.size > max_size:
+                raise forms.ValidationError(
+                    f'❌ Kích thước file quá lớn! Tối đa 5MB, file của bạn {image.size / (1024*1024):.2f}MB'
+                )
+        
+        return image
 
 
 ProductSpecFormSet = inlineformset_factory(
@@ -147,6 +171,143 @@ class UserExtendedProfileForm(forms.ModelForm):
                 'rows': 3
             }),
         }
+    
+    def clean_phone(self):
+        """Validate phone number format - only digits and spaces/dashes, 10-15 characters"""
+        phone = self.cleaned_data.get('phone', '').strip()
+        
+        if not phone:
+            raise forms.ValidationError('❌ Số điện thoại không được để trống')
+        
+        # Remove spaces and dashes for validation
+        phone_digits = re.sub(r'[\s\-\(\)]', '', phone)
+        
+        # Check if contains only digits and optional + at start
+        if not re.match(r'^\+?[0-9]{10,15}$', phone_digits):
+            raise forms.ValidationError('❌ Số điện thoại không hợp lệ! Chỉ nhập số (10-15 chữ số)')
+        
+        # If starts with +84, check it's valid Vietnamese number
+        if phone_digits.startswith('+84') and len(phone_digits) != 13:
+            raise forms.ValidationError('❌ Số điện thoại Việt Nam định dạng +84 phải có 13 chữ số')
+        
+        # If starts with 0, check it's valid Vietnamese number (0 + 9 digits)
+        if phone_digits.startswith('0') and len(phone_digits) != 10:
+            raise forms.ValidationError('❌ Số điện thoại Việt Nam phải có 10 chữ số (0X XXXX XXXX)')
+        
+        return phone
+
+
+class CheckoutForm(forms.Form):
+    """Form for checkout with phone validation"""
+    fullname = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập họ tên'
+        })
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập email'
+        })
+    )
+    phone = forms.CharField(
+        max_length=20,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập số điện thoại',
+            'type': 'tel'
+        })
+    )
+    address = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập địa chỉ chi tiết',
+            'rows': 3
+        })
+    )
+    city = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập thành phố/tỉnh'
+        })
+    )
+    district = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập quận/huyện'
+        })
+    )
+    ward = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nhập phường/xã'
+        })
+    )
+    payment_method = forms.ChoiceField(
+        choices=[
+            ('cash', 'Thanh toán khi nhận hàng'),
+            ('bank', 'Chuyển khoản ngân hàng'),
+            ('vnpay', 'VNPAY')
+        ],
+        required=True,
+        widget=forms.RadioSelect()
+    )
+    
+    def clean_fullname(self):
+        fullname = self.cleaned_data.get('fullname', '').strip()
+        if not fullname:
+            raise forms.ValidationError('❌ Họ tên không được để trống')
+        if len(fullname) < 2:
+            raise forms.ValidationError('❌ Họ tên phải có ít nhất 2 ký tự')
+        return fullname
+    
+    def clean_phone(self):
+        """Validate phone number format - only digits and spaces/dashes, 10-15 characters"""
+        phone = self.cleaned_data.get('phone', '').strip()
+        
+        if not phone:
+            raise forms.ValidationError('❌ Số điện thoại không được để trống')
+        
+        # Remove spaces and dashes for validation
+        phone_digits = re.sub(r'[\s\-\(\)]', '', phone)
+        
+        # Check if contains only digits and optional + at start
+        if not re.match(r'^\+?[0-9]{10,15}$', phone_digits):
+            raise forms.ValidationError('❌ Số điện thoại chỉ được chứa chữ số (0-9)! Chỉ nhập số điện thoại (10-15 chữ số)')
+        
+        # If starts with +84, check it's valid Vietnamese number
+        if phone_digits.startswith('+84') and len(phone_digits) != 13:
+            raise forms.ValidationError('❌ Số điện thoại Việt Nam định dạng +84 phải có 13 chữ số')
+        
+        # If starts with 0, check it's valid Vietnamese number (0 + 9 digits)
+        if phone_digits.startswith('0') and len(phone_digits) != 10:
+            raise forms.ValidationError('❌ Số điện thoại Việt Nam phải có 10 chữ số (0X XXXX XXXX)')
+        
+        return phone
+    
+    def clean_address(self):
+        address = self.cleaned_data.get('address', '').strip()
+        if not address or len(address) < 5:
+            raise forms.ValidationError('❌ Địa chỉ phải có ít nhất 5 ký tự')
+        return address
+    
+    def clean_city(self):
+        city = self.cleaned_data.get('city', '').strip()
+        if not city or len(city) < 2:
+            raise forms.ValidationError('❌ Thành phố/Tỉnh phải có ít nhất 2 ký tự')
+        return city
 
 
 class ChangePasswordForm(forms.Form):
@@ -172,3 +333,54 @@ class ChangePasswordForm(forms.Form):
             'placeholder': 'Xác nhận mật khẩu mới'
         })
     )
+
+
+class BannerForm(forms.ModelForm):
+    """Form for managing banner images"""
+    class Meta:
+        model = Banner
+        fields = ['banner_id', 'image', 'title', 'description', 'is_active']
+        widgets = {
+            'banner_id': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Vị trí banner (1, 2, 3, ...)'
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tiêu đề banner',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Mô tả banner',
+                'rows': 3
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            })
+        }
+    
+    def clean_banner_id(self):
+        banner_id = self.cleaned_data.get('banner_id')
+        if banner_id is None or banner_id <= 0:
+            raise forms.ValidationError('Vị trí banner phải lớn hơn 0')
+        return banner_id
+    
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image:
+            allowed_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            file_extension = image.name.split('.')[-1].lower()
+            
+            if file_extension not in allowed_formats:
+                raise forms.ValidationError('❌ Định dạng ảnh không hợp lệ! Chỉ nhận: JPG, PNG, GIF, WEBP')
+            
+            max_size = 10 * 1024 * 1024  # 10MB for banners
+            if image.size > max_size:
+                raise forms.ValidationError(f'❌ Kích thước ảnh quá lớn! Tối đa 10MB')
+        
+        return image
+

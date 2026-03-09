@@ -21,6 +21,13 @@
     <div class="cart-header">
         <h1>🛒 Giỏ hàng của bạn</h1>
         <p>Quản lý các sản phẩm bạn muốn mua</p>
+        {% if products %}
+        <div style="margin-top: 10px;">
+            <a href="{% url 'store:clear_cart' %}" class="btn-clear-cart" onclick="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng?')">
+                🗑️ Xóa tất cả
+            </a>
+        </div>
+        {% endif %}
     </div>
     
     {% if products %}
@@ -114,9 +121,11 @@
 </div>
 
 <script>
-function updateQuantity(productId, change) {
+async function updateQuantity(productId, change) {
     const cartItem = document.querySelector(`[data-product-id="${productId}"]`);
     const qtyInput = cartItem.querySelector('.qty-input');
+    const subtotalElement = cartItem.querySelector('.cart-item-subtotal');
+    
     let currentQty = parseInt(qtyInput.value);
     
     // If change is a number, it's the new quantity value
@@ -130,13 +139,68 @@ function updateQuantity(productId, change) {
     if (currentQty > 99) currentQty = 99;
     
     qtyInput.value = currentQty;
-    // TODO: Send update to backend
+    
+    // Send update to backend
+    try {
+        const response = await fetch(`/cart/update/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: `quantity=${currentQty}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update subtotal display
+            subtotalElement.textContent = data.subtotal_formatted;
+            
+            // Update total in summary
+            updateCartTotal();
+        } else {
+            alert('Lỗi cập nhật số lượng: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        alert('Lỗi kết nối khi cập nhật số lượng');
+    }
+}
+
+function updateCartTotal() {
+    // Calculate new total from all subtotals
+    const subtotals = document.querySelectorAll('.cart-item-subtotal');
+    let total = 0;
+    
+    subtotals.forEach(subtotal => {
+        const price = parseInt(subtotal.textContent.replace(/[₫,]/g, ''));
+        total += price;
+    });
+    
+    // Update total display
+    const totalElements = document.querySelectorAll('.summary-row.total .price');
+    totalElements.forEach(element => {
+        element.textContent = total.toLocaleString('vi-VN') + '₫';
+    });
 }
 
 function checkout() {
-    // TODO: Implement checkout process
-    alert('Chức năng thanh toán đang được phát triển');
+    // Redirect to cart checkout page
+    window.location.href = '{% url "store:checkout_from_cart" %}';
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add CSRF token to form for AJAX requests
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        document.body.appendChild(csrfToken);
+    }
+});
 </script>
 
 {% endblock %}

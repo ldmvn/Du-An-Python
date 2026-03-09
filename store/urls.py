@@ -31,7 +31,10 @@ urlpatterns = [
     path('cart/', views.cart_view, name='cart_detail'),
     path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/update/<int:product_id>/', views.update_cart_quantity, name='update_cart_quantity'),
+    path('cart/clear/', views.clear_cart, name='clear_cart'),
     path('checkout/', views.checkout, name='checkout'),
+    path('checkout/cart/', views.checkout_from_cart, name='checkout_from_cart'),
 
     # ========== WISHLIST & COMPARE ==========
     path('wishlist/', views.wishlist, name='wishlist'),
@@ -41,10 +44,19 @@ urlpatterns = [
     # ========== USER PROFILE ==========
     path('profile/', views.profile, name='profile'),
     path('order-tracking/', views.order_tracking, name='order_tracking'),
+    path('order-tracking/cancel/<int:order_id>/', views.cancel_order, name='cancel_order'),
     path('order-success/', views.order_success, name='order_success'),
 
     # ========== PLACEHOLDER URLS ==========
     # Các route dưới đây là placeholder để tránh lỗi template
+    path('api/provinces/', views.get_provinces, name='get_provinces'),
+    path('api/districts/<str:province_code>/', views.get_districts, name='get_districts'),
+    path('api/wards/<str:district_code>/', views.get_wards, name='get_wards'),
+    path('banner-images/list/', views.banner_list, name='banner_list'),
+    path('banner-images/admin/', views.banner_admin_list, name='banner_admin_list'),
+    path('banner-images/add/', views.banner_add, name='banner_add'),
+    path('banner-images/replace/', views.banner_replace, name='banner_replace'),
+    path('banner-images/delete/', views.banner_delete, name='banner_delete'),
     path('brand/add/', views.placeholder, name='brand_add'),
     path('brand/edit/', views.placeholder, name='brand_edit'),
     path('brand/delete/', views.placeholder, name='brand_delete'),

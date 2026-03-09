@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% load custom_filters %}
 
 {% block title %}TRẠNG THÁI - MOBILE STORE{% endblock %}
 
@@ -21,7 +20,7 @@
         <div class="qh-os-icon">
             <svg class="qhc" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
         </div>
-        <h2>ĐƠN HÀNG ĐÃ ĐƯỢC TẠO THÀNH CÔNG</h2>
+        <h2>✅ ĐƠN HÀNG ĐÃ ĐƯỢC TẠO THÀNH CÔNG</h2>
     </div>
 
     <!-- Hai hộp bằng nhau -->
@@ -29,23 +28,62 @@
 
         <!-- Left: Thông tin đơn hàng -->
         <div class="qh-os-info">
-            <div class="qh-os-info-title">Thông tin đơn hàng</div>
-            <div class="qh-os-row">
-                <span class="label">Mã đơn hàng</span>
-                <span class="value">{{ order.order_code }}</span>
-            </div>
-            <div class="qh-os-row">
-                <span class="label">Phương thức</span>
-                <span class="value">{{ order.get_payment_method_display }}</span>
-            </div>
-            <div class="qh-os-row">
-                <span class="label">Trạng thái</span>
-                <span class="value">{{ order.get_status_display }}</span>
-            </div>
-            <div class="qh-os-row">
-                <span class="label">Thời gian</span>
-                <span class="value">{{ order.created_at|date:"d/m/Y H:i" }}</span>
-            </div>
+            <div class="qh-os-info-title">📋 Thông tin đơn hàng</div>
+            {% if order %}
+                <div class="qh-os-row">
+                    <span class="label">Mã đơn hàng</span>
+                    <span class="value" style="font-weight: bold; color: #2563eb;">{{ order.order_number }}</span>
+                </div>
+                <div class="qh-os-row">
+                    <span class="label">Trạng thái</span>
+                    <span class="value" style="padding: 5px 10px; border-radius: 4px; font-weight: bold;
+                        {% if order.status == 'pending' %}background: #fbbf24; color: #78350f;
+                        {% elif order.status == 'approved' %}background: #60a5fa; color: white;
+                        {% elif order.status == 'shipped' %}background: #a78bfa; color: white;
+                        {% elif order.status == 'completed' %}background: #34d399; color: white;
+                        {% elif order.status == 'cancelled' %}background: #f87171; color: white;
+                        {% endif %}">
+                        {% if order.status == 'pending' %}⏳ Chờ xử lý
+                        {% elif order.status == 'approved' %}✓ Đã duyệt
+                        {% elif order.status == 'shipped' %}🚚 Đang giao
+                        {% elif order.status == 'completed' %}🎉 Hoàn tất
+                        {% elif order.status == 'cancelled' %}❌ Đã huỷ
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="qh-os-row">
+                    <span class="label">Tổng tiền</span>
+                    <span class="value" style="font-weight: bold; color: #dc2626;">{{ order.total_amount|floatformat:0|add:0 }}₫</span>
+                </div>
+                <div class="qh-os-row">
+                    <span class="label">Phương thức thanh toán</span>
+                    <span class="value">
+                        {% if order.payment_method == 'cash' %}💵 Thanh toán khi nhận hàng
+                        {% elif order.payment_method == 'bank' %}🏦 Chuyển khoản ngân hàng
+                        {% elif order.payment_method == 'vnpay' %}💳 VNPAY
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="qh-os-row">
+                    <span class="label">Thời gian</span>
+                    <span class="value">{{ order.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                
+                <!-- Chi tiết sản phẩm -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                    <div class="qh-os-info-title">📦 Sản phẩm đã đặt</div>
+                    {% for item in order.items.all %}
+                    <div style="padding: 10px; background: #f3f4f6; border-radius: 4px; margin-bottom: 8px;">
+                        <div><strong>{{ item.product.name }}</strong></div>
+                        <div style="font-size: 13px; color: #666;">Số lượng: {{ item.quantity }} | Giá: {{ item.price|floatformat:0|add:0 }}₫</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: #f87171; padding: 15px; background: #fee2e2; border-radius: 4px;">
+                    ⚠️ Không tìm thấy thông tin đơn hàng. Vui lòng <a href="{% url 'store:order_tracking' %}">tra cứu đơn hàng</a> của bạn.
+                </p>
+            {% endif %}
         </div>
 
         <!-- Phải: Các nút -->
@@ -74,10 +112,10 @@
 {% endblock %}
 
 {% block extra_js %}
-{# copyCode() KHÔNG THỂ TÁCH vì chứa Django template tag {{ order.order_code }} #}
+{# copyCode() KHÔNG THỂ TÁCH vì chứa Django template tag {{ order.order_number }} #}
 <script>
 function copyCode() {
-    var code = '{{ order.order_code }}';
+    var code = '{{ order.order_number }}';
     var btn = event.currentTarget;
     if (navigator.clipboard) {
         navigator.clipboard.writeText(code).then(function() { doCopied(btn); });

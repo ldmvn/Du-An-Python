@@ -5,7 +5,8 @@ from .models import (
     ProductSpecification,
     Order,
     OrderItem,
-    Review
+    Review,
+    Banner
 )
 
 # ================== PRODUCT ==================
@@ -51,6 +52,15 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('id', 'product', 'user', 'rating', 'created_at')
     list_filter = ('rating', 'created_at')
     search_fields = ('product__name', 'user__username')
+
+# ================== BANNER ==================
+
+@admin.register(Banner)
+class BannerAdmin(admin.ModelAdmin):
+    list_display = ('banner_id', 'title', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('title', 'description')
+    list_editable = ('is_active',)
 
 # ================== SPEC (OPTIONAL) ==================
 admin.site.register(ProductSpecification)

@@ -100,6 +100,12 @@ class Order(models.Model):
         ('completed', 'Hoàn tất'),
         ('cancelled', 'Đã huỷ'),
     ]
+    
+    PAYMENT_METHOD_CHOICES = [
+        ('cash', 'Thanh toán khi nhận hàng'),
+        ('bank', 'Chuyển khoản ngân hàng'),
+        ('vnpay', 'VNPAY'),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     order_number = models.CharField(max_length=20, default='')
@@ -108,6 +114,11 @@ class Order(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default='pending'
+    )
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='cash'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -127,6 +138,10 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+    
+    def get_total(self):
+        """Tính tổng giá của item (price * quantity)"""
+        return self.price * self.quantity
 
 
 class Review(models.Model):
@@ -150,4 +165,20 @@ class ProductSpecification(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.key}"
 
+
+class Banner(models.Model):
+    """Banner image for homepage slider"""
+    banner_id = models.IntegerField(unique=True, help_text="Banner position (1, 2, 3, ...)")
+    image = models.ImageField(upload_to='banner/', help_text="Banner image")
+    title = models.CharField(max_length=255, blank=True, default='')
+    description = models.TextField(blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['banner_id']
+
+    def __str__(self):
+        return f"Banner #{self.banner_id}"
     

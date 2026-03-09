@@ -4,9 +4,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
+import requests
 
-from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem
-from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm
+from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner
+from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm
 
 
 # ================== UTILS ==================
@@ -219,6 +220,51 @@ def remove_from_cart(request, product_id):
     return redirect('store:cart_detail')
 
 
+@login_required(login_url='store:login')
+def update_cart_quantity(request, product_id):
+    """Update quantity of a product in cart via AJAX"""
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        product_id = str(product_id)
+        
+        try:
+            new_quantity = int(request.POST.get('quantity', 1))
+            if new_quantity < 1:
+                new_quantity = 1
+            elif new_quantity > 99:
+                new_quantity = 99
+                
+            if product_id in cart:
+                cart[product_id] = new_quantity
+                request.session['cart'] = cart
+                
+                # Calculate new subtotal
+                product = Product.objects.get(id=int(product_id))
+                subtotal = product.price * new_quantity
+                
+                return JsonResponse({
+                    'success': True,
+                    'quantity': new_quantity,
+                    'subtotal': subtotal,
+                    'subtotal_formatted': f"{subtotal:,.0f}₫"
+                })
+            else:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm không có trong giỏ hàng'})
+                
+        except (ValueError, Product.DoesNotExist):
+            return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại'})
+    
+    return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'})
+
+
+@login_required(login_url='store:login')
+def clear_cart(request):
+    """Clear all items from cart"""
+    request.session['cart'] = {}
+    messages.success(request, '🗑️ Đã xóa toàn bộ giỏ hàng')
+    return redirect('store:cart_detail')
+
+
 # ================== CHECKOUT ==================
 @login_required(login_url='store:login')
 def checkout(request):
@@ -239,67 +285,227 @@ def checkout(request):
         return redirect('store:home')
     
     if request.method == 'POST':
-        # Process checkout form
-        fullname = request.POST.get('fullname', '')
-        email = request.POST.get('email', request.user.email)
-        phone = request.POST.get('phone', '')
-        address = request.POST.get('address', '')
-        city = request.POST.get('city', '')
-        payment_method = request.POST.get('payment_method', 'cash')
+        # Process checkout form using CheckoutForm
+        form = CheckoutForm(request.POST)
         
-        if not fullname or not phone or not address or not city:
-            messages.error(request, '❌ Vui lòng nhập đầy đủ thông tin')
+        if form.is_valid():
+            fullname = form.cleaned_data['fullname']
+            email = form.cleaned_data['email']
+            phone = form.cleaned_data['phone']
+            address = form.cleaned_data['address']
+            city = form.cleaned_data['city']
+            district = form.cleaned_data['district']
+            ward = form.cleaned_data['ward']
+            payment_method = form.cleaned_data['payment_method']
+            
+            # Combine address with district and ward for full address
+            full_address = f"{address}, {ward}, {district}, {city}"
+            
+            try:
+                # Create Order
+                from datetime import datetime
+                order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                
+                total_amount = product.get_discounted_price() * quantity
+                
+                order = Order.objects.create(
+                    user=request.user,
+                    order_number=order_number,
+                    total_amount=total_amount,
+                    status='pending',
+                    payment_method=payment_method
+                )
+                
+                # Create OrderItem
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    price=product.get_discounted_price()
+                )
+                
+                # Get or create user profile
+                user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+                
+                # Update user profile with shipping info
+                user_profile.phone = phone
+                user_profile.address = full_address  # Save full address including district/ward
+                user_profile.save()
+                
+                # Update user's name/email
+                parts = fullname.split(' ', 1)
+                request.user.first_name = parts[0] if len(parts) > 0 else ''
+                request.user.last_name = parts[1] if len(parts) > 1 else ''
+                request.user.email = email
+                request.user.save()
+                
+                messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}')
+                return redirect('store:order_success')
+            
+            except Exception as e:
+                messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
+                context = get_base_context(request)
+                context.update({
+                    'product': product,
+                    'quantity': quantity,
+                    'total_price': product.get_discounted_price() * quantity,
+                    'form': form,
+                })
+                return render(request, 'store/checkout.html', context)
+        else:
+            # Form validation failed - display errors
             context = get_base_context(request)
             context.update({
                 'product': product,
                 'quantity': quantity,
                 'total_price': product.get_discounted_price() * quantity,
+                'form': form,
             })
             return render(request, 'store/checkout.html', context)
-        
-        # Create Order
-        from datetime import datetime
-        order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
-        total_amount = product.get_discounted_price() * quantity
-        
-        order = Order.objects.create(
-            user=request.user,
-            order_number=order_number,
-            total_amount=total_amount,
-            status='pending'
-        )
-        
-        # Create OrderItem
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            quantity=quantity,
-            price=product.get_discounted_price()
-        )
-        
-        # Update user profile with shipping info
-        request.user.profile.phone = phone
-        request.user.profile.address = address
-        request.user.profile.save()
-        
-        # Update user's name/email
-        parts = fullname.split(' ', 1)
-        request.user.first_name = parts[0] if len(parts) > 0 else ''
-        request.user.last_name = parts[1] if len(parts) > 1 else ''
-        request.user.email = email
-        request.user.save()
-        
-        messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}')
-        return redirect('store:order_success')
+    else:
+        # GET request - initialize form with pre-filled data
+        initial_data = {
+            'email': request.user.email if request.user.is_authenticated else '',
+        }
+        form = CheckoutForm(initial=initial_data)
     
     context = get_base_context(request)
     context.update({
         'product': product,
         'quantity': quantity,
         'total_price': product.get_discounted_price() * quantity,
+        'form': form,
     })
     return render(request, 'store/checkout.html', context)
+
+
+
+@login_required(login_url='store:login')
+def checkout_from_cart(request):
+    """Checkout process for cart items"""
+    cart = request.session.get('cart', {})
+    
+    if not cart:
+        messages.error(request, '❌ Giỏ hàng của bạn trống')
+        return redirect('store:cart_detail')
+    
+    # Get cart items
+    cart_items = []
+    total_amount = 0
+    
+    for product_id, quantity in cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            item_total = product.get_discounted_price() * quantity
+            total_amount += item_total
+            
+            cart_items.append({
+                'product': product,
+                'quantity': quantity,
+                'price': product.get_discounted_price(),
+                'total': item_total
+            })
+        except Product.DoesNotExist:
+            # Remove invalid product from cart
+            del cart[product_id]
+            request.session['cart'] = cart
+    
+    if not cart_items:
+        messages.error(request, '❌ Không có sản phẩm hợp lệ trong giỏ hàng')
+        return redirect('store:cart_detail')
+    
+    if request.method == 'POST':
+        # Process checkout form using CheckoutForm
+        form = CheckoutForm(request.POST)
+        
+        if form.is_valid():
+            fullname = form.cleaned_data['fullname']
+            email = form.cleaned_data['email']
+            phone = form.cleaned_data['phone']
+            address = form.cleaned_data['address']
+            city = form.cleaned_data['city']
+            district = form.cleaned_data['district']
+            ward = form.cleaned_data['ward']
+            payment_method = form.cleaned_data['payment_method']
+            
+            # Combine address with district and ward for full address
+            full_address = f"{address}, {ward}, {district}, {city}"
+            
+            try:
+                # Create Order
+                from datetime import datetime
+                order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                
+                order = Order.objects.create(
+                    user=request.user,
+                    order_number=order_number,
+                    total_amount=total_amount,
+                    status='pending',
+                    payment_method=payment_method
+                )
+                
+                # Create OrderItems for all cart items
+                for item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item['product'],
+                        quantity=item['quantity'],
+                        price=item['price']
+                    )
+                
+                # Clear cart after successful order
+                request.session['cart'] = {}
+                
+                # Get or create user profile
+                user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+                
+                # Update user profile with shipping info
+                user_profile.phone = phone
+                user_profile.address = full_address  # Save full address including district/ward
+                user_profile.save()
+                
+                # Update user's name/email
+                parts = fullname.split(' ', 1)
+                request.user.first_name = parts[0] if len(parts) > 0 else ''
+                request.user.last_name = parts[1] if len(parts) > 1 else ''
+                request.user.email = email
+                request.user.save()
+                
+                messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}')
+                return redirect('store:order_success')
+            
+            except Exception as e:
+                messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
+                context = get_base_context(request)
+                context.update({
+                    'cart_items': cart_items,
+                    'total_amount': total_amount,
+                    'form': form,
+                })
+                return render(request, 'store/checkout_cart.html', context)
+        else:
+            # Form validation failed - display errors
+            context = get_base_context(request)
+            context.update({
+                'cart_items': cart_items,
+                'total_amount': total_amount,
+                'form': form,
+            })
+            return render(request, 'store/checkout_cart.html', context)
+    else:
+        # GET request - initialize form with pre-filled data
+        initial_data = {
+            'email': request.user.email if request.user.is_authenticated else '',
+        }
+        form = CheckoutForm(initial=initial_data)
+    
+    context = get_base_context(request)
+    context.update({
+        'cart_items': cart_items,
+        'total_amount': total_amount,
+        'form': form,
+    })
+    return render(request, 'store/checkout_cart.html', context)
 
 
 # ================== WISHLIST ==================
@@ -409,13 +615,36 @@ def profile(request):
 
 @login_required(login_url='store:login')
 def order_tracking(request):
+    # Lấy tất cả orders của user, sắp xếp theo thời gian gần nhất
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    
     context = get_base_context(request)
+    context['orders'] = orders
     return render(request, 'store/order_tracking.html', context)
 
 
 @login_required(login_url='store:login')
+def cancel_order(request, order_id):
+    """Hủy đơn hàng (chỉ khi status = pending)"""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    if order.status == 'pending':
+        order.status = 'cancelled'
+        order.save()
+        messages.success(request, '✅ Đơn hàng đã được hủy')
+    else:
+        messages.error(request, f'❌ Không thể hủy đơn hàng với trạng thái: {order.get_status_display()}')
+    
+    return redirect('store:order_tracking')
+
+
+@login_required(login_url='store:login')
 def order_success(request):
+    # Lấy đơn hàng cuối cùng của user
+    order = Order.objects.filter(user=request.user).order_by('-created_at').first()
+    
     context = get_base_context(request)
+    context['order'] = order
     return render(request, 'store/order_success.html', context)
 
 
@@ -623,6 +852,214 @@ def user_delete(request, pk):
 def logout_view(request):
     logout(request)
     return redirect('store:login')
+
+
+# ================== BANNER MANAGEMENT ==================
+def banner_list(request):
+    """Get all active banners as JSON for homepage slider"""
+    banners = Banner.objects.filter(is_active=True).order_by('banner_id')
+    data = {
+        'success': True,
+        'banners': [
+            {
+                'banner_id': b.banner_id,
+                'image_url': b.image.url if b.image else '',
+                'title': b.title,
+                'description': b.description,
+            }
+            for b in banners
+        ]
+    }
+    return JsonResponse(data)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def banner_admin_list(request):
+    """Admin list all banners"""
+    banners = Banner.objects.all().order_by('banner_id')
+    context = get_base_context(request)
+    context['banners'] = banners
+    return render(request, 'store/banner_list.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def banner_add(request):
+    """Add a new banner"""
+    if request.method == 'POST':
+        from .forms import BannerForm
+        form = BannerForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({'success': True, 'message': '✅ Thêm banner thành công'})
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def banner_replace(request):
+    """Replace/update existing banner"""
+    if request.method == 'POST':
+        banner_id = request.POST.get('banner_id')
+        
+        try:
+            banner = Banner.objects.get(banner_id=banner_id)
+            
+            if 'image' in request.FILES:
+                # Delete old image
+                if banner.image:
+                    banner.image.delete()
+                banner.image = request.FILES['image']
+            
+            if 'title' in request.POST:
+                banner.title = request.POST.get('title', '')
+            if 'description' in request.POST:
+                banner.description = request.POST.get('description', '')
+            
+            banner.save()
+            return JsonResponse({'success': True, 'message': '✅ Cập nhật banner thành công'})
+        except Banner.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '❌ Không tìm thấy banner'}, status=404)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def banner_delete(request):
+    """Delete a banner"""
+    if request.method == 'POST':
+        banner_id = request.POST.get('banner_id')
+        
+        try:
+            banner = Banner.objects.get(banner_id=banner_id)
+            if banner.image:
+                banner.image.delete()
+            banner.delete()
+            return JsonResponse({'success': True, 'message': '✅ Xoá banner thành công'})
+        except Banner.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '❌ Không tìm thấy banner'}, status=404)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+# ================== API VIEWS ==================
+def get_provinces(request):
+    """API endpoint to fetch Vietnamese provinces from external API"""
+    try:
+        # Fetch provinces from Vietnamese provinces API
+        response = requests.get('https://provinces.open-api.vn/api/p/', timeout=10)
+        response.raise_for_status()  # Raise exception for bad status codes
+        
+        provinces_data = response.json()
+        
+        # Transform data to format suitable for frontend
+        provinces = []
+        for province in provinces_data:
+            provinces.append({
+                'code': province.get('code'),
+                'name': province.get('name'),
+                'division_type': province.get('division_type'),
+                'codename': province.get('codename'),
+                'phone_code': province.get('phone_code')
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'provinces': provinces
+        })
+        
+    except requests.RequestException as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Không thể kết nối đến API tỉnh thành: {str(e)}'
+        }, status=500)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Lỗi xử lý dữ liệu: {str(e)}'
+        }, status=500)
+
+
+def get_districts(request, province_code):
+    """API endpoint to fetch districts by province code"""
+    try:
+        # Fetch districts from Vietnamese provinces API
+        url = f'https://provinces.open-api.vn/api/p/{province_code}?depth=2'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        province_data = response.json()
+        
+        # Extract districts from the response
+        districts = []
+        if 'districts' in province_data:
+            for district in province_data['districts']:
+                districts.append({
+                    'code': district.get('code'),
+                    'name': district.get('name'),
+                    'division_type': district.get('division_type'),
+                    'codename': district.get('codename'),
+                    'province_code': province_code
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'districts': districts
+        })
+        
+    except requests.RequestException as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Không thể kết nối đến API quận/huyện: {str(e)}'
+        }, status=500)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Lỗi xử lý dữ liệu: {str(e)}'
+        }, status=500)
+
+
+def get_wards(request, district_code):
+    """API endpoint to fetch wards by district code"""
+    try:
+        # Fetch wards from Vietnamese provinces API
+        url = f'https://provinces.open-api.vn/api/d/{district_code}?depth=2'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        district_data = response.json()
+        
+        # Extract wards from the response
+        wards = []
+        if 'wards' in district_data:
+            for ward in district_data['wards']:
+                wards.append({
+                    'code': ward.get('code'),
+                    'name': ward.get('name'),
+                    'division_type': ward.get('division_type'),
+                    'codename': ward.get('codename'),
+                    'district_code': district_code
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'wards': wards
+        })
+        
+    except requests.RequestException as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Không thể kết nối đến API phường/xã: {str(e)}'
+        }, status=500)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Lỗi xử lý dữ liệu: {str(e)}'
+        }, status=500)
 
 
 # ================== PLACEHOLDER VIEW ==================
