@@ -17,10 +17,18 @@ function toggleWishlist(productId, buttonElement) {
                 buttonElement.classList.add('active');
                 buttonElement.innerHTML = '❤️';
                 showToast('Đã thêm vào danh sách yêu thích', 'success');
+                // Reload page to show wishlist section
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
             } else {
                 buttonElement.classList.remove('active');
                 buttonElement.innerHTML = '🤍';
                 showToast('Đã bỏ khỏi danh sách yêu thích', 'info');
+                // Reload page to update wishlist section
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
             }
 
             // Update badge

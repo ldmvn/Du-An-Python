@@ -74,15 +74,50 @@
     <!-- Tất cả sản phẩm (homepage now starts with brand filter links) -->
     <section class="qh-products-section" style="padding: 40px 20px; background: #f5f5f5;">
         <div class="qh-container">
-            <!-- list of manufacturers / categories -->
-            {% if categories %}
-            <div class="qh-brand-list" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:30px;">
-                {% for cat in categories %}
-                    <a href="?brand={{ cat.name }}{% if search_query %}&q={{ search_query }}{% endif %}" class="qh-brand-pill {% if selected_brand == cat.name %}qh-brand-pill-active{% endif %}" style="padding:8px 16px; border:1px solid #ccc; border-radius:999px; color:#333; text-decoration:none; font-weight:500; transition:background 0.2s;{% if selected_brand == cat.name %} background: #2563eb; color: white; border-color: #2563eb;{% endif %}">{{ cat.name }}</a>
-                {% endfor %}
-                <a href="{% url 'store:home' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="qh-brand-pill {% if not selected_brand %}qh-brand-pill-active{% endif %}" style="padding:8px 16px; border:1px solid #ccc; border-radius:999px; color:#333; text-decoration:none; font-weight:500; transition:background 0.2s;{% if not selected_brand %} background: #2563eb; color: white; border-color: #2563eb;{% endif %}">Xem tất cả</a>
-            </div>
-            {% endif %}
+            <!-- Search & Filter Bar -->
+            <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <!-- Brand Filter -->
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Hãng</label>
+                    <select name="brand" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
+                        <option value="">Tất cả hãng</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.name }}" {% if selected_brand == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Price Filter -->
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Giá</label>
+                    <select name="price_range" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
+                        <option value="">Tất cả giá</option>
+                        <option value="under_5m" {% if price_range == 'under_5m' %}selected{% endif %}>Dưới 5 triệu</option>
+                        <option value="5m_10m" {% if price_range == '5m_10m' %}selected{% endif %}>5 - 10 triệu</option>
+                        <option value="10m_20m" {% if price_range == '10m_20m' %}selected{% endif %}>10 - 20 triệu</option>
+                        <option value="over_20m" {% if price_range == 'over_20m' %}selected{% endif %}>Trên 20 triệu</option>
+                    </select>
+                </div>
+
+                <!-- Sort By -->
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Sắp xếp</label>
+                    <select name="sort_by" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
+                        <option value="">Mặc định</option>
+                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Sản phẩm mới</option>
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                    <button type="submit" style="padding: 10px 20px; background: #5b5bff; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.3s;">Tìm</button>
+                </div>
+
+                <!-- Keep search query if it exists -->
+                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+            </form>
 
             <!-- Section title -->
             {% if search_query or selected_brand %}
@@ -340,7 +375,9 @@ function toggleWishlist(productId) {
             }
             setTimeout(() => {
                 button.style.transform = 'scale(1)';
-            }, 200);
+                // Reload page to show/update wishlist section
+                location.reload();
+            }, 500);
         })
         .catch(error => console.error('Error:', error));
 }

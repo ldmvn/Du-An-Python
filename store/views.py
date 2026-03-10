@@ -107,6 +107,9 @@ def register_view(request):
 def home(request):
     q = request.GET.get('q')
     brand = request.GET.get('brand', '').strip()
+    price_range = request.GET.get('price_range', '')
+    sort_by = request.GET.get('sort_by', '')
+    
     products = Product.objects.all()
 
     if q:
@@ -115,6 +118,32 @@ def home(request):
     # Filter by brand (category) if provided
     if brand:
         products = products.filter(category__name__iexact=brand)
+
+    # Filter by price range
+    if price_range:
+        if price_range == 'under_5m':
+            products = products.filter(price__lt=5000000)
+        elif price_range == '5m_10m':
+            products = products.filter(price__gte=5000000, price__lt=10000000)
+        elif price_range == '10m_20m':
+            products = products.filter(price__gte=10000000, price__lt=20000000)
+        elif price_range == 'over_20m':
+            products = products.filter(price__gte=20000000)
+    
+    # Sort products
+    if sort_by:
+        if sort_by == 'price_asc':
+            products = products.order_by('price')
+        elif sort_by == 'price_desc':
+            products = products.order_by('-price')
+        elif sort_by == 'newest':
+            products = products.order_by('-created_at')
+        elif sort_by == 'rating':
+            products = products.order_by('-id')  # Placeholder - you might want actual rating sorting
+
+    # Get wishlist products
+    wishlist_ids = request.session.get('wishlist', [])
+    wishlist_products = Product.objects.filter(id__in=wishlist_ids)
 
     # pull all categories (used as "brands"/manufacturers on the homepage)
     categories = Category.objects.all()
@@ -125,6 +154,9 @@ def home(request):
         'categories': categories,
         'selected_brand': brand,
         'search_query': q,
+        'price_range': price_range,
+        'sort_by': sort_by,
+        'wishlist_products': wishlist_products,
     })
     return render(request, 'store/home.html', context)
 
@@ -139,10 +171,31 @@ def product_detail(request, id):
         category=product.category
     ).exclude(id=product.id)[:4]
     
+    # Color options for display
+    colors = [
+        ('Hồng', '#ffb6c1'),
+        ('Đen', '#1f2937'),
+        ('Xanh dương', '#3b82f6'),
+        ('Vàng', '#fbbf24'),
+        ('Xanh lá', '#10b981'),
+    ]
+    
+    # RAM options with price increments
+    # Base price is the product's discounted price
+    base_price = product.get_discounted_price()
+    ram_options = [
+        {'capacity': '128GB', 'price': base_price},
+        {'capacity': '256GB', 'price': base_price + 500000},
+        {'capacity': '512GB', 'price': base_price + 1000000},
+    ]
+    
     context = get_base_context(request)
     context.update({
         'product': product,
-        'related_products': related_products
+        'related_products': related_products,
+        'colors': colors,
+        'ram_options': ram_options,
+        'base_price': base_price,
     })
     return render(request, 'store/product_detail.html', context)
 
@@ -651,16 +704,21 @@ def order_success(request):
 # ================== ADMIN DASHBOARD ==================
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
-@login_required(login_url='store:login')
-@user_passes_test(is_admin, login_url='store:login')
 def dashboard(request):
-    products = Product.objects.all()
+    from django.core.paginator import Paginator
+    
+    all_products = Product.objects.all().order_by('-created_at')
     users = User.objects.all()
     categories = Category.objects.all()
     orders = Order.objects.all()
     
+    # Pagination
+    paginator = Paginator(all_products, 15)  # 15 products per page
+    page_number = request.GET.get('page', 1)
+    products = paginator.get_page(page_number)
+    
     # Calculate statistics
-    total_products = products.count()
+    total_products = all_products.count()
     total_users = users.count()
     total_categories = categories.count()
     total_orders = orders.count()
@@ -675,7 +733,7 @@ def dashboard(request):
         'total_orders': total_orders,
         'total_revenue': total_revenue,
     })
-    return render(request, 'store/dashboard.html', context)
+    return render(request, 'store/admin_dashboard.html', context)
 
 
 @login_required(login_url='store:login')

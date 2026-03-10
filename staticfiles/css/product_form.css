@@ -1,0 +1,145 @@
+/* ==================== PRODUCT FORM PAGE - Inline Styles from product_form.html ==================== */
+.qh-form-page {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.qh-form-header {
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.qh-form-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 10px;
+}
+
+.qh-form-header p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.qh-form-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+.qh-form-group {
+    margin-bottom: 25px;
+}
+
+.qh-form-group label {
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.qh-form-group input,
+.qh-form-group select,
+.qh-form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+}
+
+.qh-form-group input:focus,
+.qh-form-group select:focus,
+.qh-form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.qh-form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.qh-image-preview {
+    margin-top: 15px;
+}
+
+.qh-image-preview img {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.qh-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.qh-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.qh-btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.qh-btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.qh-btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.qh-btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+.qh-error-message {
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.qh-form-group.has-error input,
+.qh-form-group.has-error select,
+.qh-form-group.has-error textarea {
+    border-color: #dc2626;
+}
+
+.qh-back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.qh-back-link:hover {
+    text-decoration: underline;
+}

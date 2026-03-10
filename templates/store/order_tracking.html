@@ -15,9 +15,9 @@
     </a>
 
     <!-- Page header -->
-    <div style="padding: 40px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; margin-bottom: 30px;">
+    <div style="padding: 40px 20px; background: white; color: #1f2937; border-radius: 10px; margin-bottom: 30px;">
         <h1 style="font-size: 32px; font-weight: 700; margin: 0 0 10px 0;">📦 Lịch sử đơn hàng</h1>
-        <p style="margin: 0; opacity: 0.9;">Tất cả đơn hàng bạn đã đặt</p>
+        <p style="margin: 0; color: #666;">Tất cả đơn hàng bạn đã đặt</p>
     </div>
 
     {% if orders %}
@@ -128,7 +128,7 @@
         <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
         <h3 style="margin-bottom: 10px; color: #333; font-size: 20px;">Chưa có đơn hàng nào</h3>
         <p style="margin-bottom: 20px; color: #6c757d;">Bạn chưa đặt đơn hàng nào. Hãy bắt đầu mua sắm!</p>
-        <a href="{% url 'store:home' %}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+        <a href="{% url 'store:home' %}" style="background: #5b4eff; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
             🛒 Mua sắm ngay
         </a>
     </div>

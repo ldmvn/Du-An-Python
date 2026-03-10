@@ -107,20 +107,6 @@
 
                 <!-- Các nút hành động trong header -->
                 <div class="qh-header-actions">
-                    <!-- Danh sách yêu thích -->
-                    <a href="{% url 'store:wishlist' %}" class="qh-header-icon">
-                        <div class="qh-icon-circle">
-                            <svg class="qh-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                            </svg>
-                            <span class="qh-icon-badge" id="qh-wishlist-count">{{ wishlist_count|default:0 }}</span>
-                        </div>
-                        <div class="qh-icon-text">
-                            <span class="qh-icon-label">Danh Sách</span>
-                            <span class="qh-icon-title">Yêu thích</span>
-                        </div>
-                    </a>
-
                     <!-- Giỏ hàng / Thanh toán -->
                     <a href="{% url 'store:cart_detail' %}" class="qh-header-icon">
                         <div class="qh-icon-circle">
@@ -215,6 +201,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
                                     <span>Thông tin cá nhân</span>
+                                </a>
+                                <a href="{% url 'store:wishlist' %}" class="qh-user-menu-item">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                    </svg>
+                                    <span>Danh sách yêu thích</span>
                                 </a>
                                 <div class="qh-user-menu-divider"></div>
                                 <form action="{% url 'store:logout' %}" method="POST" style="margin: 0;">

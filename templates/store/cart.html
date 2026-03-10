@@ -5,120 +5,557 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/cart.css' %}">
+<style>
+  .cart-page-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+  }
+
+  .cart-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 0;
+  }
+
+  .cart-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+
+  .cart-header p {
+    font-size: 14px;
+    color: #666;
+  }
+
+  .cart-content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .cart-content-wrapper {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Cart Table */
+  .cart-table-wrapper {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .cart-table-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 100px 120px;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    font-size: 13px;
+    color: #666;
+  }
+
+  .cart-table-header > div {
+    display: flex;
+    align-items: center;
+  }
+
+  .cart-item-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 100px 120px;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    align-items: center;
+  }
+
+  .cart-item-row:last-child {
+    border-bottom: none;
+  }
+
+  .item-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  .item-product {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .item-product-image {
+    width: 60px;
+    height: 60px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .item-product-info {
+    flex: 1;
+  }
+
+  .item-product-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+  }
+
+  .item-product-variant {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .item-price,
+  .item-subtotal {
+    text-align: right;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .qty-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qty-btn:hover {
+    background: #f3f4f6;
+  }
+
+  .qty-input {
+    width: 40px;
+    height: 28px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  /* Right Sidebar */
+  .cart-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar-section {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .sidebar-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .discount-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .discount-form input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .discount-form button {
+    padding: 10px 16px;
+    background: #5b4eff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .discount-form button:hover {
+    background: #4940cc;
+  }
+
+  .discount-info {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  .total-section {
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .total-row.summary {
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .total-row.final {
+    font-size: 16px;
+    font-weight: 700;
+    color: #dc2626;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .total-row.final span:last-child {
+    color: #dc2626;
+  }
+
+  .btn-checkout {
+    width: 100%;
+    padding: 12px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+
+  .btn-checkout:hover {
+    background: #b91c1c;
+  }
+
+  .empty-cart {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-cart svg {
+    width: 80px;
+    height: 80px;
+    stroke: #d1d5db;
+    margin-bottom: 20px;
+  }
+
+  .empty-cart h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+  }
+
+  .empty-cart p {
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  .empty-cart a {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #5b4eff;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 40px auto; padding: 20px;">
-    <a href="{% url 'store:home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
-        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        ← Quay lại
-    </a>
+<div class="cart-page-container">
+  {% csrf_token %}
+  
+  <!-- Header -->
+  <div class="cart-header">
+    <div style="font-size: 32px; margin-bottom: 8px;">🛒</div>
+    <h1>Giỏ hàng của bạn</h1>
+    <p>Quản lý sản phẩm bạn đã thêm vào giỏ</p>
+  </div>
+
+  {% if products %}
+  <!-- Cart Content -->
+  <div class="cart-content-wrapper">
+    <!-- Left: Cart Table -->
+    <div>
+      <div class="cart-table-wrapper">
+        <div class="cart-table-header">
+          <div></div>
+          <div>Sản phẩm</div>
+          <div style="text-align: right;">Đơn giá</div>
+          <div style="text-align: center;">Số lượng</div>
+          <div style="text-align: right;">Thành tiền</div>
+        </div>
+
+        {% for product in products %}
+        <div class="cart-item-row" data-product-id="{{ product.id }}">
+          <!-- Checkbox -->
+          <div class="item-checkbox">
+            <input type="checkbox" class="product-checkbox" value="{{ product.id }}">
+          </div>
+
+          <!-- Product -->
+          <div class="item-product">
+            <div class="item-product-image">
+              {% if product.image %}
+              <img src="{{ product.image.url }}" alt="{{ product.name }}">
+              {% endif %}
+            </div>
+            <div class="item-product-info">
+              <div class="item-product-name">
+                <a href="{% url 'store:product_detail' product.id %}" style="color: inherit; text-decoration: none;">
+                  {{ product.name }}
+                </a>
+              </div>
+              {% if product.color %}
+              <div class="item-product-variant">Màu: {{ product.color }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Unit Price -->
+          <div class="item-price">
+            {{ product.price|floatformat:0|add:0 }}₫
+          </div>
+
+          <!-- Quantity -->
+          <div class="item-quantity" style="justify-content: center;">
+            <button class="qty-btn" onclick="updateQuantity({{ product.id }}, -1)">−</button>
+            <input type="number" class="qty-input" value="{{ product.quantity }}" min="1" max="99">
+            <button class="qty-btn" onclick="updateQuantity({{ product.id }}, 1)">+</button>
+          </div>
+
+          <!-- Subtotal -->
+          <div class="item-subtotal" data-subtotal="{{ product.subtotal|floatformat:0|add:0 }}">
+            {{ product.subtotal|floatformat:0|add:0 }}₫
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right: Sidebar -->
+    <div class="cart-sidebar">
+      <!-- Discount Code Section -->
+      <div class="sidebar-section">
+        <h3>❤️ Mã giảm giá</h3>
+        <div class="discount-form">
+          <input type="text" id="voucherCode" placeholder="Nhập mã voucher">
+          <button onclick="applyVoucher()">Áp dụng</button>
+        </div>
+        <div class="discount-info">
+          Mã giảm giá bạn có thể tim thấy trong Trang cá nhân. Chọn sản phẩm hợp và sử dụng mã để được giá cao ưu nhất!
+        </div>
+      </div>
+
+      <!-- Total Section -->
+      <div class="sidebar-section">
+        <h3>💳 Tổng giỏ hàng</h3>
+
+        <div class="total-section">
+          <div class="total-row">
+            <span>Số sản phẩm đã chọn:</span>
+            <span class="selected-count">0</span>
+          </div>
+
+          <div class="total-row">
+            <span>Tạm tính:</span>
+            <span class="subtotal-amount">0đ</span>
+          </div>
+
+          <div class="total-row">
+            <span>Phí vận chuyển:</span>
+            <span>0đ</span>
+          </div>
+
+          <div class="total-row final">
+            <span>Thành tiền:</span>
+            <span class="total-amount">0đ</span>
+          </div>
+
+          <button class="btn-checkout" onclick="checkout()">
+            ✓ Tiến hành thanh toán
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- Empty Cart -->
+  <div class="empty-cart">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
+    </svg>
+    <h2>Giỏ hàng của bạn trống</h2>
+    <p>Hãy thêm một số sản phẩm yêu thích của bạn</p>
+    <a href="{% url 'store:home' %}">Tiếp tục mua sắm</a>
+  </div>
+  {% endif %}
 </div>
-<div class="cart-container">
-    <!-- Header -->
-    <div class="cart-header">
-        <h1>🛒 Giỏ hàng của bạn</h1>
-        <p>Quản lý các sản phẩm bạn muốn mua</p>
-        {% if products %}
-        <div style="margin-top: 10px;">
-            <a href="{% url 'store:clear_cart' %}" class="btn-clear-cart" onclick="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm trong giỏ hàng?')">
-                🗑️ Xóa tất cả
-            </a>
-        </div>
-        {% endif %}
-    </div>
+
+<script>
+// Update totals when checkboxes change
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('.product-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateTotals);
+  });
+  
+  // Initial update
+  updateTotals();
+});
+
+function updateTotals() {
+  const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+  let total = 0;
+  let count = 0;
+
+  checkboxes.forEach(checkbox => {
+    const row = checkbox.closest('.cart-item-row');
+    const subtotal = parseInt(row.querySelector('.item-subtotal').dataset.subtotal);
+    total += subtotal;
+    count++;
+  });
+
+  // Update display
+  document.querySelector('.selected-count').textContent = count;
+  document.querySelector('.subtotal-amount').textContent = total.toLocaleString('vi-VN') + 'đ';
+  document.querySelector('.total-amount').textContent = total.toLocaleString('vi-VN') + 'đ';
+}
+
+async function updateQuantity(productId, change) {
+  const row = document.querySelector(`[data-product-id="${productId}"]`);
+  const qtyInput = row.querySelector('.qty-input');
+  
+  let currentQty = parseInt(qtyInput.value);
+  currentQty += change;
+  
+  if (currentQty < 1) currentQty = 1;
+  if (currentQty > 99) currentQty = 99;
+  
+  qtyInput.value = currentQty;
+  
+  // Send update to backend
+  try {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
     
-    {% if products %}
-    <!-- Cart Grid -->
-    <div class="cart-grid">
-        <!-- Cart Items -->
-        <div class="cart-items">
-            {% for product in products %}
-            <div class="cart-item" data-product-id="{{ product.id }}">
-                <!-- Image -->
-                <div class="cart-item-image">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
-                    {% else %}
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    {% endif %}
-                </div>
-                
-                <!-- Info -->
-                <div class="cart-item-info">
-                    <h3>
-                        <a href="{% url 'store:product_detail' product.id %}">
-                            {{ product.name }}
-                        </a>
-                    </h3>
-                    <div class="cart-item-price">{{ product.price|floatformat:0|add:0 }}₫</div>
-                    <div class="cart-item-quantity">
-                        <button class="qty-btn" onclick="updateQuantity({{ product.id }}, -1)">−</button>
-                        <input type="number" class="qty-input" value="{{ product.quantity }}" min="1" max="99" 
-                               onchange="updateQuantity({{ product.id }}, this.value)">
-                        <button class="qty-btn" onclick="updateQuantity({{ product.id }}, 1)">+</button>
-                    </div>
-                </div>
-                
-                <!-- Actions -->
-                <div class="cart-item-actions">
-                    <div class="cart-item-subtotal">{{ product.subtotal|floatformat:0|add:0 }}₫</div>
-                    <a href="{% url 'store:remove_from_cart' product.id %}" class="btn-remove" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                        Xóa
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Cart Summary -->
-        <div class="cart-summary">
-            <div class="summary-row">
-                <span>Tổng số lượng:</span>
-                <span class="price">{{ products|length }} sản phẩm</span>
-            </div>
-            
-            <div class="summary-row">
-                <span>Tổng tiền hàng:</span>
-                <span class="price">{{ total|floatformat:0|add:0 }}₫</span>
-            </div>
-            
-            <div class="summary-row">
-                <span>Phí vận chuyển:</span>
-                <span class="price">Miễn phí</span>
-            </div>
-            
-            <div class="summary-row total">
-                <span>Thành tiền:</span>
-                <span class="price">{{ total|floatformat:0|add:0 }}₫</span>
-            </div>
-            
-            <button class="btn-checkout" onclick="checkout()">
-                💳 Tiếp tục thanh toán
-            </button>
-            
-            <a href="{% url 'store:home' %}" class="btn-continue">
-                ← Tiếp tục mua sắm
-            </a>
-        </div>
-    </div>
+    const response = await fetch(`/cart/update/${productId}/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': csrfToken
+      },
+      body: `quantity=${currentQty}`
+    });
     
-    {% else %}
-    <!-- Empty Cart -->
-    <div class="empty-cart">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
-        </svg>
-        <h2>Giỏ hàng của bạn trống</h2>
-        <p>Hãy thêm một số sản phẩm yêu thích của bạn</p>
-        <a href="{% url 'store:home' %}">Tiếp tục mua sắm</a>
-    </div>
-    {% endif %}
-</div>
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    if (data.success) {
+      // Update subtotal
+      const newSubtotal = data.subtotal_formatted || (data.price * currentQty);
+      row.querySelector('.item-subtotal').textContent = newSubtotal;
+      row.querySelector('.item-subtotal').dataset.subtotal = parseInt(data.subtotal);
+      
+      updateTotals();
+    } else {
+      alert('Lỗi cập nhật: ' + (data.error || 'Không xác định'));
+      // Revert to previous quantity
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Error updating quantity:', error);
+    alert('Lỗi kết nối khi cập nhật số lượng. Vui lòng thử lại!');
+  }
+}
+
+function applyVoucher() {
+  const code = document.getElementById('voucherCode').value;
+  if (!code) {
+    alert('Vui lòng nhập mã voucher');
+    return;
+  }
+  alert('Mã voucher "' + code + '" sẽ được xử lý');
+}
+
+function checkout() {
+  const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+  if (checkedCount === 0) {
+    alert('Vui lòng chọn ít nhất một sản phẩm');
+    return;
+  }
+  window.location.href = '{% url "store:checkout_from_cart" %}';
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
 
 <script>
 async function updateQuantity(productId, change) {
