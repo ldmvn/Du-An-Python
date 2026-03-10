@@ -65,9 +65,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         {% for message in messages %}
         (function() {
-            const tags = "{{ message.tags|escapejs }}";
-            const messageText = "{{ message|escapejs }}";
-            const type = tags.includes('error') ? 'error' : 'success';
+            var tags = "{{ message.tags|escapejs }}";
+            var messageText = "{{ message|escapejs }}";
+            var type = (tags.indexOf('error') !== -1) ? 'error' : 'success';
 
             if (window.QHToast && typeof window.QHToast.show === 'function') {
                 window.QHToast.show(messageText, type);

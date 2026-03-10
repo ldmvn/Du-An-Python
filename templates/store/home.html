@@ -358,7 +358,9 @@
 })();
 
 // Wishlist toggle function
-function toggleWishlist(productId) {
+function toggleWishlist(productId, event) {
+    event.preventDefault();
+    event.stopPropagation();
     const icon = document.getElementById('wishlist-' + productId);
     const button = event.currentTarget;
     

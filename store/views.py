@@ -298,6 +298,7 @@ def update_cart_quantity(request, product_id):
                 return JsonResponse({
                     'success': True,
                     'quantity': new_quantity,
+                    'price': product.price,
                     'subtotal': subtotal,
                     'subtotal_formatted': f"{subtotal:,.0f}₫"
                 })

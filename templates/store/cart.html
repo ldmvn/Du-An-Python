@@ -478,9 +478,16 @@ function updateTotals() {
 async function updateQuantity(productId, change) {
   const row = document.querySelector(`[data-product-id="${productId}"]`);
   const qtyInput = row.querySelector('.qty-input');
+  const subtotalElement = row.querySelector('.item-subtotal');
   
   let currentQty = parseInt(qtyInput.value);
-  currentQty += change;
+  
+  // If change is a string, it's the new quantity value
+  if (typeof change === 'string') {
+    currentQty = parseInt(change);
+  } else {
+    currentQty += parseInt(change);
+  }
   
   if (currentQty < 1) currentQty = 1;
   if (currentQty > 99) currentQty = 99;
@@ -489,7 +496,9 @@ async function updateQuantity(productId, change) {
   
   // Send update to backend
   try {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? 
+                      document.querySelector('[name=csrfmiddlewaretoken]').value : 
+                      getCookie('csrftoken');
     
     const response = await fetch(`/cart/update/${productId}/`, {
       method: 'POST',
@@ -500,26 +509,20 @@ async function updateQuantity(productId, change) {
       body: `quantity=${currentQty}`
     });
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
     const data = await response.json();
+    
     if (data.success) {
-      // Update subtotal
-      const newSubtotal = data.subtotal_formatted || (data.price * currentQty);
-      row.querySelector('.item-subtotal').textContent = newSubtotal;
-      row.querySelector('.item-subtotal').dataset.subtotal = parseInt(data.subtotal);
+      // Update subtotal display
+      subtotalElement.textContent = data.subtotal_formatted;
+      subtotalElement.dataset.subtotal = data.subtotal;
       
       updateTotals();
     } else {
-      alert('Lỗi cập nhật: ' + (data.error || 'Không xác định'));
-      // Revert to previous quantity
-      location.reload();
+      alert('Lỗi cập nhật số lượng: ' + (data.error || 'Unknown error'));
     }
   } catch (error) {
     console.error('Error updating quantity:', error);
-    alert('Lỗi kết nối khi cập nhật số lượng. Vui lòng thử lại!');
+    alert('Lỗi kết nối khi cập nhật số lượng');
   }
 }
 
@@ -555,88 +558,17 @@ function getCookie(name) {
   }
   return cookieValue;
 }
-</script>
-
-<script>
-async function updateQuantity(productId, change) {
-    const cartItem = document.querySelector(`[data-product-id="${productId}"]`);
-    const qtyInput = cartItem.querySelector('.qty-input');
-    const subtotalElement = cartItem.querySelector('.cart-item-subtotal');
-    
-    let currentQty = parseInt(qtyInput.value);
-    
-    // If change is a number, it's the new quantity value
-    if (typeof change === 'string') {
-        currentQty = parseInt(change);
-    } else {
-        currentQty += parseInt(change);
-    }
-    
-    if (currentQty < 1) currentQty = 1;
-    if (currentQty > 99) currentQty = 99;
-    
-    qtyInput.value = currentQty;
-    
-    // Send update to backend
-    try {
-        const response = await fetch(`/cart/update/${productId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            body: `quantity=${currentQty}`
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Update subtotal display
-            subtotalElement.textContent = data.subtotal_formatted;
-            
-            // Update total in summary
-            updateCartTotal();
-        } else {
-            alert('Lỗi cập nhật số lượng: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error updating quantity:', error);
-        alert('Lỗi kết nối khi cập nhật số lượng');
-    }
-}
-
-function updateCartTotal() {
-    // Calculate new total from all subtotals
-    const subtotals = document.querySelectorAll('.cart-item-subtotal');
-    let total = 0;
-    
-    subtotals.forEach(subtotal => {
-        const price = parseInt(subtotal.textContent.replace(/[₫,]/g, ''));
-        total += price;
-    });
-    
-    // Update total display
-    const totalElements = document.querySelectorAll('.summary-row.total .price');
-    totalElements.forEach(element => {
-        element.textContent = total.toLocaleString('vi-VN') + '₫';
-    });
-}
-
-function checkout() {
-    // Redirect to cart checkout page
-    window.location.href = '{% url "store:checkout_from_cart" %}';
-}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Add CSRF token to form for AJAX requests
-    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = 'csrfmiddlewaretoken';
-        csrfToken.value = '{{ csrf_token }}';
-        document.body.appendChild(csrfToken);
-    }
+  // Add CSRF token to form for AJAX requests
+  if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = 'csrfmiddlewaretoken';
+    csrfToken.value = '{{ csrf_token }}';
+    document.body.appendChild(csrfToken);
+  }
 });
 </script>
 
