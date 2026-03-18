@@ -1,11 +1,11 @@
-{% extends 'base.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
 {% load humanize %}
 
 {% block title %}KẾT QUẢ TÌM KIẾM - MOBILE STORE{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/search.css' %}">
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
         ← Quay lại
     </a>
 </div>
-<div class="qh-search-page" style="background: #f5f5f5; min-height: 100vh;">
+<div class="ldm-search-page" style="background: #f5f5f5; min-height: 100vh;">
     <!-- Tiêu đề trang -->
     <section style="padding: 40px 20px; background: white; color: #1f2937;">
         <div style="max-width: 1200px; margin: 0 auto;">
@@ -40,9 +40,9 @@
         <p style="color: #666; margin-bottom: 30px; font-size: 16px;">Tìm thấy <strong>{{ products.count }}</strong> sản phẩm</p>
         
         <!-- Lưới sản phẩm -->
-        <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        <div class="ldm-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
             {% for product in products %}
-            <div class="qh-product-card" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+            <div class="ldm-product-card" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">
                 <a href="{% url 'store:product_detail' product.id %}" style="text-decoration: none; color: inherit; display: block;">
                     <!-- Ảnh sản phẩm -->
                     <div style="width: 100%; height: 200px; background: #f0f0f0; overflow: hidden;">
@@ -62,7 +62,17 @@
                         <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.4;">{{ product.name }}</h3>
                         <p style="font-size: 12px; color: #666; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ product.description|default:"" }}</p>
                         <p style="font-size: 18px; font-weight: 700; color: #2563eb;">{{ product.price|intcomma }}₫</p>
-                        <button class="qh-btn-add-cart" style="width: 100%; padding: 8px; margin-top: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px;">Xem chi tiết</button>
+                        
+                        <!-- Action buttons -->
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="ldm-btn-view" style="flex: 1; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;" onclick="window.location.href='{% url 'store:product_detail' product.id %}'">Xem chi tiết</button>
+                            <button class="wishlist-btn-inline" onclick="event.preventDefault(); event.stopPropagation(); toggleWishlistAjax({{ product.id }}, this); return false;" style="padding: 8px 10px; background: white; border: 1px solid #ddd; cursor: pointer; color: #667eea; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500;">
+                                <svg id="wishlist-{{ product.id }}" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                                <span>❤️</span>
+                            </button>
+                        </div>
                     </div>
                 </a>
             </div>
@@ -92,3 +102,4 @@
 </div>
 
 {% endblock %}
+

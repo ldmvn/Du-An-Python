@@ -1,0 +1,140 @@
+﻿<!-- Filter Sidebar Component -->
+<aside class="ldm-filter-sidebar">
+    <h4 class="ldm-filter-title">
+        <i class="ri-filter-3-line"></i> Lọc sản phẩm
+    </h4>
+
+    <form method="get" class="ldm-filter-form" id="filterForm">
+        
+        <!-- PRICE FILTER -->
+        <div class="ldm-filter-group">
+            <h5 class="ldm-filter-group-title">
+                <i class="ri-money-dollar-circle-line"></i> Giá
+            </h5>
+            <label class="ldm-filter-item">
+                <input type="radio" name="price_range" value="" {% if not request.GET.price_range %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+                <span>Tất cả</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="radio" name="price_range" value="under_5m" {% if request.GET.price_range == 'under_5m' %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+                <span>Dưới 5 triệu</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="radio" name="price_range" value="5m_10m" {% if request.GET.price_range == '5m_10m' %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+                <span>5 - 10 triệu</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="radio" name="price_range" value="10m_20m" {% if request.GET.price_range == '10m_20m' %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+                <span>10 - 20 triệu</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="radio" name="price_range" value="over_20m" {% if request.GET.price_range == 'over_20m' %}checked{% endif %} onchange="document.getElementById('filterForm').submit()">
+                <span>Trên 20 triệu</span>
+            </label>
+        </div>
+
+        <!-- BRAND FILTER -->
+        {% if brands %}
+        <div class="ldm-filter-group">
+            <h5 class="ldm-filter-group-title">
+                <i class="ri-store-2-line"></i> Thương hiệu
+            </h5>
+            {% for brand in brands %}
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="brand" value="{{ brand.id }}" 
+                    {% if brand.id|stringformat:'s' in selected_brands %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>{{ brand.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- RAM FILTER -->
+        <div class="ldm-filter-group">
+            <h5 class="ldm-filter-group-title">
+                <i class="ri-cpu-line"></i> RAM
+            </h5>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="ram" value="4GB" 
+                    {% if '4GB' in selected_rams %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>4GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="ram" value="6GB" 
+                    {% if '6GB' in selected_rams %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>6GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="ram" value="8GB" 
+                    {% if '8GB' in selected_rams %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>8GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="ram" value="12GB" 
+                    {% if '12GB' in selected_rams %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>12GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="ram" value="16GB" 
+                    {% if '16GB' in selected_rams %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>16GB</span>
+            </label>
+        </div>
+
+        <!-- STORAGE FILTER -->
+        <div class="ldm-filter-group">
+            <h5 class="ldm-filter-group-title">
+                <i class="ri-hard-drive-2-line"></i> Bộ nhớ
+            </h5>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="rom" value="128GB" 
+                    {% if '128GB' in selected_roms %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>128GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="rom" value="256GB" 
+                    {% if '256GB' in selected_roms %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>256GB</span>
+            </label>
+            <label class="ldm-filter-item">
+                <input type="checkbox" name="rom" value="512GB" 
+                    {% if '512GB' in selected_roms %}checked{% endif %} 
+                    onchange="document.getElementById('filterForm').submit()">
+                <span>512GB</span>
+            </label>
+        </div>
+
+        <!-- SORT -->
+        <div class="ldm-filter-group">
+            <h5 class="ldm-filter-group-title">
+                <i class="ri-sort-asc-line"></i> Sắp xếp
+            </h5>
+            <select name="sort_by" class="ldm-filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Mặc định</option>
+                <option value="price_asc" {% if request.GET.sort_by == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
+                <option value="price_desc" {% if request.GET.sort_by == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
+                <option value="newest" {% if request.GET.sort_by == 'newest' %}selected{% endif %}>Mới nhất</option>
+                <option value="rating" {% if request.GET.sort_by == 'rating' %}selected{% endif %}>Được đánh giá cao</option>
+            </select>
+        </div>
+
+        <!-- CLEAR FILTERS -->
+        <div class="ldm-filter-group">
+            <a href="{% url 'store:products' %}" class="ldm-btn-clear-filters">
+                <i class="ri-close-line"></i> Xóa bộ lọc
+            </a>
+        </div>
+    </form>
+</aside>
+
+
+
+

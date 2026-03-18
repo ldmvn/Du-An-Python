@@ -1,0 +1,932 @@
+﻿/* Authentication Page Styling */
+
+body.auth-page {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px;
+}
+
+.auth-header p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+/* Auth Tabs */
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px 0;
+    text-align: center;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.auth-tab.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+}
+
+.auth-tab-content {
+    display: none;
+}
+
+.auth-tab-content.active {
+    display: block;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Remember & Forgot */
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 13px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.remember-me input {
+    cursor: pointer;
+}
+
+.forgot-link {
+    color: #667eea;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+/* Primary Button */
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Auth Footer */
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+.auth-footer a {
+    color: #667eea;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Messages */
+.error-message {
+    background: #fee;
+    color: #c33;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    border-left: 4px solid #c33;
+}
+
+.success-message {
+    background: #efe;
+    color: #3c3;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    border-left: 4px solid #3c3;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .auth-container {
+        padding: 30px 20px;
+    }
+
+    .auth-header h1 {
+        font-size: 24px;
+    }
+}
+/* ========== From forgot_password.css ========== */
+/* ========================================================
+   MOBILE STORE â€“ Forgot Password Page
+   ======================================================== */
+
+/* ========== Form Styles ========== */
+.ldm-auth-box {
+    background: var(--ldm-white);
+    border-radius: var(--ldm-radius-lg);
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px var(--ldm-shadow);
+}
+
+.ldm-auth-box-title {
+    font-size: 30px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 24px;
+    color: var(--ldm-text);
+}
+
+.ldm-auth-link {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--ldm-text-light);
+}
+
+.ldm-auth-link a {
+    color: var(--ldm-primary-dark);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.ldm-auth-link a:hover {
+    text-decoration: underline;
+}
+
+/* ========== OTP Button ========== */
+.ldm-otp-group {
+    display: flex;
+    gap: 8px;
+}
+
+.ldm-otp-group .ldm-input {
+    flex: 1;
+}
+
+.ldm-otp-btn {
+    white-space: nowrap;
+    padding: 12px 20px;
+    background: var(--ldm-primary);
+    color: var(--ldm-white);
+    border: none;
+    border-radius: var(--ldm-radius);
+    cursor: pointer;
+    font-family: 'Signika', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ldm-otp-btn:hover:not(:disabled) {
+    background: var(--ldm-primary-dark);
+}
+
+.ldm-otp-btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.ldm-otp-message {
+    text-align: center;
+    padding: 8px;
+    margin-bottom: 12px;
+    border-radius: var(--ldm-radius);
+    font-size: 14px;
+}
+
+.ldm-otp-message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.ldm-otp-message.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ========== Password Fields ========== */
+.ldm-password-field {
+    position: relative;
+}
+
+.ldm-password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ldm-text-light);
+    padding: 4px;
+}
+
+.ldm-password-toggle:hover {
+    color: var(--ldm-primary);
+}
+
+/* ========== Back Button ========== */
+.ldm-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ldm-primary-dark);
+    text-decoration: none;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.ldm-back-link:hover {
+    text-decoration: underline;
+}
+
+/* ========== Steps indicator ========== */
+.ldm-steps {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.ldm-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ldm-text-light);
+    font-size: 14px;
+}
+
+.ldm-step.active {
+    color: var(--ldm-primary);
+    font-weight: 600;
+}
+
+.ldm-step.completed {
+    color: #28a745;
+}
+
+.ldm-step-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ldm-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ldm-step.active .ldm-step-number {
+    background: var(--ldm-primary);
+    color: white;
+}
+
+.ldm-step.completed .ldm-step-number {
+    background: #28a745;
+    color: white;
+}
+
+/* ========== Hidden class ========== */
+.ldm-hidden {
+    display: none !important;
+}
+
+
+
+
+/* ========== From login.css ========== */
+/* ========================================================
+   MOBILE STORE â€“ Login Page
+   Modern & Beautiful Design
+   ======================================================== */
+
+:root {
+    --primary-color: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary-color: #10b981;
+    --error-color: #ef4444;
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ==================== Login Page Container ==================== */
+.ldm-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    font-family: 'Signika', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ==================== Auth Box ==================== */
+.ldm-auth-box {
+    background: white;
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ldm-auth-box-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.ldm-auth-subtitle {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 32px;
+}
+
+/* ==================== Form Group ==================== */
+.ldm-form-group {
+    margin-bottom: 20px;
+}
+
+.ldm-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ldm-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Signika', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.ldm-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ldm-input::placeholder {
+    color: var(--text-light);
+}
+
+/* ==================== Remember & Forgot ==================== */
+.ldm-remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    font-size: 14px;
+}
+
+.ldm-remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-light);
+    cursor: pointer;
+    user-select: none;
+}
+
+.ldm-remember-me input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.ldm-forgot-password {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.ldm-forgot-password:hover {
+    color: var(--primary-dark);
+}
+
+/* ==================== Buttons ==================== */
+.ldm-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Signika', sans-serif;
+}
+
+.ldm-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    margin-bottom: 16px;
+}
+
+.ldm-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+}
+
+.ldm-btn-primary:active {
+    transform: translateY(0);
+}
+
+.ldm-google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: white;
+    color: var(--text-dark);
+    border: 2px solid var(--border-color);
+    margin-bottom: 16px;
+}
+
+.ldm-google-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+}
+
+.ldm-google-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ==================== Divider ==================== */
+.ldm-divider {
+    display: flex;
+    align-items: center;
+    margin: 28px 0;
+    gap: 12px;
+}
+
+.ldm-divider::before,
+.ldm-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.ldm-divider span {
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ==================== Auth Link ==================== */
+.ldm-auth-link {
+    text-align: center;
+    margin-top: 28px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.ldm-auth-link a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.ldm-auth-link a:hover {
+    color: var(--primary-dark);
+}
+
+/* ==================== Turnstile Container ==================== */
+.ldm-turnstile {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 480px) {
+    .ldm-auth-box {
+        padding: 32px 24px;
+    }
+
+    .ldm-auth-box-title {
+        font-size: 24px;
+    }
+
+    .ldm-remember-forgot {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+}
+
+
+
+
+/* ========== From register.css ========== */
+/* ========================================================
+   MOBILE STORE â€“ Register Page
+   Modern & Beautiful Design (Synchronized with Login)
+   ======================================================== */
+
+:root {
+    --primary-color: #2563eb;
+    --primary-dark: #1e40af;
+    --secondary-color: #10b981;
+    --error-color: #ef4444;
+    --text-dark: #1f2937;
+    --text-light: #6b7280;
+    --border-color: #e5e7eb;
+    --bg-light: #f9fafb;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ==================== Register Page Container ==================== */
+.ldm-register-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    font-family: 'Signika', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ==================== Auth Box ==================== */
+.ldm-auth-box {
+    background: white;
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ldm-auth-box-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.ldm-auth-subtitle {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 32px;
+}
+
+/* ==================== Form Group ==================== */
+.ldm-form-group {
+    margin-bottom: 20px;
+}
+
+.ldm-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ldm-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Signika', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.ldm-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.ldm-input::placeholder {
+    color: var(--text-light);
+}
+
+/* ==================== Remember & Forgot ==================== */
+.ldm-remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    font-size: 14px;
+}
+
+.ldm-remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-light);
+    cursor: pointer;
+    user-select: none;
+}
+
+.ldm-remember-me input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.ldm-forgot-password {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.ldm-forgot-password:hover {
+    color: var(--primary-dark);
+}
+
+/* ==================== Buttons ==================== */
+.ldm-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Signika', sans-serif;
+}
+
+.ldm-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    margin-bottom: 16px;
+}
+
+.ldm-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+}
+
+.ldm-btn-primary:active {
+    transform: translateY(0);
+}
+
+.ldm-google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: white;
+    color: var(--text-dark);
+    border: 2px solid var(--border-color);
+    margin-bottom: 16px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-family: 'Signika', sans-serif;
+}
+
+.ldm-google-btn:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+}
+
+.ldm-google-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ==================== Divider ==================== */
+.ldm-divider {
+    display: flex;
+    align-items: center;
+    margin: 28px 0;
+    gap: 12px;
+}
+
+.ldm-divider::before,
+.ldm-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.ldm-divider span {
+    color: var(--text-light);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ==================== Auth Link ==================== */
+.ldm-auth-link {
+    text-align: center;
+    margin-top: 28px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.ldm-auth-link a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.ldm-auth-link a:hover {
+    color: var(--primary-dark);
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 480px) {
+    .ldm-auth-box {
+        padding: 32px 24px;
+    }
+
+    .ldm-auth-box-title {
+        font-size: 24px;
+    }
+
+    .ldm-remember-forgot {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+}
+
+
+

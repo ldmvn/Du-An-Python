@@ -66,7 +66,7 @@
 }
 
 /* --- Hero Slider --- */
-.qh-hero-slider {
+.ldm-hero-slider {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto 22px;
@@ -74,7 +74,7 @@
     position: relative;
 }
 
-.qh-hero-slider-wrap {
+.ldm-hero-slider-wrap {
     position: relative;
     width: 100%;
     border-radius: 20px;
@@ -82,14 +82,14 @@
     box-shadow: 0 10px 36px rgba(0, 0, 0, 0.14);
 }
 
-.qh-hero-stage {
+.ldm-hero-stage {
     position: relative;
     height: min(480px, 55vh);
     width: 100%;
     background: #111827;
 }
 
-.qh-hero-slide {
+.ldm-hero-slide {
     position: absolute;
     inset: 0;
     opacity: 0;
@@ -97,12 +97,12 @@
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
 
-.qh-hero-slide.active {
+.ldm-hero-slide.active {
     opacity: 1;
     z-index: 1;
 }
 
-.qh-hero-video {
+.ldm-hero-video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -110,11 +110,11 @@
     transition: transform 0.7s ease;
 }
 
-.qh-hero-slide.active .qh-hero-video {
+.ldm-hero-slide.active .ldm-hero-video {
     transform: scale(1);
 }
 
-.qh-hero-overlay {
+.ldm-hero-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
@@ -122,12 +122,12 @@
     align-items: center;
 }
 
-.qh-hero-text {
+.ldm-hero-text {
     padding-left: 80px;
     max-width: 600px;
 }
 
-.qh-hero-text h2 {
+.ldm-hero-text h2 {
     font-size: 48px;
     font-weight: 800;
     letter-spacing: 0.6px;
@@ -135,14 +135,14 @@
     margin: 0 0 12px;
 }
 
-.qh-hero-text p {
+.ldm-hero-text p {
     font-size: 20px;
     color: rgba(255, 255, 255, 0.85);
     margin: 0;
 }
 
 /* Hero Dots */
-.qh-hero-dots {
+.ldm-hero-dots {
     position: absolute;
     bottom: 14px;
     left: 50%;
@@ -152,7 +152,7 @@
     z-index: 50;
 }
 
-.qh-hero-dot {
+.ldm-hero-dot {
     width: 10px;
     height: 10px;
     border-radius: 999px;
@@ -162,17 +162,17 @@
     transition: background 0.2s ease, transform 0.2s ease;
 }
 
-.qh-hero-dot:hover {
+.ldm-hero-dot:hover {
     background: rgba(255, 255, 255, 0.75);
     transform: scale(1.08);
 }
 
-.qh-hero-dot.active {
+.ldm-hero-dot.active {
     background: rgba(255, 255, 255, 0.95);
 }
 
 /* Fallback text when video fails */
-.qh-hero-fallback {
+.ldm-hero-fallback {
     position: absolute;
     inset: 0;
     display: flex;
@@ -183,7 +183,7 @@
 }
 
 /* --- Banner Slider --- */
-.qh-banner-slider {
+.ldm-banner-slider {
     display: block;
     width: 100%;
     max-width: 1400px;
@@ -193,7 +193,7 @@
     box-sizing: border-box;
 }
 
-.qh-banner-slider-wrap {
+.ldm-banner-slider-wrap {
     position: relative;
     width: 100%;
     overflow: hidden;
@@ -201,13 +201,13 @@
     border-radius: 12px;
 }
 
-.qh-banner-track {
+.ldm-banner-track {
     display: flex;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     /* KHÔNG hard-code width - dùng flex tự động */
 }
 
-.qh-banner-item {
+.ldm-banner-item {
     min-width: 50%;
     /* Desktop: 2 banners = 50% each */
     flex-shrink: 0;
@@ -216,19 +216,19 @@
     /* Small gap inside container */
 }
 
-.qh-banner-item:first-child {
+.ldm-banner-item:first-child {
     padding-left: 0;
 }
 
-.qh-banner-item:last-child {
+.ldm-banner-item:last-child {
     padding-right: 0;
 }
 
-.qh-banner-item a {
+.ldm-banner-item a {
     display: block;
 }
 
-.qh-banner-item img {
+.ldm-banner-item img {
     width: 100%;
     height: 180px;
     object-fit: cover;
@@ -238,7 +238,7 @@
 }
 
 /* Banner sử dụng .slider-nav */
-.qh-banner-nav {
+.ldm-banner-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -258,44 +258,44 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.qh-banner-nav:hover {
+.ldm-banner-nav:hover {
     background: #fff;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
     transform: translateY(-50%) scale(1.08);
 }
 
-.qh-banner-nav:active {
+.ldm-banner-nav:active {
     transform: translateY(-50%) scale(0.95);
 }
 
-.qh-banner-nav svg {
+.ldm-banner-nav svg {
     width: 20px;
     height: 20px;
 }
 
-.qh-banner-nav.prev {
+.ldm-banner-nav.prev {
     left: 16px;
 }
 
-.qh-banner-nav.next {
+.ldm-banner-nav.next {
     right: 16px;
 }
 
 @media (max-width: 768px) {
-    .qh-banner-nav {
+    .ldm-banner-nav {
         width: 36px;
         height: 36px;
     }
 
-    .qh-banner-nav.prev {
+    .ldm-banner-nav.prev {
         left: 10px;
     }
 
-    .qh-banner-nav.next {
+    .ldm-banner-nav.next {
         right: 10px;
     }
 
-    .qh-banner-nav svg {
+    .ldm-banner-nav svg {
         width: 18px;
         height: 18px;
     }
@@ -303,34 +303,35 @@
 
 /* Responsive: Mobile - Hiển thị 1 banner */
 @media (max-width: 768px) {
-    .qh-hero-slider {
+    .ldm-hero-slider {
         padding: 0;
     }
 
-    .qh-hero-stage {
+    .ldm-hero-stage {
         height: min(220px, 40vh);
     }
 
-    .qh-hero-text {
+    .ldm-hero-text {
         padding-left: 24px;
         padding-right: 24px;
     }
 
-    .qh-hero-text h2 {
+    .ldm-hero-text h2 {
         font-size: 24px;
     }
 
-    .qh-hero-text p {
+    .ldm-hero-text p {
         font-size: 14px;
     }
 
     /* Banner mobile */
-    .qh-banner-item {
+    .ldm-banner-item {
         min-width: 100%;
         /* Mobile: 1 banner = 100% */
     }
 
-    .qh-banner-item img {
+    .ldm-banner-item img {
         height: 140px;
     }
 }
+

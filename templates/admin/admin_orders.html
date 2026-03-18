@@ -1,0 +1,197 @@
+{% extends "admin/admin_base.html" %}
+{% load static humanize %}
+
+{% block title %}Quản lý đơn hàng - Admin Panel{% endblock %}
+{% block page_title %}📦 Quản Lý Đơn Hàng{% endblock %}
+
+{% block content %}
+<div class="ldm-section">
+    <div class="ldm-section-header">
+        <h2 class="ldm-section-title">Danh sách đơn hàng</h2>
+        <div class="ldm-toolbar">
+            <input type="text" id="orderSearch" placeholder="🔍 Tìm kiếm đơn hàng (ID/Khách hàng)..." class="ldm-input" style="min-width:300px;">
+        </div>
+    </div>
+    
+    <!-- Status Filter Buttons -->
+    <div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="ldm-button ldm-filter-btn" data-status="all" style="background:#3b82f6;color:white;font-weight:600;">✓ Tất cả</button>
+        <button class="ldm-button ldm-filter-btn" data-status="pending" style="border:1px solid #fbbf24;color:#f59e0b;">⏳ Chờ xác nhận</button>
+        <button class="ldm-button ldm-filter-btn" data-status="processing" style="border:1px solid #60a5fa;color:#3b82f6;">⚙️ Xử lý</button>
+        <button class="ldm-button ldm-filter-btn" data-status="shipped" style="border:1px solid #34d399;color:#10b981;">📦 Đã gửi</button>
+        <button class="ldm-button ldm-filter-btn" data-status="delivered" style="border:1px solid #10b981;color:#10b981;">✓ Hoàn thành</button>
+        <button class="ldm-button ldm-filter-btn" data-status="cancelled" style="border:1px solid #ef4444;color:#ef4444;">✕ Hủy</button>
+    </div>
+
+    <div class="ldm-table-wrap">
+        <table class="ldm-table">
+            <thead>
+                <tr>
+                    <th style="width:50px;">#</th>
+                    <th style="width:80px;">Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th style="text-align:center;">Sản phẩm</th>
+                    <th style="text-align:right;">Tổng tiền</th>
+                    <th style="text-align:center;">Thanh toán</th>
+                    <th style="text-align:center;">Trạng thái</th>
+                    <th style="text-align:center;">Ngày</th>
+                    <th style="text-align:center;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                {% for order in orders %}
+                <tr data-status="{{ order.status|lower }}">
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td><strong style="color:#3b82f6;">ORD-{{ order.id }}</strong></td>
+                    <td>
+                        <div style="font-weight:600;">{{ order.user.get_full_name|default:order.user.username }}</div>
+                        <div style="font-size:12px;color:#94a3b8;">{{ order.user.email }}</div>
+                    </td>
+                    <td style="text-align:center;">
+                        {% with item_count=order.items.count %}
+                            <span style="display:inline-block;background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:12px;">{{ item_count }} sản phẩm</span>
+                        {% endwith %}
+                    </td>
+                    <td style="text-align:right;font-weight:600;color:#1e293b;">{{ order.total_amount|intcomma }}₫</td>
+                    <td style="text-align:center;">
+                        {% if order.payment_method == 'vietqr' %}
+                        <span style="font-size:12px;background:#e0e7ff;color:#4f46e5;padding:4px 8px;border-radius:4px;">VietQR</span>
+                        {% elif order.payment_method == 'cod' %}
+                        <span style="font-size:12px;background:#fce7f3;color:#ec4899;padding:4px 8px;border-radius:4px;">COD</span>
+                        {% else %}
+                        <span style="font-size:12px;background:#f3e8ff;color:#a855f7;padding:4px 8px;border-radius:4px;">{{ order.payment_method }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="ldm-status ldm-status-{{ order.status|lower }}" style="">
+                            {% if order.status == 'pending' %}
+                            <i class="ri-time-line"></i> Chờ xác nhận
+                            {% elif order.status == 'processing' %}
+                            <i class="ri-settings-line"></i> Xử lý
+                            {% elif order.status == 'shipped' %}
+                            <i class="ri-truck-line"></i> Đã gửi
+                            {% elif order.status == 'delivered' %}
+                            <i class="ri-check-line"></i> Hoàn thành
+                            {% elif order.status == 'cancelled' %}
+                            <i class="ri-close-line"></i> Hủy
+                            {% else %}
+                            {{ order.status }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td style="text-align:center;font-size:12px;color:#64748b;">{{ order.created_at|date:"d/m/Y" }}</td>
+                    <td style="text-align:center;">
+                        <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Chi tiết</a>
+                        <button onclick="if(confirm('Xóa đơn hàng này?')) { window.location='{% url 'store:delete_order' order.id %}'; }" class="ldm-button ldm-button-danger" style="padding:6px 12px;font-size:12px;">Xóa</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">📭 Chưa có đơn hàng nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="ldm-pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1">« Đầu</a>
+        <a href="?page={{ page_obj.previous_page_number }}">‹ Trước</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="active">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Tiếp ›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Cuối »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.ldm-status {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ldm-status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.ldm-status-processing {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ldm-status-shipped {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ldm-status-delivered {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ldm-status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ldm-filter-btn:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+}
+</style>
+
+<script>
+// Status filter
+document.querySelectorAll('.ldm-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const status = this.dataset.status;
+        const rows = document.querySelectorAll('#ordersTableBody tr');
+        
+        document.querySelectorAll('.ldm-filter-btn').forEach(b => {
+            b.style.background = 'white';
+            b.style.color = '#64748b';
+        });
+        this.style.background = '#3b82f6';
+        this.style.color = 'white';
+        
+        rows.forEach(row => {
+            if (status === 'all') {
+                row.style.display = '';
+            } else {
+                row.style.display = row.dataset.status === status ? '' : 'none';
+            }
+        });
+    });
+});
+
+// Search filter
+document.getElementById('orderSearch').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#ordersTableBody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

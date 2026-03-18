@@ -68,6 +68,7 @@ class Product(models.Model):
     rom = models.CharField(max_length=10, choices=ROM_CHOICES, default='128GB', help_text="Bộ nhớ ROM")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+    stock = models.IntegerField(default=0, help_text="Số lượng sản phẩm trong kho")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -181,4 +182,32 @@ class Banner(models.Model):
 
     def __str__(self):
         return f"Banner #{self.banner_id}"
+
+
+class Wishlist(models.Model):
+    """User wishlist for saving favorite products"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wishlist')
+    products = models.ManyToManyField(Product, related_name='wishlisted_by', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Wishlist"
+    
+    def add_product(self, product):
+        """Add a product to wishlist"""
+        self.products.add(product)
+    
+    def remove_product(self, product):
+        """Remove a product from wishlist"""
+        self.products.remove(product)
+    
+    def toggle_product(self, product):
+        """Add or remove a product from wishlist"""
+        if self.products.filter(id=product.id).exists():
+            self.remove_product(product)
+            return False
+        else:
+            self.add_product(product)
+            return True
     

@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 import requests
 
-from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner
+from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner, Wishlist
 from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm
 
 
@@ -62,7 +62,8 @@ def login_view(request):
             return redirect('store:login')
 
     context = get_base_context(request)
-    return render(request, 'store/login.html', context)
+    context['auth_type'] = 'login'
+    return render(request, 'store/auth.html', context)
 
 
 # ================== REGISTER ==================
@@ -99,7 +100,8 @@ def register_view(request):
         return redirect('store:login')
 
     context = get_base_context(request)
-    return render(request, 'store/register.html', context)
+    context['auth_type'] = 'register'
+    return render(request, 'store/auth.html', context)
 
 
 # ================== HOME ==================
@@ -536,7 +538,7 @@ def checkout_from_cart(request):
                     'total_amount': total_amount,
                     'form': form,
                 })
-                return render(request, 'store/checkout_cart.html', context)
+                return render(request, 'store/checkout.html', context)
         else:
             # Form validation failed - display errors
             context = get_base_context(request)
@@ -545,7 +547,7 @@ def checkout_from_cart(request):
                 'total_amount': total_amount,
                 'form': form,
             })
-            return render(request, 'store/checkout_cart.html', context)
+            return render(request, 'store/checkout.html', context)
     else:
         # GET request - initialize form with pre-filled data
         initial_data = {
@@ -559,7 +561,7 @@ def checkout_from_cart(request):
         'total_amount': total_amount,
         'form': form,
     })
-    return render(request, 'store/checkout_cart.html', context)
+    return render(request, 'store/checkout.html', context)
 
 
 # ================== WISHLIST ==================
@@ -664,6 +666,7 @@ def profile(request):
         'profile_form': profile_form,
         'password_form': password_form,
     })
+    context['auth_type'] = 'profile'
     return render(request, 'store/profile.html', context)
 
 
@@ -674,7 +677,7 @@ def order_tracking(request):
     
     context = get_base_context(request)
     context['orders'] = orders
-    return render(request, 'store/order_tracking.html', context)
+    return render(request, 'store/orders.html', context)
 
 
 @login_required(login_url='store:login')
@@ -693,6 +696,16 @@ def cancel_order(request, order_id):
 
 
 @login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def delete_order(request, order_id):
+    """Delete order (admin only)"""
+    order = get_object_or_404(Order, id=order_id)
+    order.delete()
+    messages.success(request, '✅ Đơn hàng đã xóa thành công')
+    return redirect('store:admin_orders')
+
+
+@login_required(login_url='store:login')
 def order_success(request):
     # Lấy đơn hàng cuối cùng của user
     order = Order.objects.filter(user=request.user).order_by('-created_at').first()
@@ -702,28 +715,74 @@ def order_success(request):
     return render(request, 'store/order_success.html', context)
 
 
+@login_required(login_url='store:login')
+def order_detail(request, order_id):
+    """View order details - for both users and admin"""
+    # Admin can see any order, regular users can only see their own
+    if request.user.is_staff:
+        order = get_object_or_404(Order, id=order_id)
+    else:
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    context = get_base_context(request)
+    context['order'] = order
+    context['order_items'] = order.items.all()
+    return render(request, 'store/order_detail.html', context)
+
+
 # ================== ADMIN DASHBOARD ==================
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
 def dashboard(request):
     from django.core.paginator import Paginator
+    from django.utils import timezone
+    from datetime import timedelta
+    from decimal import Decimal
     
+    # Get all data
     all_products = Product.objects.all().order_by('-created_at')
     users = User.objects.all()
     categories = Category.objects.all()
-    orders = Order.objects.all()
+    orders = Order.objects.all().order_by('-created_at')
     
-    # Pagination
-    paginator = Paginator(all_products, 15)  # 15 products per page
-    page_number = request.GET.get('page', 1)
-    products = paginator.get_page(page_number)
+    # Today's date
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+    year_start = today.replace(month=1, day=1)
+    
+    # Filter orders by date
+    today_orders = orders.filter(created_at__date=today)
+    month_orders = orders.filter(created_at__date__gte=month_start)
+    year_orders = orders.filter(created_at__year=today.year)
     
     # Calculate statistics
     total_products = all_products.count()
     total_users = users.count()
     total_categories = categories.count()
     total_orders = orders.count()
-    total_revenue = sum(order.total_amount for order in orders)
+    total_revenue = sum(order.total_amount for order in orders) if orders else 0
+    
+    # Today revenue
+    today_revenue = sum(order.total_amount for order in today_orders) if today_orders else 0
+    
+    # Average Order Value (AOV)
+    if orders.exists():
+        aov = total_revenue / total_orders
+    else:
+        aov = 0
+    
+    # Conversion Rate (dummy calculation, you can adjust)
+    # This would need visitor data from analytics
+    conversion_rate = 1.67
+    
+    # Pagination for products
+    paginator = Paginator(all_products, 15)
+    page_number = request.GET.get('page', 1)
+    products = paginator.get_page(page_number)
+    
+    # Get recent orders and products
+    recent_orders = orders[:10]
+    recent_products = all_products[:10]
     
     context = get_base_context(request)
     context.update({
@@ -732,9 +791,17 @@ def dashboard(request):
         'total_users': total_users,
         'total_categories': total_categories,
         'total_orders': total_orders,
-        'total_revenue': total_revenue,
+        'total_revenue': f"{int(total_revenue):,}",
+        'today_orders': today_orders.count(),
+        'month_orders': month_orders.count(),
+        'year_orders': year_orders.count(),
+        'today_revenue': f"{int(today_revenue):,}",
+        'aov': f"{int(aov):,}",
+        'conversion_rate': f"{conversion_rate:.2f}",
+        'recent_orders': recent_orders,
+        'recent_products': recent_products,
     })
-    return render(request, 'store/admin_dashboard.html', context)
+    return render(request, 'admin/admin_dashboard.html', context)
 
 
 @login_required(login_url='store:login')
@@ -751,7 +818,7 @@ def product_create(request):
 
     context = get_base_context(request)
     context['form'] = form
-    return render(request, 'store/product_form.html', context)
+    return render(request, 'admin/products.html', context)
 
 
 @login_required(login_url='store:login')
@@ -887,7 +954,7 @@ def user_edit(request, pk):
     context = get_base_context(request)
     context['form'] = form
     context['edit_user'] = user
-    return render(request, 'store/user_form.html', context)
+    return render(request, 'profile.html', context)
 
 
 @login_required(login_url='store:login')
@@ -1119,6 +1186,186 @@ def get_wards(request, district_code):
             'success': False,
             'error': f'Lỗi xử lý dữ liệu: {str(e)}'
         }, status=500)
+
+
+# ================== AJAX ENDPOINTS - WISHLIST ==================
+@login_required(login_url='store:login')
+def toggle_wishlist_ajax(request):
+    """AJAX endpoint to toggle product in wishlist"""
+    if request.method == 'POST':
+        try:
+            product_id = request.POST.get('product_id')
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Get or create wishlist
+            wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+            
+            # Toggle product
+            is_added = wishlist.toggle_product(product)
+            
+            return JsonResponse({
+                'success': True,
+                'is_added': is_added,
+                'message': '✅ Thêm vào wishlist' if is_added else '❌ Xóa khỏi wishlist',
+                'wishlist_count': wishlist.products.count()
+            })
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+# ================== AJAX ENDPOINTS - CART ==================
+def add_to_cart_ajax(request):
+    """AJAX endpoint to add product to cart"""
+    if request.method == 'POST':
+        try:
+            product_id = request.POST.get('product_id')
+            quantity = int(request.POST.get('quantity', 1))
+            
+            product = get_object_or_404(Product, id=product_id)
+            
+            # Check stock
+            if product.stock <= 0:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm hết hàng'}, status=400)
+            
+            # Initialize cart in session
+            cart = request.session.get('cart', {})
+            
+            product_key = str(product_id)
+            if product_key in cart:
+                cart[product_key]['quantity'] += quantity
+            else:
+                cart[product_key] = {
+                    'name': product.name,
+                    'price': product.get_discounted_price(),
+                    'quantity': quantity,
+                    'image': product.image.url if product.image else ''
+                }
+            
+            request.session['cart'] = cart
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'✅ Thêm {quantity} sản phẩm vào giỏ hàng',
+                'cart_count': sum(item['quantity'] for item in cart.values()),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values())
+            })
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại'}, status=404)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Số lượng không hợp lệ'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+def update_cart_quantity_ajax(request):
+    """AJAX endpoint to update cart item quantity"""
+    if request.method == 'POST':
+        try:
+            product_id = request.POST.get('product_id')
+            quantity = int(request.POST.get('quantity', 1))
+            
+            cart = request.session.get('cart', {})
+            product_key = str(product_id)
+            
+            if product_key not in cart:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm không trong giỏ'}, status=404)
+            
+            if quantity <= 0:
+                del cart[product_key]
+            else:
+                cart[product_key]['quantity'] = quantity
+            
+            request.session['cart'] = cart
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cập nhật giỏ hàng thành công',
+                'cart_count': sum(item['quantity'] for item in cart.values()),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values()),
+                'item_total': cart[product_key]['price'] * quantity if product_key in cart else 0
+            })
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Số lượng không hợp lệ'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+def remove_from_cart_ajax(request):
+    """AJAX endpoint to remove product from cart"""
+    if request.method == 'POST':
+        try:
+            product_id = request.POST.get('product_id')
+            
+            cart = request.session.get('cart', {})
+            product_key = str(product_id)
+            
+            if product_key in cart:
+                del cart[product_key]
+                request.session['cart'] = cart
+                
+            return JsonResponse({
+                'success': True,
+                'message': '✅ Xóa khỏi giỏ hàng',
+                'cart_count': sum(item['quantity'] for item in cart.values()),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values())
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+# ================== ADMIN PRODUCTS & ORDERS ==================
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_products(request):
+    """Admin products management page"""
+    from django.core.paginator import Paginator
+    
+    products = Product.objects.all().order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(products, 20)
+    page_number = request.GET.get('page', 1)
+    products_page = paginator.get_page(page_number)
+    
+    categories = Category.objects.all()
+    context = get_base_context(request)
+    context.update({
+        'products': products_page,
+        'categories': categories,
+    })
+    return render(request, 'admin/admin_products.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_orders(request):
+    """Admin orders management page"""
+    from django.core.paginator import Paginator
+    
+    orders = Order.objects.all().order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(orders, 20)
+    page_number = request.GET.get('page', 1)
+    orders_page = paginator.get_page(page_number)
+    
+    context = get_base_context(request)
+    context.update({
+        'orders': orders_page,
+    })
+    return render(request, 'admin/admin_orders.html', context)
 
 
 # ================== PLACEHOLDER VIEW ==================

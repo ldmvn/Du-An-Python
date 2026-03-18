@@ -1,0 +1,65 @@
+{% load static %}
+
+<!-- Reusable Product Card Component -->
+<div class="product-card">
+    <!-- Product Image -->
+    {% if product.image %}
+        <div class="product-image">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+        </div>
+    {% else %}
+        <div class="product-image product-image-placeholder">
+            <svg style="width: 40px; height: 40px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+        </div>
+    {% endif %}
+
+    <!-- Product Info -->
+    <div class="product-info">
+        <!-- Product Name -->
+        <h3 class="product-name">
+            <a href="{% url 'store:product_detail' product.id %}">{{ product.name }}</a>
+        </h3>
+
+        <!-- Product Category -->
+        {% if product.category %}
+            <p class="product-category">{{ product.category.name }}</p>
+        {% endif %}
+
+        <!-- Product Price -->
+        <div class="product-price">
+            <span class="product-price-current">
+                {{ product.get_discounted_price|floatformat:0|add:0 }}₫
+            </span>
+            {% if product.discount > 0 %}
+                <span class="product-price-original">
+                    {{ product.price|floatformat:0|add:0 }}₫
+                </span>
+                <span class="product-discount-badge">-{{ product.discount }}%</span>
+            {% endif %}
+        </div>
+
+        <!-- Product Rating (Optional) -->
+        {% if product.rating %}
+            <div class="product-rating">
+                <span class="product-rating-stars">★★★★★</span>
+                <span class="product-rating-value">{{ product.rating }}/5</span>
+            </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="product-actions">
+            <a href="{% url 'store:product_detail' product.id %}" class="btn-view">
+                Chi tiết
+            </a>
+            <button class="btn-wishlist" data-product-id="{{ product.id }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                <span>❤️ Yêu thích</span>
+            </button>
+        </div>
+    </div>
+</div>
+

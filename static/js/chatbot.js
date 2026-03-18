@@ -1,7 +1,7 @@
 /**
  * Widget Chatbot AI của MOBILE STORE
  */
-const QHChat = (() => {
+const LDMChat = (() => {
     const API_URL = '/api/chatbot/';
     let isOpen = false;
     let isSending = false;
@@ -9,10 +9,10 @@ const QHChat = (() => {
     const $ = (sel) => document.querySelector(sel);
 
     function init() {
-        const fab = $('#qh-chat-fab');
-        const closeBtn = $('#qh-chat-close');
-        const sendBtn = $('#qh-chat-send');
-        const input = $('#qh-chat-input');
+        const fab = $('#ldm-chat-fab');
+        const closeBtn = $('#ldm-chat-close');
+        const sendBtn = $('#ldm-chat-send');
+        const input = $('#ldm-chat-input');
 
         if (!fab) return;
 
@@ -33,19 +33,19 @@ const QHChat = (() => {
     }
 
     function toggle() {
-        const win = $('#qh-chat-window');
-        const fab = $('#qh-chat-fab');
+        const win = $('#ldm-chat-window');
+        const fab = $('#ldm-chat-fab');
         isOpen = !isOpen;
         win.classList.toggle('open', isOpen);
         fab.classList.toggle('active', isOpen);
         if (isOpen) {
-            setTimeout(() => $('#qh-chat-input')?.focus(), 200);
+            setTimeout(() => $('#ldm-chat-input')?.focus(), 200);
         }
     }
 
     function send() {
         if (isSending) return;
-        const input = $('#qh-chat-input');
+        const input = $('#ldm-chat-input');
         const msg = input.value.trim();
         if (!msg) return;
 
@@ -92,37 +92,37 @@ const QHChat = (() => {
             .finally(() => {
                 isSending = false;
                 setSendDisabled(false);
-                $('#qh-chat-input')?.focus();
+                $('#ldm-chat-input')?.focus();
             });
     }
 
     function addUserMessage(text) {
-        const container = $('#qh-chat-messages');
+        const container = $('#ldm-chat-messages');
         const el = document.createElement('div');
-        el.className = 'qh-chat-msg user';
+        el.className = 'ldm-chat-msg user';
         el.innerHTML = `
-            <div class="qh-chat-msg-avatar"><i class="ri-user-line"></i></div>
-            <div class="qh-chat-msg-bubble">${escapeHtml(text)}</div>
+            <div class="ldm-chat-msg-avatar"><i class="ri-user-line"></i></div>
+            <div class="ldm-chat-msg-bubble">${escapeHtml(text)}</div>
         `;
         container.appendChild(el);
         scrollToBottom();
     }
 
     function addBotMessage(text, suggestions) {
-        const container = $('#qh-chat-messages');
+        const container = $('#ldm-chat-messages');
         const el = document.createElement('div');
-        el.className = 'qh-chat-msg bot';
+        el.className = 'ldm-chat-msg bot';
 
         let html = `
-            <div class="qh-chat-msg-avatar"><i class="ri-robot-2-line"></i></div>
+            <div class="ldm-chat-msg-avatar"><i class="ri-robot-2-line"></i></div>
             <div>
-                <div class="qh-chat-msg-bubble">${formatMarkdown(text)}</div>
+                <div class="ldm-chat-msg-bubble">${formatMarkdown(text)}</div>
         `;
 
         if (suggestions && suggestions.length) {
-            html += '<div class="qh-chat-suggestions">';
+            html += '<div class="ldm-chat-suggestions">';
             suggestions.forEach((s) => {
-                html += `<button class="qh-chat-suggestion-btn" onclick="QHChat.sendSuggestion('${escapeAttr(s)}')">${escapeHtml(s)}</button>`;
+                html += `<button class="ldm-chat-suggestion-btn" onclick="LDMChat.sendSuggestion('${escapeAttr(s)}')">${escapeHtml(s)}</button>`;
             });
             html += '</div>';
         }
@@ -134,18 +134,18 @@ const QHChat = (() => {
     }
 
     function showTyping(show) {
-        const el = $('#qh-chat-typing');
+        const el = $('#ldm-chat-typing');
         if (el) el.classList.toggle('show', show);
         if (show) scrollToBottom();
     }
 
     function setSendDisabled(disabled) {
-        const btn = $('#qh-chat-send');
+        const btn = $('#ldm-chat-send');
         if (btn) btn.disabled = disabled;
     }
 
     function scrollToBottom() {
-        const container = $('#qh-chat-messages');
+        const container = $('#ldm-chat-messages');
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
         });
@@ -171,3 +171,4 @@ const QHChat = (() => {
 
     return { toggle, sendSuggestion };
 })();
+

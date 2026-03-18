@@ -1,79 +1,79 @@
-{% extends 'base.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
 {% load humanize %}
 
 {% block title %}TRANG CHỦ - MOBILE STORE{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="qh-home">
+<div class="ldm-home">
 
     <!-- Slider video hero -->
-    <section class="qh-hero-slider">
-        <div class="qh-hero-slider-wrap">
-            <div class="qh-hero-stage" id="qhHeroSlider">
-                <div class="qh-hero-slide active" data-slide="0">
-                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+    <section class="ldm-hero-slider">
+        <div class="ldm-hero-slider-wrap">
+            <div class="ldm-hero-stage" id="ldmHeroSlider">
+                <div class="ldm-hero-slide active" data-slide="0">
+                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
                         <source src="/static/videos/applv1.mp4" type="video/mp4">
                     </video>
-                    <div class="qh-hero-overlay">
-                        <div class="qh-hero-text">
+                    <div class="ldm-hero-overlay">
+                        <div class="ldm-hero-text">
                             <h2>IPHONE</h2>
                             <p>Trải nghiệm công nghệ vượt trội</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="qh-hero-slide" data-slide="1">
-                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+                <div class="ldm-hero-slide" data-slide="1">
+                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
                         <source src="/static/videos/sams.mp4" type="video/mp4">
                     </video>
-                    <div class="qh-hero-overlay">
-                        <div class="qh-hero-text">
+                    <div class="ldm-hero-overlay">
+                        <div class="ldm-hero-text">
                             <h2>SAMSUNG</h2>
                             <p>Camera siêu zoom 100x</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="qh-hero-slide" data-slide="2">
-                    <video class="qh-hero-video" autoplay muted loop playsinline preload="auto">
+                <div class="ldm-hero-slide" data-slide="2">
+                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
                         <source src="/static/videos/xiao.mp4" type="video/mp4">
                     </video>
-                    <div class="qh-hero-overlay">
-                        <div class="qh-hero-text">
+                    <div class="ldm-hero-overlay">
+                        <div class="ldm-hero-text">
                             <h2>XIAOMI</h2>
                             <p>Snapdragon 8 Elite – Hiệu năng vượt xa</p>
                         </div>
                     </div>
                 </div>
 
-                <button type="button" class="qh-hero-nav prev" id="qhHeroPrev" aria-label="Slide trước">
+                <button type="button" class="ldm-hero-nav prev" id="ldmHeroPrev" aria-label="Slide trước">
                     <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
-                <button type="button" class="qh-hero-nav next" id="qhHeroNext" aria-label="Slide sau">
+                <button type="button" class="ldm-hero-nav next" id="ldmHeroNext" aria-label="Slide sau">
                     <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
 
-                <div class="qh-hero-dots" id="qhHeroDots">
-                    <button type="button" class="qh-hero-dot active" data-slide="0" aria-label="Slide 1"></button>
-                    <button type="button" class="qh-hero-dot" data-slide="1" aria-label="Slide 2"></button>
-                    <button type="button" class="qh-hero-dot" data-slide="2" aria-label="Slide 3"></button>
+                <div class="ldm-hero-dots" id="ldmHeroDots">
+                    <button type="button" class="ldm-hero-dot active" data-slide="0" aria-label="Slide 1"></button>
+                    <button type="button" class="ldm-hero-dot" data-slide="1" aria-label="Slide 2"></button>
+                    <button type="button" class="ldm-hero-dot" data-slide="2" aria-label="Slide 3"></button>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Tất cả sản phẩm (homepage now starts with brand filter links) -->
-    <section class="qh-products-section" style="padding: 40px 20px; background: #f5f5f5;">
-        <div class="qh-container">
+    <section class="ldm-products-section" style="padding: 40px 20px; background: #f5f5f5;">
+        <div class="ldm-container">
             <!-- Search & Filter Bar -->
             <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                 <!-- Brand Filter -->
@@ -135,9 +135,9 @@
             {% endif %}
 
             {% if products %}
-            <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+            <div class="ldm-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
                 {% for product in products %}
-                <div class="qh-product-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative;">
+                <div class="ldm-product-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative;">
                     <!-- Discount Badge -->
                     {% if product.discount > 0 %}
                     <div style="position: absolute; top: 10px; left: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">
@@ -187,11 +187,12 @@
                                 <div style="color: #999;">Chưa có đánh giá</div>
                                 {% endif %}
 
-                                <!-- Wishlist icon placed alongside rating -->
-                                <button class="wishlist-btn-inline" onclick="toggleWishlist({{ product.id }})" style="background: none; border: none; padding: 0; cursor: pointer; color: #ddd; transition: color 0.2s;">
-                                    <svg id="wishlist-{{ product.id }}" style="width: 20px; height: 20px;" fill="currentColor" stroke="none" viewBox="0 0 24 24">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                <!-- Wishlist button with text -->
+                                <button class="wishlist-btn-inline" onclick="event.preventDefault(); event.stopPropagation(); toggleWishlistAjax({{ product.id }}, this); return false;" style="background: white; border: 1px solid #ddd; padding: 4px 8px; cursor: pointer; color: #667eea; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500;">
+                                    <svg id="wishlist-{{ product.id }}" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                                     </svg>
+                                    <span>Yêu thích</span>
                                 </button>
                             </div>
 
@@ -209,12 +210,12 @@
     </section>
 
     <!-- Phần USP -->
-    <section class="qh-usp-section" style="padding: 60px 20px; background: #ffffff;">
-        <div class="qh-container" style="max-width: 1200px; margin: 0 auto;">
+    <section class="ldm-usp-section" style="padding: 60px 20px; background: #ffffff;">
+        <div class="ldm-container" style="max-width: 1200px; margin: 0 auto;">
             <h2 style="text-align: center; margin-bottom: 40px; font-size: 28px; font-weight: 600;">TẠI SAO NÊN CHỌN CHÚNG TÔI?</h2>
-            <div class="qh-usp-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+            <div class="ldm-usp-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
                         <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
@@ -222,8 +223,8 @@
                     <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Hàng Chính Hãng</h3>
                     <p style="font-size: 13px; color: #666;">Cam kết 100% sản phẩm chính hãng, đầy đủ phụ kiện.</p>
                 </div>
-                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
                         <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -231,8 +232,8 @@
                     <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Đổi Trả Dễ Dàng</h3>
                     <p style="font-size: 13px; color: #666;">Hỗ trợ đổi trả trong 7 ngày nếu lỗi kỹ thuật.</p>
                 </div>
-                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
                         <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
@@ -240,8 +241,8 @@
                     <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Giao Hàng Nhanh</h3>
                     <p style="font-size: 13px; color: #666;">Giao hàng toàn quốc từ 1-2 ngày làm việc.</p>
                 </div>
-                <div class="qh-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="qh-usp-icon" style="margin-bottom: 15px;">
+                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
+                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
                         <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                         </svg>
@@ -258,14 +259,14 @@
 <!-- JavaScript điều khiển Hero Slider -->
 <script>
 (function() {
-    const slider = document.getElementById('qhHeroSlider');
+    const slider = document.getElementById('ldmHeroSlider');
     if (!slider) return;
 
-    const slides = Array.from(slider.querySelectorAll('.qh-hero-slide'));
-    const dotsWrap = document.getElementById('qhHeroDots');
-    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.qh-hero-dot')) : [];
-    const prevBtn = document.getElementById('qhHeroPrev');
-    const nextBtn = document.getElementById('qhHeroNext');
+    const slides = Array.from(slider.querySelectorAll('.ldm-hero-slide'));
+    const dotsWrap = document.getElementById('ldmHeroDots');
+    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ldm-hero-dot')) : [];
+    const prevBtn = document.getElementById('ldmHeroPrev');
+    const nextBtn = document.getElementById('ldmHeroNext');
     const total = slides.length;
 
     let idx = 0;
@@ -396,3 +397,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% endblock %}
 `
+

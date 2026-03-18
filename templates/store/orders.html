@@ -1,0 +1,92 @@
+﻿{% extends "store/base.html" %}
+{% load static humanize %}
+
+{% block title %}Tra cứu đơn hàng - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">{% endblock %}
+
+{% block content %}
+<div class="orders-container">
+    <h1 class="orders-title">📦 Tra cứu đơn hàng</h1>
+
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order-card">
+                <!-- Order Header -->
+                <div class="order-header">
+                    <div>
+                        <div class="order-number">Đơn hàng #{{ order.id }}</div>
+                    </div>
+                    <span class="order-status status-{{ order.status|lower }}">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Order Details -->
+                <div class="order-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Ngày đặt</div>
+                        <div class="detail-value">{{ order.created_at|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Tổng tiền</div>
+                        <div class="detail-value" style="color: #667eea; font-weight: 700;">
+                            {{ order.total_amount|default:0|floatformat:0|add:0 }}₫
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Người nhận</div>
+                        <div class="detail-value">{{ order.customer_name|default:"N/A" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Số điện thoại</div>
+                        <div class="detail-value">{{ order.customer_phone|default:"N/A" }}</div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                {% if order.items.all %}
+                    <div class="order-items">
+                        {% for item in order.items.all %}
+                            <div class="order-item">
+                                <span>{{ item.product.name|truncatewords:5 }} x{{ item.quantity }}</span>
+                                <span>{{ item.price|floatformat:0|add:0 }}₫</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Order Actions -->
+                <div class="order-actions">
+                    <a href="{% url 'store:order_detail' order.id %}" class="btn btn-primary">
+                        Xem chi tiết
+                    </a>
+                    {% if order.status == 'pending' %}
+                        <form method="POST" action="{% url 'store:cancel_order' order.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary" onclick="return confirm('Bạn có chắc muốn hủy đơn?')">
+                                Hủy đơn
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <h3>Chưa có đơn hàng</h3>
+            <p>Bạn chưa có đơn hàng nào. Bắt đầu mua sắm ngay!</p>
+            <a href="{% url 'store:home' %}" class="btn btn-primary" style="display: inline-block;">
+                Xem sản phẩm
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

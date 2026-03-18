@@ -2,8 +2,8 @@
    MOBILE STORE – Compare Page JavaScript
    ======================================================== */
 
-/* ========== Đối tượng QHCompare ========== */
-const QHCompare = {
+/* ========== Đối tượng LDMCompare ========== */
+const LDMCompare = {
     // Key lưu trữ trong localStorage
     STORAGE_KEY: 'qh_compare_items',
     MAX_ITEMS: 4,
@@ -26,13 +26,13 @@ const QHCompare = {
 
         // Kiểm tra xem sản phẩm đã tồn tại chưa
         if (items.some(item => item.id === id)) {
-            if (window.QHToast) QHToast.show('Sản phẩm đã có trong danh sách so sánh!', 'info');
+            if (window.LDMToast) LDMToast.show('Sản phẩm đã có trong danh sách so sánh!', 'info');
             return;
         }
 
         // Kiểm tra số lượng tối đa
         if (items.length >= this.MAX_ITEMS) {
-            if (window.QHToast) QHToast.show('Tối đa ' + this.MAX_ITEMS + ' sản phẩm để so sánh!', 'error');
+            if (window.LDMToast) LDMToast.show('Tối đa ' + this.MAX_ITEMS + ' sản phẩm để so sánh!', 'error');
             return;
         }
 
@@ -40,7 +40,7 @@ const QHCompare = {
         items.push({ id: id, name: name, image: image, price: price });
         this.saveItems(items);
 
-        if (window.QHToast) QHToast.show('Đã thêm vào so sánh!', 'success');
+        if (window.LDMToast) LDMToast.show('Đã thêm vào so sánh!', 'success');
     },
 
     // Xóa sản phẩm khỏi danh sách
@@ -61,11 +61,11 @@ const QHCompare = {
         const count = items.length;
 
         // Cập nhật badge đếm
-        const badge = document.getElementById('qh-compare-fab-count');
+        const badge = document.getElementById('ldm-compare-fab-count');
         if (badge) badge.textContent = count;
 
         // Hiển/ẩn FAB dựa trên số lượng sản phẩm
-        const fab = document.getElementById('qh-compare-fab');
+        const fab = document.getElementById('ldm-compare-fab');
         if (fab) {
             if (count > 0) {
                 fab.classList.add('active');
@@ -75,23 +75,23 @@ const QHCompare = {
         }
 
         // Cập nhật nút "So sánh ngay"
-        const goBtn = document.getElementById('qh-compare-go-btn');
+        const goBtn = document.getElementById('ldm-compare-go-btn');
         if (goBtn) goBtn.disabled = count < 2;
 
         // Cập nhật danh sách trong thanh so sánh
-        const listContainer = document.getElementById('qh-compare-items');
+        const listContainer = document.getElementById('ldm-compare-items');
         if (listContainer) {
             if (items.length === 0) {
                 listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có sản phẩm nào</p>';
             } else {
                 listContainer.innerHTML = items.map(item => `
-                    <div class="qh-compare-bar-item">
+                    <div class="ldm-compare-bar-item">
                         <img src="${item.image}" alt="${item.name}">
-                        <div class="qh-compare-bar-item-info">
-                            <div class="qh-compare-bar-item-name">${item.name}</div>
-                            <div class="qh-compare-bar-item-price">${item.price}</div>
+                        <div class="ldm-compare-bar-item-info">
+                            <div class="ldm-compare-bar-item-name">${item.name}</div>
+                            <div class="ldm-compare-bar-item-price">${item.price}</div>
                         </div>
-                        <button class="qh-compare-bar-item-remove" onclick="QHCompare.removeFromCompare(${item.id});QHCompare.updateUI();">
+                        <button class="ldm-compare-bar-item-remove" onclick="LDMCompare.removeFromCompare(${item.id});LDMCompare.updateUI();">
                             <i class="ri-close-line"></i>
                         </button>
                     </div>
@@ -100,7 +100,7 @@ const QHCompare = {
         }
 
         // Cập nhật trạng thái nút trên các trang
-        document.querySelectorAll('.qh-compare-btn').forEach(btn => {
+        document.querySelectorAll('.ldm-compare-btn').forEach(btn => {
             const productId = parseInt(btn.dataset.productId);
             if (items.some(item => item.id === productId)) {
                 btn.classList.add('active');
@@ -116,7 +116,7 @@ const QHCompare = {
     goToCompare: function() {
         const items = this.getItems();
         if (items.length < 2) {
-            if (window.QHToast) QHToast.show('Cần ít nhất 2 sản phẩm để so sánh!', 'error');
+            if (window.LDMToast) LDMToast.show('Cần ít nhất 2 sản phẩm để so sánh!', 'error');
             return;
         }
         const ids = items.map(item => item.id).join(',');
@@ -125,8 +125,8 @@ const QHCompare = {
 
     // Toggle hiển/ẩn thanh so sánh
     toggleBar: function() {
-        const bar = document.getElementById('qh-compare-bar');
-        const fab = document.getElementById('qh-compare-fab');
+        const bar = document.getElementById('ldm-compare-bar');
+        const fab = document.getElementById('ldm-compare-fab');
         if (bar && fab) {
             bar.classList.toggle('active');
             fab.classList.toggle('active');
@@ -136,7 +136,7 @@ const QHCompare = {
 
 // Khởi tạo khi trang tải xong
 document.addEventListener('DOMContentLoaded', function() {
-    QHCompare.updateUI();
+    LDMCompare.updateUI();
 });
 
 /* ========== Lọc thông số kỹ thuật ========== */
@@ -145,15 +145,15 @@ document.addEventListener('DOMContentLoaded', function() {
  * @param {string} mode - Chế độ lọc: 'all', 'same', 'diff'
  */
 function filterSpecs(mode) {
-    const cols = document.querySelectorAll('.qh-compare-col');
+    const cols = document.querySelectorAll('.ldm-compare-col');
     if (cols.length < 2) return;
 
     // Xây dựng lookup: label → [value, value, ...]
     const labelValues = {};
     cols.forEach(col => {
-        col.querySelectorAll('.qh-spec-row').forEach(row => {
+        col.querySelectorAll('.ldm-spec-row').forEach(row => {
             const label = row.dataset.label;
-            const val = row.querySelector('.qh-spec-val').innerText.trim();
+            const val = row.querySelector('.ldm-spec-val').innerText.trim();
             if (!labelValues[label]) labelValues[label] = [];
             labelValues[label].push(val);
         });
@@ -167,7 +167,7 @@ function filterSpecs(mode) {
 
     // Hiển thị/ẩn các hàng
     cols.forEach(col => {
-        col.querySelectorAll('.qh-spec-row').forEach(row => {
+        col.querySelectorAll('.ldm-spec-row').forEach(row => {
             const label = row.dataset.label;
             const status = labelStatus[label];
             if (mode === 'all') {
@@ -178,10 +178,10 @@ function filterSpecs(mode) {
         });
 
         // Hiển/ẩn tiêu đề nhóm
-        col.querySelectorAll('.qh-compare-spec-group').forEach(group => {
-            const rows = group.querySelectorAll('.qh-spec-row');
+        col.querySelectorAll('.ldm-compare-spec-group').forEach(group => {
+            const rows = group.querySelectorAll('.ldm-spec-row');
             const hasVisible = Array.from(rows).some(r => r.style.display !== 'none');
-            const title = group.querySelector('.qh-compare-spec-group-title');
+            const title = group.querySelector('.ldm-compare-spec-group-title');
             if (title) title.style.display = hasVisible ? '' : 'none';
             const table = group.querySelector('table');
             if (table) table.style.display = hasVisible ? '' : 'none';
@@ -195,8 +195,8 @@ function filterSpecs(mode) {
  * @param {number} productId - ID sản phẩm cần xóa
  */
 function removeAndReload(productId) {
-    QHCompare.removeFromCompare(productId);
-    const items = QHCompare.getItems();
+    LDMCompare.removeFromCompare(productId);
+    const items = LDMCompare.getItems();
     if (items.length < 2) {
         window.location.href = '/';
     } else {
@@ -204,3 +204,16 @@ function removeAndReload(productId) {
         window.location.href = '/compare/?ids=' + ids;
     }
 }
+
+/* ========== Event Listeners for Remove Buttons ========== */
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.ldm-compare-col-remove').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            if (productId) {
+                removeAndReload(productId);
+            }
+        });
+    });
+});
+

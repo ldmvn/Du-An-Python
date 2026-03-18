@@ -16,6 +16,8 @@ urlpatterns = [
 
     # ========== DASHBOARD (ADMIN) ==========
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('admin/products/', views.admin_products, name='admin_products'),
+    path('admin/orders/', views.admin_orders, name='admin_orders'),
     path('dashboard/create/', views.product_create, name='product_create'),
     path('dashboard/edit/<int:pk>/', views.dashboard_edit_product, name='dashboard_edit_product'),
     path('dashboard/delete/<int:pk>/', views.product_delete, name='product_delete'),
@@ -33,18 +35,26 @@ urlpatterns = [
     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:product_id>/', views.update_cart_quantity, name='update_cart_quantity'),
     path('cart/clear/', views.clear_cart, name='clear_cart'),
+    # AJAX endpoints
+    path('ajax/cart/add/', views.add_to_cart_ajax, name='add_to_cart_ajax'),
+    path('ajax/cart/update/', views.update_cart_quantity_ajax, name='update_cart_quantity_ajax'),
+    path('ajax/cart/remove/', views.remove_from_cart_ajax, name='remove_from_cart_ajax'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/cart/', views.checkout_from_cart, name='checkout_from_cart'),
 
     # ========== WISHLIST & COMPARE ==========
     path('wishlist/', views.wishlist, name='wishlist'),
     path('wishlist/toggle/', views.wishlist_toggle, name='wishlist_toggle'),
+    # AJAX endpoint
+    path('ajax/wishlist/toggle/', views.toggle_wishlist_ajax, name='toggle_wishlist_ajax'),
     path('compare/', views.compare_view, name='compare'),
 
     # ========== USER PROFILE ==========
     path('profile/', views.profile, name='profile'),
     path('order-tracking/', views.order_tracking, name='order_tracking'),
+    path('order/<int:order_id>/', views.order_detail, name='order_detail'),
     path('order-tracking/cancel/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('order/delete/<int:order_id>/', views.delete_order, name='delete_order'),
     path('order-success/', views.order_success, name='order_success'),
 
     # ========== PLACEHOLDER URLS ==========

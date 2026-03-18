@@ -1,0 +1,321 @@
+{% extends "store/base.html" %}
+{% load static humanize %}
+
+{% block title %}Chi tiết đơn hàng #{{ order.id }} - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
+<style>
+    .ldm-od-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .ldm-od-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .ldm-od-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+    }
+    .ldm-od-status {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .ldm-od-status.pending {
+        background: #fef08a;
+        color: #713f12;
+    }
+    .ldm-od-status.processing {
+        background: #dbeafe;
+        color: #082f49;
+    }
+    .ldm-od-status.completed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .ldm-od-status.cancelled {
+        background: #fee2e2;
+        color: #7f1d1d;
+    }
+    .ldm-od-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    .ldm-od-section {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e5e5e5;
+    }
+    .ldm-od-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #333;
+    }
+    .ldm-od-info-group {
+        margin-bottom: 16px;
+    }
+    .ldm-od-info-label {
+        font-size: 13px;
+        color: #888;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .ldm-od-info-value {
+        font-size: 15px;
+        color: #333;
+        font-weight: 500;
+    }
+    .ldm-od-items {
+        margin-bottom: 30px;
+    }
+    .ldm-od-item {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        gap: 16px;
+        margin-bottom: 12px;
+        align-items: center;
+    }
+    .ldm-od-item-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        object-fit: cover;
+        background: #f0f0f0;
+    }
+    .ldm-od-item-details {
+        flex: 1;
+    }
+    .ldm-od-item-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+    }
+    .ldm-od-item-price {
+        color: #667eea;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .ldm-od-item-qty {
+        text-align: right;
+        color: #888;
+        font-size: 13px;
+    }
+    .ldm-od-summary {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e5e5e5;
+    }
+    .ldm-od-summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 14px;
+    }
+    .ldm-od-summary-row.total {
+        border-top: 2px solid #f0f0f0;
+        padding-top: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #333;
+    }
+    .ldm-od-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+    .ldm-od-btn {
+        flex: 1;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+    }
+    .ldm-od-btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    .ldm-od-btn-primary:hover {
+        background: #5a67d8;
+    }
+    .ldm-od-btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+        border: 1px solid #e5e5e5;
+    }
+    .ldm-od-btn-secondary:hover {
+        background: #e8e8e8;
+    }
+    @media (max-width: 768px) {
+        .ldm-od-grid {
+            grid-template-columns: 1fr;
+        }
+        .ldm-od-item {
+            flex-direction: column;
+        }
+        .ldm-od-item-image {
+            width: 100%;
+            height: 200px;
+        }
+        .ldm-od-item-qty {
+            text-align: left;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ldm-od-container">
+    <!-- Header -->
+    <div class="ldm-od-header">
+        <div>
+            <h1 class="ldm-od-title">📦 Đơn hàng #{{ order.id }}</h1>
+            <div style="font-size: 14px; color: #888; margin-top: 8px;">
+                Ngày tạo: {{ order.created_at|date:"d/m/Y H:i" }}
+            </div>
+        </div>
+        <span class="ldm-od-status {{ order.status|lower }}">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ldm-od-grid">
+        <!-- Left Column: Items & Summary -->
+        <div>
+            <!-- Order Items -->
+            <div class="ldm-od-items">
+                <h3 class="ldm-od-section-title">Sản phẩm đã đặt</h3>
+                {% for item in order_items %}
+                <div class="ldm-od-item">
+                    {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="ldm-od-item-image">
+                    {% else %}
+                    <div class="ldm-od-item-image" style="display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #ccc; font-size: 30px;">📱</div>
+                    {% endif %}
+                    <div class="ldm-od-item-details">
+                        <div class="ldm-od-item-name">{{ item.product.name }}</div>
+                        <div class="ldm-od-item-price">{{ item.price|intcomma }}₫</div>
+                    </div>
+                    <div class="ldm-od-item-qty">x{{ item.quantity }}</div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 40px 20px; color: #888;">
+                    Không có sản phẩm nào
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="ldm-od-summary">
+                <div class="ldm-od-summary-row">
+                    <span>Tổng giá trị sản phẩm:</span>
+                    <span>{{ order.total_amount|intcomma }}₫</span>
+                </div>
+                <div class="ldm-od-summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span style="color: #10b981;">Miễn phí</span>
+                </div>
+                <div class="ldm-od-summary-row total">
+                    <span>Tổng thanh toán:</span>
+                    <span>{{ order.total_amount|intcomma }}₫</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Order Info -->
+        <div>
+            <!-- Shipping Information -->
+            <div class="ldm-od-section">
+                <h3 class="ldm-od-section-title">📍 Thông tin giao hàng</h3>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Người nhận</div>
+                    <div class="ldm-od-info-value">{{ order.customer_name|default:"N/A" }}</div>
+                </div>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Số điện thoại</div>
+                    <div class="ldm-od-info-value">{{ order.customer_phone|default:"N/A" }}</div>
+                </div>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Địa chỉ giao hàng</div>
+                    <div class="ldm-od-info-value">{{ order.customer_address|default:"N/A" }}</div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="ldm-od-section" style="margin-top: 16px;">
+                <h3 class="ldm-od-section-title">💳 Thông tin thanh toán</h3>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Phương thức</div>
+                    <div class="ldm-od-info-value">
+                        {% if order.payment_method == 'cod' %}
+                        💵 Tiền mặt (COD)
+                        {% elif order.payment_method == 'vietqr' %}
+                        🏦 VietQR
+                        {% elif order.payment_method == 'vnpay' %}
+                        💳 VNPay
+                        {% else %}
+                        {{ order.payment_method }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Trạng thái thanh toán</div>
+                    <div class="ldm-od-info-value" style="color: #f59e0b;">
+                        ⏳ Chưa thanh toán
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Status -->
+            <div class="ldm-od-section" style="margin-top: 16px;">
+                <h3 class="ldm-od-section-title">📊 Trạng thái đơn hàng</h3>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Hiện tại</div>
+                    <div class="ldm-od-info-value">{{ order.get_status_display }}</div>
+                </div>
+                <div class="ldm-od-info-group">
+                    <div class="ldm-od-info-label">Cập nhật lúc</div>
+                    <div class="ldm-od-info-value">{{ order.updated_at|date:"d/m/Y H:i"|default:order.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="ldm-od-actions">
+        <a href="{% url 'store:order_tracking' %}" class="ldm-od-btn ldm-od-btn-secondary">← Quay lại</a>
+        {% if order.status == 'pending' %}
+        <form method="POST" action="{% url 'store:cancel_order' order.id %}" style="flex: 1;">
+            {% csrf_token %}
+            <button type="submit" class="ldm-od-btn ldm-od-btn-secondary" onclick="return confirm('Bạn có chắc muốn hủy đơn này?')" style="width: 100%;">
+                Hủy đơn hàng
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

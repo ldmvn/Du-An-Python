@@ -2,7 +2,7 @@
 
 /* ==================== Badge wishlist ==================== */
 function updateWishlistBadge(count) {
-    var badge = document.getElementById('qh-wishlist-count');
+    var badge = document.getElementById('ldm-wishlist-count');
     if (badge) badge.textContent = count;
 }
 
@@ -56,3 +56,4 @@ function removeFromWishlist(event, productId) {
             showToast('Lỗi khi cập nhật danh sách yêu thích', 'error');
         });
 }
+

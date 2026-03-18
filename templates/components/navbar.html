@@ -1,0 +1,150 @@
+{% load static %}
+
+<!-- Navigation Bar Header -->
+<header class="ldm-header">
+    <div class="ldm-header-container">
+        <div class="ldm-header-inner">
+            <!-- Logo -->
+            <a href="{% url 'store:home' %}" class="ldm-logo">
+                <span class="ldm-logo-text">MOBILE STORE</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="ldm-search">
+                <form action="{% url 'store:home' %}" method="GET" class="ldm-search-form">
+                    <input type="text"
+                           name="q"
+                           placeholder="Nhập sản phẩm mà bạn muốn tìm..."
+                           class="ldm-search-input"
+                           value="{{ request.GET.q|default:'' }}">
+                    <button type="submit" class="ldm-search-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="ldm-header-actions">
+                <!-- Cart -->
+                <a href="{% url 'store:cart_detail' %}" class="ldm-header-icon">
+                    <div class="ldm-icon-circle">
+                        <svg class="ldm-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="ldm-icon-badge">{{ cart_count|default:0 }}</span>
+                    </div>
+                    <div class="ldm-icon-text">
+                        <span class="ldm-icon-label">Thanh Toán</span>
+                        <span class="ldm-icon-title">Giỏ hàng</span>
+                    </div>
+                </a>
+
+                <!-- Orders -->
+                <a href="{% url 'store:order_tracking' %}" class="ldm-header-icon">
+                    <div class="ldm-icon-circle">
+                        <svg class="ldm-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        <span class="ldm-icon-badge">{{ order_count|default:0 }}</span>
+                    </div>
+                    <div class="ldm-icon-text">
+                        <span class="ldm-icon-label">Kiểm tra</span>
+                        <span class="ldm-icon-title">Tra cứu đơn</span>
+                    </div>
+                </a>
+
+                <!-- Admin Dashboard (Staff only) -->
+                {% if user.is_authenticated and user.is_staff %}
+                    <a href="{% url 'store:dashboard' %}" class="ldm-header-icon ldm-admin-icon">
+                        <div class="ldm-icon-circle">
+                            <svg class="ldm-icon-svg" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="2.5" />
+                                <rect x="10.5" y="1.5" width="3" height="2.5" />
+                                <rect x="16.9" y="3.5" width="2.5" height="3" transform="rotate(45 18.65 5)" />
+                                <rect x="20" y="10.5" width="2.5" height="3" />
+                                <rect x="16.9" y="16.9" width="2.5" height="3" transform="rotate(45 18.65 18.9)" />
+                                <rect x="10.5" y="20" width="3" height="2.5" />
+                                <rect x="3.6" y="16.9" width="2.5" height="3" transform="rotate(45 5.35 18.9)" />
+                                <rect x="1.5" y="10.5" width="2.5" height="3" />
+                                <rect x="3.6" y="3.5" width="2.5" height="3" transform="rotate(45 5.35 5)" />
+                                <circle cx="12" cy="12" r="7" />
+                            </svg>
+                        </div>
+                        <div class="ldm-icon-text">
+                            <span class="ldm-icon-label">Quản Lý</span>
+                            <span class="ldm-icon-title">Admin Panel</span>
+                        </div>
+                    </a>
+                {% endif %}
+
+                <!-- User Menu -->
+                {% if user.is_authenticated %}
+                    <div class="ldm-header-user-menu">
+                        <button class="ldm-header-icon ldm-user-menu-toggle" onclick="toggleUserMenu()">
+                            <div class="ldm-icon-circle">
+                                <svg class="ldm-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <div class="ldm-icon-text">
+                                <span class="ldm-icon-label">Xin chào</span>
+                                <span class="ldm-icon-title">{{ user_display_name|upper }}</span>
+                            </div>
+                        </button>
+                        
+                        <!-- User Dropdown Menu -->
+                        <div class="ldm-user-menu-dropdown" id="ldmUserMenuDropdown">
+                            <div class="ldm-user-menu-header">
+                                <div class="ldm-user-avatar">{{ user_display_name|first|upper }}</div>
+                                <div class="ldm-user-info">
+                                    <div class="ldm-user-name">{{ user_display_name }}</div>
+                                    <div class="ldm-user-email">{{ user.email|default:"" }}</div>
+                                </div>
+                            </div>
+                            <div class="ldm-user-menu-divider"></div>
+                            <a href="{% url 'store:profile' %}" class="ldm-user-menu-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                <span>Thông tin cá nhân</span>
+                            </a>
+                            <a href="{% url 'store:wishlist' %}" class="ldm-user-menu-item">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                                <span>Danh sách yêu thích</span>
+                            </a>
+                            <div class="ldm-user-menu-divider"></div>
+                            <form action="{% url 'store:logout' %}" method="POST" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="ldm-user-menu-item ldm-user-menu-logout">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    <span>Đăng xuất</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Login Button -->
+                    <a href="{% url 'store:login' %}" class="ldm-header-icon">
+                        <div class="ldm-icon-circle">
+                            <svg class="ldm-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div class="ldm-icon-text">
+                            <span class="ldm-icon-label">Xin chào</span>
+                            <span class="ldm-icon-title">Đăng nhập</span>
+                        </div>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+

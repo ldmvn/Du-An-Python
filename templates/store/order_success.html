@@ -1,48 +1,42 @@
-{% extends "base.html" %}
+{% extends "store/base.html" %}
 {% load static %}
 
 {% block title %}TRẠNG THÁI - MOBILE STORE{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/order_success.css' %}">
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="qh-os-page">
+<div class="ldm-os-page">
 
-    <h1 class="qh-page-title">TRẠNG THÁI</h1>
+    <h1 class="ldm-page-title">TRẠNG THÁI</h1>
 
     <!-- Hộp bao -->
-    <div class="qh-os-wrapper" id="successCard">
+    <div class="ldm-os-wrapper" id="successCard">
 
     <!-- Tiêu đề nổi bật -->
-    <div class="qh-os-hero">
-        <div class="qh-os-icon">
-            <svg class="qhc" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    <div class="ldm-os-hero">
+        <div class="ldm-os-icon">
+            <svg class="ldmc" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
         </div>
         <h2>✅ ĐƠN HÀNG ĐÃ ĐƯỢC TẠO THÀNH CÔNG</h2>
     </div>
 
     <!-- Hai hộp bằng nhau -->
-    <div class="qh-os-grid">
+    <div class="ldm-os-grid">
 
         <!-- Left: Thông tin đơn hàng -->
-        <div class="qh-os-info">
-            <div class="qh-os-info-title">📋 Thông tin đơn hàng</div>
+        <div class="ldm-os-info">
+            <div class="ldm-os-info-title">📋 Thông tin đơn hàng</div>
             {% if order %}
-                <div class="qh-os-row">
+                <div class="ldm-os-row">
                     <span class="label">Mã đơn hàng</span>
                     <span class="value" style="font-weight: bold; color: #2563eb;">{{ order.order_number }}</span>
                 </div>
-                <div class="qh-os-row">
+                <div class="ldm-os-row">
                     <span class="label">Trạng thái</span>
-                    <span class="value" style="padding: 5px 10px; border-radius: 4px; font-weight: bold;
-                        {% if order.status == 'pending' %}background: #fbbf24; color: #78350f;
-                        {% elif order.status == 'approved' %}background: #60a5fa; color: white;
-                        {% elif order.status == 'shipped' %}background: #a78bfa; color: white;
-                        {% elif order.status == 'completed' %}background: #34d399; color: white;
-                        {% elif order.status == 'cancelled' %}background: #f87171; color: white;
-                        {% endif %}">
+                    <span class="value ldm-status {% if order.status == 'pending' %}ldm-status-pending{% elif order.status == 'approved' %}ldm-status-approved{% elif order.status == 'shipped' %}ldm-status-shipped{% elif order.status == 'completed' %}ldm-status-completed{% elif order.status == 'cancelled' %}ldm-status-cancelled{% endif %}">
                         {% if order.status == 'pending' %}⏳ Chờ xử lý
                         {% elif order.status == 'approved' %}✓ Đã duyệt
                         {% elif order.status == 'shipped' %}🚚 Đang giao
@@ -51,11 +45,11 @@
                         {% endif %}
                     </span>
                 </div>
-                <div class="qh-os-row">
+                <div class="ldm-os-row">
                     <span class="label">Tổng tiền</span>
                     <span class="value" style="font-weight: bold; color: #dc2626;">{{ order.total_amount|floatformat:0|add:0 }}₫</span>
                 </div>
-                <div class="qh-os-row">
+                <div class="ldm-os-row">
                     <span class="label">Phương thức thanh toán</span>
                     <span class="value">
                         {% if order.payment_method == 'cash' %}💵 Thanh toán khi nhận hàng
@@ -64,14 +58,14 @@
                         {% endif %}
                     </span>
                 </div>
-                <div class="qh-os-row">
+                <div class="ldm-os-row">
                     <span class="label">Thời gian</span>
                     <span class="value">{{ order.created_at|date:"d/m/Y H:i" }}</span>
                 </div>
                 
                 <!-- Chi tiết sản phẩm -->
                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                    <div class="qh-os-info-title">📦 Sản phẩm đã đặt</div>
+                    <div class="ldm-os-info-title">📦 Sản phẩm đã đặt</div>
                     {% for item in order.items.all %}
                     <div style="padding: 10px; background: #f3f4f6; border-radius: 4px; margin-bottom: 8px;">
                         <div><strong>{{ item.product.name }}</strong></div>
@@ -87,14 +81,14 @@
         </div>
 
         <!-- Phải: Các nút -->
-        <div class="qh-os-actions">
-            <button class="qh-os-btn primary" onclick="copyCode()">
+        <div class="ldm-os-actions">
+            <button class="ldm-os-btn primary" onclick="copyCode()">
                 <i class="ri-file-copy-line"></i> Copy mã đơn
             </button>
-            <a href="{% url 'store:order_tracking' %}" class="qh-os-btn">
+            <a href="{% url 'store:order_tracking' %}" class="ldm-os-btn">
                 <i class="ri-search-line"></i> Tra cứu đơn
             </a>
-            <a href="{% url 'store:home' %}" class="qh-os-btn">
+            <a href="{% url 'store:home' %}" class="ldm-os-btn">
                 <i class="ri-home-line"></i> Trang chủ
             </a>
         </div>
@@ -102,11 +96,11 @@
     </div>
 
     <!-- Chân trang -->
-    <div class="qh-os-footer">
+    <div class="ldm-os-footer">
         CẢM ƠN BẠN ĐÃ TIN TƯỞNG VÀ MUA HÀNG, CHÚC BẠN CÓ TRẢI NGHIỆM TUYỆT VỜI VỚI SẢN PHẨM NHÉ! 
     </div>
 
-    </div><!-- /.qh-os-wrapper -->
+    </div><!-- /.ldm-os-wrapper -->
 
 </div>
 {% endblock %}
@@ -134,3 +128,4 @@ function copyCode() {
 {# JS thuần - đã tách ra file static/js/order_success.js #}
 <script src="{% static 'js/order_success.js' %}"></script>
 {% endblock %}
+

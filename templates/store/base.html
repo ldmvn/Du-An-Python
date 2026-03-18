@@ -1,0 +1,166 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MOBILE STORE{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23FF6B6B'>📱</text></svg>">
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/banner.css' %}">
+    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icon Library -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Page-specific Styles -->
+    {% block extra_css %}{% endblock %}
+
+    <!-- Core JavaScript Libraries -->
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/cart.js' %}"></script>
+    <script src="{% static 'js/wishlist.js' %}"></script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
+    <script src="{% static 'js/compare.js' %}"></script>
+    <script src="{% static 'js/ajax_cart.js' %}"></script>
+    <script src="{% static 'js/ajax_wishlist.js' %}"></script>
+
+    <script>
+        // Toggle user dropdown menu
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('ldmUserMenuDropdown');
+            if (!dropdown) return;
+            
+            dropdown.classList.toggle('active');
+            
+            document.addEventListener('click', function closeDropdown(e) {
+                const menu = document.querySelector('.ldm-header-user-menu');
+                if (menu && !menu.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+        
+        // Close menu on item click
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.ldm-user-menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const dropdown = document.getElementById('ldmUserMenuDropdown');
+                    if (dropdown) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- Messages/Notifications Data in JSON script tag -->
+    <script type="application/json" id="ldm-messages-data">
+    {% if messages %}[
+        {% for message in messages %}{
+            "message": "{{ message|escapejs }}",
+            "tags": "{{ message.tags|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}]
+    {% else %}[]{% endif %}
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var script = document.getElementById('ldm-messages-data');
+        if (script && script.textContent) {
+            try {
+                var messages = JSON.parse(script.textContent);
+                if (messages && messages.length > 0) {
+                    messages.forEach(function(msg) {
+                        var type = (msg.tags.indexOf('error') > -1) ? 'error' : 'success';
+                        if (window.ldmToast && typeof window.ldmToast.show === 'function') {
+                            window.ldmToast.show(msg.message, type);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading messages:', e);
+            }
+        }
+    });
+    </script>
+
+    <!-- Navigation Bar -->
+    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' %}
+        {% include "components/navbar.html" %}
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="ldm-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' %}
+        {% include "components/footer.html" %}
+    {% endif %}
+
+    <!-- Comparison Bar -->
+    <div id="ldm-compare-bar" class="ldm-compare-bar">
+        <div class="ldm-compare-bar-inner">
+            <div id="ldm-compare-items" class="ldm-compare-bar-items"></div>
+            <div class="ldm-compare-bar-actions">
+                <button class="ldm-compare-bar-clear" onclick="ldmCompare.clearCompare()">
+                    <i class="ri-delete-bin-line"></i> Xóa tất cả
+                </button>
+                <button id="ldm-compare-go-btn" class="ldm-compare-bar-go" onclick="ldmCompare.goToCompare()" disabled>
+                    <i class="ri-arrow-left-right-line"></i> So sánh ngay
+                </button>
+                <button class="ldm-compare-bar-toggle" onclick="ldmCompare.toggleBar()" title="Thu gọn">
+                    <i class="ri-arrow-down-s-line" style="font-size:18px;color:var(--ldm-text-light);"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison FAB -->
+    <button id="ldm-compare-fab" class="ldm-compare-fab" onclick="ldmCompare.toggleBar()">
+        <i class="ri-arrow-left-right-line" style="font-size:22px;"></i>
+        <span id="ldm-compare-fab-count" class="ldm-compare-fab-badge">0</span>
+    </button>
+
+    <!-- Chatbot Widget -->
+    <div id="ldm-chat-window" class="ldm-chat-window">
+        <div class="ldm-chat-header">
+            <div class="ldm-chat-avatar"><i class="ri-robot-2-line"></i></div>
+            <div class="ldm-chat-header-info">
+                <h6>CHATBOT</h6>
+                <small>Trợ lý mua sắm thông minh</small>
+            </div>
+        </div>
+        <div class="ldm-chat-messages" id="ldmChatMessages"></div>
+        <div class="ldm-chat-input-area">
+            <input type="text" id="ldmChatInput" placeholder="Say something..." class="ldm-chat-input">
+            <button class="ldm-chat-send" onclick="sendChatMessage()">
+                <i class="ri-send-plane-2-line"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Page-specific Scripts -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

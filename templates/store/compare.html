@@ -1,29 +1,24 @@
-{% extends 'base.html' %}
+﻿{% extends 'store/base.html' %}
 {% load custom_filters %}
 {% load static %}
 
 {% block title %}So sánh sản phẩm - MOBILE STORE{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
+{% endblock %}
+
 {% block content %}
-{# CSS có sử dụng Django template tag {{ products|length }} nên giữ lại phần grid-template-columns #}
-<style>
-/* Grid columns cần giữ lại do sử dụng Django template tag */
-.qh-compare-grid {
-    display: grid;
-    grid-template-columns: repeat({{ products|length }}, 1fr);
-}
-</style>
-<link rel="stylesheet" href="{% static 'css/compare.css' %}">
 
 <!-- Tiêu đề -->
-<div class="qh-compare-header">
+<div class="ldm-compare-header">
     <h1>SO SÁNH SẢN PHẨM ({{ products|length }})</h1>
 </div>
 
 <!-- Bộ lọc -->
-<div class="qh-compare-filter">
-    <label for="qh-compare-filter-select"><i class="ri-filter-3-line"></i> Lọc thông số:</label>
-    <select id="qh-compare-filter-select" onchange="filterSpecs(this.value)">
+<div class="ldm-compare-filter">
+    <label for="ldm-compare-filter-select"><i class="ri-filter-3-line"></i> Lọc thông số:</label>
+    <select id="ldm-compare-filter-select" onchange="filterSpecs(this.value)">
         <option value="all">Tất cả</option>
         <option value="same">Chỉ giống nhau</option>
         <option value="diff">Chỉ khác nhau</option>
@@ -31,45 +26,45 @@
 </div>
 
 <!-- Các cột sản phẩm -->
-<div class="qh-compare-grid">
+<div class="ldm-compare-grid">
     {% for item in compare_data %}
-    <div class="qh-compare-col">
+    <div class="ldm-compare-col">
         <!-- Tiêu đề sản phẩm -->
-        <div class="qh-compare-col-header">
-            <button class="qh-compare-col-remove" onclick="removeAndReload({{ item.product.id }})" title="Xóa khỏi so sánh">
+        <div class="ldm-compare-col-header">
+            <button class="ldm-compare-col-remove" data-product-id="{{ item.product.id }}" title="Xóa khỏi so sánh">
                 <i class="ri-close-line"></i>
             </button>
             {% if item.product.image %}
-            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="qh-compare-col-img">
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="ldm-compare-col-img">
             {% else %}
-            <div class="qh-compare-col-img-empty">
+            <div class="ldm-compare-col-img-empty">
                 <i class="ri-image-line" style="font-size:32px;"></i>
             </div>
             {% endif %}
-            <div class="qh-compare-col-name">{{ item.product.name }}</div>
+            <div class="ldm-compare-col-name">{{ item.product.name }}</div>
             {% if item.product.detail and item.product.detail.summary_original_price and item.product.detail.summary_original_price > item.product.detail.discounted_price and item.product.detail.summary_discount_percent > 0 %}
-            <div class="qh-compare-col-oldprice">{{ item.product.detail.summary_original_price|format_price_with_unit }}</div>
+            <div class="ldm-compare-col-oldprice">{{ item.product.detail.summary_original_price|format_price_with_unit }}</div>
             {% endif %}
-            <div class="qh-compare-col-price">
+            <div class="ldm-compare-col-price">
                 {% if item.product.detail %}{{ item.product.detail.discounted_price|format_price_with_unit }}{% else %}{{ item.product.price|format_price_with_unit }}{% endif %}
             </div>
         </div>
 
         <!-- Nhóm thông số kỹ thuật -->
         {% for group in item.groups %}
-        <div class="qh-compare-spec-group">
-            <div class="qh-compare-spec-group-title">{{ group.title }}</div>
+        <div class="ldm-compare-spec-group">
+            <div class="ldm-compare-spec-group-title">{{ group.title }}</div>
             <table>
                 {% for spec in group.items %}
-                <tr class="qh-spec-row" data-label="{{ spec.label }}">
+                <tr class="ldm-spec-row" data-label="{{ spec.label }}">
                     <td>{{ spec.label }}</td>
-                    <td class="qh-spec-val">{{ spec.value }}</td>
+                    <td class="ldm-spec-val">{{ spec.value }}</td>
                 </tr>
                 {% endfor %}
             </table>
         </div>
         {% empty %}
-        <div class="qh-compare-col-empty">
+        <div class="ldm-compare-col-empty">
             <i class="ri-information-line" style="font-size:24px;display:block;margin-bottom:8px;color:#ccc;"></i>
             Chưa có thông số kỹ thuật
         </div>
@@ -84,3 +79,5 @@
 {# JS thuần - đã tách ra file static/js/compare.js #}
 <script src="{% static 'js/compare.js' %}"></script>
 {% endblock %}
+
+

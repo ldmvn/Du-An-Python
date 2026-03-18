@@ -6,7 +6,8 @@ from .models import (
     Order,
     OrderItem,
     Review,
-    Banner
+    Banner,
+    Wishlist
 )
 
 # ================== PRODUCT ==================
@@ -18,10 +19,10 @@ class ProductSpecificationInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     # show discount and allow inline editing of price and discount for quick adjustments
-    list_display = ('id', 'name', 'category', 'ram', 'rom', 'price', 'discount', 'created_at')
+    list_display = ('id', 'name', 'category', 'ram', 'rom', 'price', 'discount', 'stock', 'created_at')
     list_filter = ('category', 'ram', 'rom', 'created_at')
     search_fields = ('name',)
-    list_editable = ('ram', 'rom', 'price','discount',)
+    list_editable = ('ram', 'rom', 'price', 'discount', 'stock')
     inlines = [ProductSpecificationInline]
 
 # ================== CATEGORY ==================
@@ -64,3 +65,14 @@ class BannerAdmin(admin.ModelAdmin):
 
 # ================== SPEC (OPTIONAL) ==================
 admin.site.register(ProductSpecification)
+
+# ================== WISHLIST ==================
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ('user', 'get_product_count', 'created_at')
+    search_fields = ('user__username',)
+    filter_horizontal = ('products',)
+    
+    def get_product_count(self, obj):
+        return obj.products.count()
+    get_product_count.short_description = 'Products'
