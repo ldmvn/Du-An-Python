@@ -344,17 +344,37 @@
 
     <!-- SIDEBAR -->
     <nav class="ldm-sidebar">
+        <!-- Dashboard Section -->
         <div class="ldm-sidebar-group-title">THỐNG KÊ</div>
         <a href="{% url 'store:dashboard' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
             <i class="ri-bar-chart-2-line"></i> Bảng điều khiển
         </a>
 
-        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">QUẢN LÝ</div>
+        <!-- Management Section -->
+        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">QUẢN LÝ SẢN PHẨM</div>
         <a href="{% url 'store:admin_products' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_products' %}active{% endif %}">
             <i class="ri-product-hunt-line"></i> Sản phẩm
         </a>
+        <a href="{% url 'store:category_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+            <i class="ri-price-tag-3-line"></i> Danh mục
+        </a>
+        
+        <!-- Orders & Sales Section -->
+        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">BÁN HÀNG</div>
         <a href="{% url 'store:admin_orders' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}">
             <i class="ri-shopping-cart-line"></i> Đơn hàng
+        </a>
+        
+        <!-- Content Section -->
+        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">NỘI DUNG</div>
+        <a href="{% url 'store:banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'banner_admin_list' %}active{% endif %}">
+            <i class="ri-image-add-line"></i> Banner
+        </a>
+        
+        <!-- User Management Section -->
+        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">NGƯỜI DÙNG</div>
+        <a href="{% url 'store:user_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+            <i class="ri-user-3-line"></i> Thành viên
         </a>
     </nav>
 

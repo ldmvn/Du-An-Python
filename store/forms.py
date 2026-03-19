@@ -77,7 +77,7 @@ class UserManagementForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['category', 'name', 'price', 'ram', 'rom', 'discount', 'description', 'image']
+        fields = ['category', 'name', 'price', 'stock', 'ram', 'rom', 'discount', 'description', 'image']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

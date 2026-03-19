@@ -60,7 +60,7 @@
                     </td>
                     <td style="text-align:center;">
                         <a href="{% url 'store:dashboard_edit_product' product.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Sửa</a>
-                        <button onclick="LDMProducts.deleteProduct({{ product.id }}, '{{ product.name|escapejs }}')" class="ldm-button ldm-button-danger" style="padding:6px 12px;font-size:12px;">Xóa</button>
+                        <button class="ldm-button ldm-button-danger delete-product-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" style="padding:6px 12px;font-size:12px;">Xóa</button>
                     </td>
                 </tr>
                 {% empty %}
@@ -96,6 +96,17 @@
 </div>
 
 <script>
+// Delete product handler
+document.querySelectorAll('.delete-product-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const productId = this.dataset.productId;
+        const productName = this.dataset.productName;
+        if (confirm(`Xóa sản phẩm "${productName}"?`)) {
+            window.location = `/dashboard/delete/${productId}/`;
+        }
+    });
+});
+
 // Simple search filter
 document.getElementById('productSearch').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();

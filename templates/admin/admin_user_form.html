@@ -1,0 +1,142 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}{% if edit_user %}Sửa thành viên{% else %}Thêm thành viên{% endif %}{% endblock %}
+
+{% block content %}
+<div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 30px;">
+        <h2 style="margin: 0; color: var(--ldm-text); font-size: 28px; font-weight: 700;">
+            {% if edit_user %}✏️ Sửa thành viên{% else %}➕ Thêm thành viên{% endif %}
+        </h2>
+        <p style="margin: 5px 0 0 0; color: var(--ldm-text-secondary); font-size: 14px;">
+            {% if edit_user %}Cập nhật thông tin thành viên <strong>{{ edit_user.username }}</strong>{% else %}Tạo tài khoản mới{% endif %}
+        </p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+        <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; 
+                    {% if message.tags == 'success' %}background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;
+                    {% elif message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+                    {% else %}background: #dbeafe; color: #0c2340; border: 1px solid #93c5fd;{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        {% csrf_token %}
+
+        <!-- Username -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.username.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--ldm-text); font-weight: 600; font-size: 14px;">
+                Tên đăng nhập
+            </label>
+            <input type="text" id="{{ form.username.id_for_label }}" name="username" value="{{ form.username.value|default:'' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--ldm-border); border-radius: 4px; font-size: 14px; box-sizing: border-box;" 
+                   placeholder="Tên đăng nhập" required>
+            {% if form.username.errors %}
+                <p style="color: var(--ldm-danger); font-size: 12px; margin-top: 5px;">{{ form.username.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Email -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.email.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--ldm-text); font-weight: 600; font-size: 14px;">
+                Email
+            </label>
+            <input type="email" id="{{ form.email.id_for_label }}" name="email" value="{{ form.email.value|default:'' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--ldm-border); border-radius: 4px; font-size: 14px; box-sizing: border-box;" 
+                   placeholder="Email">
+            {% if form.email.errors %}
+                <p style="color: var(--ldm-danger); font-size: 12px; margin-top: 5px;">{{ form.email.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- First Name -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.first_name.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--ldm-text); font-weight: 600; font-size: 14px;">
+                Tên
+            </label>
+            <input type="text" id="{{ form.first_name.id_for_label }}" name="first_name" value="{{ form.first_name.value|default:'' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--ldm-border); border-radius: 4px; font-size: 14px; box-sizing: border-box;" 
+                   placeholder="Tên">
+            {% if form.first_name.errors %}
+                <p style="color: var(--ldm-danger); font-size: 12px; margin-top: 5px;">{{ form.first_name.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Last Name -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.last_name.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--ldm-text); font-weight: 600; font-size: 14px;">
+                Họ
+            </label>
+            <input type="text" id="{{ form.last_name.id_for_label }}" name="last_name" value="{{ form.last_name.value|default:'' }}" 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--ldm-border); border-radius: 4px; font-size: 14px; box-sizing: border-box;" 
+                   placeholder="Họ">
+            {% if form.last_name.errors %}
+                <p style="color: var(--ldm-danger); font-size: 12px; margin-top: 5px;">{{ form.last_name.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Password -->
+        <div style="margin-bottom: 20px;">
+            <label for="{{ form.password.id_for_label }}" style="display: block; margin-bottom: 8px; color: var(--ldm-text); font-weight: 600; font-size: 14px;">
+                Mật khẩu
+            </label>
+            <input type="password" id="{{ form.password.id_for_label }}" name="password" 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--ldm-border); border-radius: 4px; font-size: 14px; box-sizing: border-box;" 
+                   placeholder="Để trống để giữ mật khẩu hiện tại">
+            <p style="margin: 5px 0 0 0; color: var(--ldm-text-secondary); font-size: 12px;">{{ form.password.help_text|safe }}</p>
+            {% if form.password.errors %}
+                <p style="color: var(--ldm-danger); font-size: 12px; margin-top: 5px;">{{ form.password.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Active Status -->
+        <div style="margin-bottom: 20px; padding: 15px; background: var(--ldm-light); border-radius: 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--ldm-text); font-weight: 600; margin: 0;">
+                <input type="checkbox" id="{{ form.is_active.id_for_label }}" name="is_active" 
+                       {% if form.is_active.value %}checked{% endif %} 
+                       style="width: 18px; height: 18px; cursor: pointer;">
+                <span>Bật hoạt động</span>
+            </label>
+            <p style="margin: 8px 0 0 0; color: var(--ldm-text-secondary); font-size: 12px;">Nếu không chọn, tài khoản sẽ bị vô hiệu hóa</p>
+        </div>
+
+        <!-- Staff Status -->
+        <div style="margin-bottom: 20px; padding: 15px; background: var(--ldm-light); border-radius: 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--ldm-text); font-weight: 600; margin: 0;">
+                <input type="checkbox" id="{{ form.is_staff.id_for_label }}" name="is_staff" 
+                       {% if form.is_staff.value %}checked{% endif %} 
+                       style="width: 18px; height: 18px; cursor: pointer;">
+                <span>Cấp quyền Admin</span>
+            </label>
+            <p style="margin: 8px 0 0 0; color: var(--ldm-text-secondary); font-size: 12px;">Admin có quyền truy cập bảng điều khiển</p>
+        </div>
+
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+        <div style="margin-bottom: 20px; padding: 15px; background: #fee2e2; color: #991b1b; border-radius: 4px; border: 1px solid #fca5a5;">
+            {% for error in form.non_field_errors %}
+                <p style="margin: 0;">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 10px; margin-top: 30px;">
+            <a href="{% url 'store:user_list' %}" style="flex: 1; padding: 12px; text-align: center; background: var(--ldm-light); color: var(--ldm-text); border: 1px solid var(--ldm-border); border-radius: 4px; text-decoration: none; font-weight: 600; transition: background 0.2s;">Hủy</a>
+            <button type="submit" style="flex: 1; padding: 12px; background: var(--ldm-primary); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--ldm-primary-dark)'" onmouseout="this.style.background='var(--ldm-primary)'">
+                {% if edit_user %}💾 Lưu thay đổi{% else %}➕ Tạo thành viên{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

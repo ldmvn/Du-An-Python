@@ -10,7 +10,7 @@ function addToCartAjax(productId, quantity = 1) {
     formData.append('quantity', quantity);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
-    fetch('{% url "store:add_to_cart_ajax" %}', {
+    fetch(window.API_ENDPOINTS.addToCart, {
         method: 'POST',
         body: formData,
     })
@@ -36,7 +36,7 @@ function updateCartQuantityAjax(productId, quantity) {
     formData.append('quantity', quantity);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
-    fetch('{% url "store:update_cart_quantity_ajax" %}', {
+    fetch(window.API_ENDPOINTS.updateCartQuantity, {
         method: 'POST',
         body: formData,
     })
@@ -68,7 +68,7 @@ function removeFromCartAjax(productId) {
     formData.append('product_id', productId);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
-    fetch('{% url "store:remove_from_cart_ajax" %}', {
+    fetch(window.API_ENDPOINTS.removeFromCart, {
         method: 'POST',
         body: formData,
     })

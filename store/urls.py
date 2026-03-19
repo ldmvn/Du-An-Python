@@ -16,8 +16,9 @@ urlpatterns = [
 
     # ========== DASHBOARD (ADMIN) ==========
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('admin/products/', views.admin_products, name='admin_products'),
-    path('admin/orders/', views.admin_orders, name='admin_orders'),
+    path('dashboard/admin/', views.dashboard, name='dashboard_admin'),
+    path('dashboard/admin/products/', views.admin_products, name='admin_products'),
+    path('dashboard/admin/orders/', views.admin_orders, name='admin_orders'),
     path('dashboard/create/', views.product_create, name='product_create'),
     path('dashboard/edit/<int:pk>/', views.dashboard_edit_product, name='dashboard_edit_product'),
     path('dashboard/delete/<int:pk>/', views.product_delete, name='product_delete'),
@@ -41,6 +42,7 @@ urlpatterns = [
     path('ajax/cart/remove/', views.remove_from_cart_ajax, name='remove_from_cart_ajax'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/cart/', views.checkout_from_cart, name='checkout_from_cart'),
+    path('ajax/order/update-status/', views.update_order_status, name='update_order_status'),
 
     # ========== WISHLIST & COMPARE ==========
     path('wishlist/', views.wishlist, name='wishlist'),

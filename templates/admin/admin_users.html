@@ -1,0 +1,161 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Quản lý thành viên{% endblock %}
+
+{% block content %}
+<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="margin-bottom: 30px;">
+        <h2 style="margin: 0; color: var(--ldm-text); font-size: 28px; font-weight: 700;">👥 Quản lý thành viên</h2>
+        <p style="margin: 5px 0 0 0; color: var(--ldm-text-secondary); font-size: 14px;">Quản lý tài khoản người dùng hệ thống</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+        <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; 
+                    {% if message.tags == 'success' %}background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;
+                    {% elif message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+                    {% else %}background: #dbeafe; color: #0c2340; border: 1px solid #93c5fd;{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Users Table -->
+    {% if users %}
+    <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--ldm-light); border-bottom: 1px solid var(--ldm-border);">
+                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 80px;">ID</th>
+                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 150px;">Tên đăng nhập</th>
+                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 200px;">Email</th>
+                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 150px;">Tên đầy đủ</th>
+                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 100px;">Trạng thái</th>
+                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 100px;">Quyền</th>
+                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 150px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid var(--ldm-border); transition: background 0.2s;">
+                    <td style="padding: 16px; color: var(--ldm-text);"><strong>#{{ user.id }}</strong></td>
+                    <td style="padding: 16px; color: var(--ldm-text);"><strong>{{ user.username }}</strong></td>
+                    <td style="padding: 16px; color: var(--ldm-text-secondary);">{{ user.email }}</td>
+                    <td style="padding: 16px; color: var(--ldm-text);">
+                        {% if user.first_name or user.last_name %}
+                            {{ user.first_name }} {{ user.last_name }}
+                        {% else %}
+                            <span style="color: #999;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px; text-align: center;">
+                        {% if user.is_active %}
+                            <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 12px; font-weight: 600;">✓ Hoạt động</span>
+                        {% else %}
+                            <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 4px; font-size: 12px; font-weight: 600;">✗ Vô hiệu</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px; text-align: center;">
+                        {% if user.is_staff %}
+                            <span style="display: inline-block; padding: 4px 12px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; font-weight: 600;">⚙️ Admin</span>
+                        {% else %}
+                            <span style="display: inline-block; padding: 4px 12px; background: #f3f4f6; color: #6b7280; border-radius: 4px; font-size: 12px;">Khách hàng</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px; text-align: center;">
+                        <a href="{% url 'store:user_edit' user.id %}" style="display: inline-block; padding: 6px 12px; background: var(--ldm-primary); color: white; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600; margin-right: 6px; transition: background 0.2s;" onmouseover="this.style.background='var(--ldm-primary-dark)'" onmouseout="this.style.background='var(--ldm-primary)'">✏️ Sửa</a>
+                        {% if user.id != request.user.id %}
+                        <button class="ldm-delete-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}" style="display: inline-block; padding: 6px 12px; background: var(--ldm-danger); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--ldm-danger)'">🗑️ Xóa</button>
+                        {% else %}
+                        <button style="display: inline-block; padding: 6px 12px; background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: not-allowed;">🗑️ Xóa</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="background: white; padding: 40px; border-radius: 8px; text-align: center;">
+        <p style="color: var(--ldm-text-secondary); font-size: 16px;">📭 Chưa có thành viên nào</p>
+    </div>
+    {% endif %}
+
+    <!-- Back Link -->
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'store:dashboard' %}" style="color: var(--ldm-primary); text-decoration: none; font-weight: 600; font-size: 14px;">← Quay lại Dashboard</a>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div id="deleteUserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 8px; padding: 30px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin: 0 0 10px 0; color: var(--ldm-danger); font-size: 18px;">⚠️ Xác nhận xóa thành viên</h3>
+        <p style="margin: 0 0 20px 0; color: var(--ldm-text-secondary); line-height: 1.5;">Bạn có chắc muốn xóa thành viên <strong id="deleteUserName" style="color: var(--ldm-text);"></strong>?</p>
+        <p style="margin: 0 0 20px 0; color: var(--ldm-text-secondary); font-size: 14;">Hành động này không thể hoàn tác.</p>
+        <div style="display: flex; gap: 10px;">
+            <button id="cancelDeleteBtn" style="flex: 1; padding: 10px; background: var(--ldm-light); color: var(--ldm-text); border: 1px solid var(--ldm-border); border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Hủy</button>
+            <button id="confirmDeleteBtn" style="flex: 1; padding: 10px; background: var(--ldm-danger); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Xóa</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookie = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
+    return cookie ? cookie.split('=')[1] : '';
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Delete User Handler
+let userToDelete = null;
+
+document.querySelectorAll('.ldm-delete-user-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        userToDelete = {
+            id: this.getAttribute('data-user-id'),
+            username: this.getAttribute('data-username')
+        };
+        document.getElementById('deleteUserName').textContent = userToDelete.username;
+        document.getElementById('deleteUserModal').style.display = 'flex';
+    });
+});
+
+document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+    document.getElementById('deleteUserModal').style.display = 'none';
+    userToDelete = null;
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (!userToDelete) return;
+    
+    fetch(`/dashboard/users/delete/${userToDelete.id}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = '{% url "store:user_list" %}';
+        } else {
+            alert('Lỗi khi xóa thành viên');
+            document.getElementById('deleteUserModal').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Lỗi khi xóa thành viên');
+        document.getElementById('deleteUserModal').style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

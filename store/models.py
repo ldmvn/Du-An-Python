@@ -96,9 +96,9 @@ class Product(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Chờ xử lý'),
-        ('approved', 'Đã duyệt'),
+        ('processing', 'Xử lý'),
         ('shipped', 'Đang giao'),
-        ('completed', 'Hoàn tất'),
+        ('delivered', 'Hoàn tất'),
         ('cancelled', 'Đã huỷ'),
     ]
     

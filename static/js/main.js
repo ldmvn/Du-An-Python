@@ -275,6 +275,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// ====== CART UI FUNCTIONS ======
+
+/**
+ * Update cart UI with new information
+ */
+function updateCartUI(cartCount, cartTotal) {
+    // Update cart count in header
+    const cartCountElement = document.getElementById('cart-count');
+    if (cartCountElement) {
+        cartCountElement.textContent = cartCount;
+        // Show/hide the count badge
+        if (cartCount > 0) {
+            cartCountElement.style.display = 'inline-flex';
+        } else {
+            cartCountElement.style.display = 'none';
+        }
+    }
+    
+    // Update cart total in sidebar/header if it exists
+    const cartTotalElement = document.getElementById('cart-total');
+    if (cartTotalElement) {
+        cartTotalElement.textContent = formatPrice(cartTotal);
+    }
+}
+
 // Export functions
 window.formatPrice = formatPrice;
 window.getCookie = getCookie;
@@ -287,4 +312,5 @@ window.scrollToElement = scrollToElement;
 window.animateElement = animateElement;
 window.isInViewport = isInViewport;
 window.lazyLoadImages = lazyLoadImages;
+window.updateCartUI = updateCartUI;
 

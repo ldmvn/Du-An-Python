@@ -5,6 +5,7 @@
 {% block page_title %}📦 Quản Lý Đơn Hàng{% endblock %}
 
 {% block content %}
+{% csrf_token %}
 <div class="ldm-section">
     <div class="ldm-section-header">
         <h2 class="ldm-section-title">Danh sách đơn hàng</h2>
@@ -63,26 +64,18 @@
                         {% endif %}
                     </td>
                     <td style="text-align:center;">
-                        <span class="ldm-status ldm-status-{{ order.status|lower }}" style="">
-                            {% if order.status == 'pending' %}
-                            <i class="ri-time-line"></i> Chờ xác nhận
-                            {% elif order.status == 'processing' %}
-                            <i class="ri-settings-line"></i> Xử lý
-                            {% elif order.status == 'shipped' %}
-                            <i class="ri-truck-line"></i> Đã gửi
-                            {% elif order.status == 'delivered' %}
-                            <i class="ri-check-line"></i> Hoàn thành
-                            {% elif order.status == 'cancelled' %}
-                            <i class="ri-close-line"></i> Hủy
-                            {% else %}
-                            {{ order.status }}
-                            {% endif %}
-                        </span>
+                        <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}" style="padding:6px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:13px;background:white;cursor:pointer;">
+                            <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Chờ xác nhận</option>
+                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Xử lý</option>
+                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Đã gửi</option>
+                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✓ Hoàn thành</option>
+                            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy</option>
+                        </select>
                     </td>
                     <td style="text-align:center;font-size:12px;color:#64748b;">{{ order.created_at|date:"d/m/Y" }}</td>
                     <td style="text-align:center;">
                         <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Chi tiết</a>
-                        <button onclick="if(confirm('Xóa đơn hàng này?')) { window.location='{% url 'store:delete_order' order.id %}'; }" class="ldm-button ldm-button-danger" style="padding:6px 12px;font-size:12px;">Xóa</button>
+                        <button class="ldm-button ldm-button-danger delete-order-btn" data-order-id="{{ order.id }}" style="padding:6px 12px;font-size:12px;">Xóa</button>
                     </td>
                 </tr>
                 {% empty %}
@@ -157,6 +150,23 @@
     background: #f1f5f9 !important;
     color: #1e293b !important;
 }
+
+.order-status-select {
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.order-status-select:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.order-status-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+</style>
 </style>
 
 <script>
@@ -191,6 +201,61 @@ document.getElementById('orderSearch').addEventListener('keyup', function(e) {
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Delete order handler
+document.querySelectorAll('.delete-order-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (confirm('Xóa đơn hàng này?')) {
+            const orderId = this.dataset.orderId;
+            window.location = `/order/delete/${orderId}/`;
+        }
+    });
+});
+
+// Update order status
+document.querySelectorAll('.order-status-select').forEach(select => {
+    select.addEventListener('change', function() {
+        const orderId = this.dataset.orderId;
+        const newStatus = this.value;
+        const oldStatus = this.dataset.currentStatus;
+        
+        if (!confirm(`Cập nhật trạng thái đơn hàng thành "${newStatus}"?`)) {
+            this.value = oldStatus;
+            return;
+        }
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        const updateUrl = '{% url "store:update_order_status" %}';
+        
+        fetch(updateUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Cập nhật trạng thái thành công!');
+                this.dataset.currentStatus = newStatus;
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + (data.error || 'Cập nhật thất bại'));
+                this.value = oldStatus;
+            }
+        })
+        .catch(error => {
+            alert('❌ Lỗi kết nối: ' + error.message);
+            this.value = oldStatus;
+        });
     });
 });
 </script>

@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models import Q
 import requests
 
 from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner, Wishlist
@@ -229,13 +230,40 @@ def product_search(request):
 # ================== CART ==================
 @login_required(login_url='store:login')
 def add_to_cart(request, product_id):
-    cart = request.session.get('cart', {})
     product_id = str(product_id)
-
-    cart[product_id] = cart.get(product_id, 0) + 1
-    request.session['cart'] = cart
-
-    messages.success(request, '🛒 Đã thêm vào giỏ hàng')
+    
+    try:
+        product = Product.objects.get(id=int(product_id))
+        cart = request.session.get('cart', {})
+        
+        if product_id in cart:
+            # Item already in cart - increase quantity
+            if isinstance(cart[product_id], dict):
+                # New format
+                cart[product_id]['quantity'] += 1
+            else:
+                # Old format - convert to new format and add
+                old_qty = cart[product_id]
+                cart[product_id] = {
+                    'name': product.name,
+                    'price': product.get_discounted_price(),
+                    'quantity': old_qty + 1,
+                    'image': product.image.url if product.image else ''
+                }
+        else:
+            # New item - add with new format
+            cart[product_id] = {
+                'name': product.name,
+                'price': product.get_discounted_price(),
+                'quantity': 1,
+                'image': product.image.url if product.image else ''
+            }
+        
+        request.session['cart'] = cart
+        messages.success(request, '🛒 Đã thêm vào giỏ hàng')
+    except Product.DoesNotExist:
+        messages.error(request, '❌ Sản phẩm không tồn tại')
+    
     return redirect('store:home')
 
 
@@ -245,14 +273,24 @@ def cart_view(request):
     products = []
     total = 0
 
-    for product_id, quantity in cart.items():
+    for product_id, cart_item in cart.items():
         try:
             product = Product.objects.get(id=int(product_id))
-            product.quantity = quantity
-            product.subtotal = product.price * quantity
+            
+            # Handle both old format (int) and new format (dict)
+            if isinstance(cart_item, dict):
+                # New format from AJAX: {'name': str, 'price': int, 'quantity': int, 'image': str}
+                product.quantity = cart_item.get('quantity', 1)
+                product.price = cart_item.get('price', product.get_discounted_price())
+            else:
+                # Old format: just an integer quantity
+                product.quantity = cart_item
+                product.price = product.get_discounted_price()
+            
+            product.subtotal = product.price * product.quantity
             total += product.subtotal
             products.append(product)
-        except Product.DoesNotExist:
+        except (Product.DoesNotExist, ValueError):
             pass
 
     context = get_base_context(request)
@@ -449,16 +487,27 @@ def checkout_from_cart(request):
     cart_items = []
     total_amount = 0
     
-    for product_id, quantity in cart.items():
+    for product_id, cart_item in cart.items():
         try:
             product = Product.objects.get(id=int(product_id))
-            item_total = product.get_discounted_price() * quantity
+            
+            # Handle both old format (int) and new format (dict)
+            if isinstance(cart_item, dict):
+                # New format from AJAX: {'name': str, 'price': int, 'quantity': int, 'image': str}
+                quantity = cart_item.get('quantity', 1)
+                price = cart_item.get('price', product.get_discounted_price())
+            else:
+                # Old format: just an integer quantity
+                quantity = cart_item
+                price = product.get_discounted_price()
+            
+            item_total = price * quantity
             total_amount += item_total
             
             cart_items.append({
                 'product': product,
                 'quantity': quantity,
-                'price': product.get_discounted_price(),
+                'price': price,
                 'total': item_total
             })
         except Product.DoesNotExist:
@@ -775,6 +824,21 @@ def dashboard(request):
     # This would need visitor data from analytics
     conversion_rate = 1.67
     
+    # Monthly revenue calculation
+    monthly_revenue = []
+    for month in range(1, 13):
+        month_start_date = today.replace(month=month, day=1)
+        if month == 12:
+            month_end_date = today.replace(year=today.year + 1, month=1, day=1)
+        else:
+            month_end_date = today.replace(month=month + 1, day=1)
+        
+        month_rev = sum(
+            order.total_amount for order in orders 
+            if month_start_date <= order.created_at.date() < month_end_date
+        ) if orders else 0
+        monthly_revenue.append(int(month_rev))
+    
     # Pagination for products
     paginator = Paginator(all_products, 15)
     page_number = request.GET.get('page', 1)
@@ -800,6 +864,7 @@ def dashboard(request):
         'conversion_rate': f"{conversion_rate:.2f}",
         'recent_orders': recent_orders,
         'recent_products': recent_products,
+        'monthly_revenue': monthly_revenue,
     })
     return render(request, 'admin/admin_dashboard.html', context)
 
@@ -812,13 +877,14 @@ def product_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, '✅ Thêm sản phẩm thành công')
-            return redirect('store:dashboard')
+            return redirect('store:admin_products')
     else:
         form = ProductForm()
 
     context = get_base_context(request)
     context['form'] = form
-    return render(request, 'admin/products.html', context)
+    context['title'] = 'Thêm sản phẩm mới'
+    return render(request, 'store/product_form.html', context)
 
 
 @login_required(login_url='store:login')
@@ -832,7 +898,7 @@ def dashboard_edit_product(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, '✅ Cập nhật sản phẩm thành công')
-            return redirect('store:dashboard')
+            return redirect('store:admin_products')
     else:
         form = ProductForm(instance=product)
 
@@ -840,20 +906,19 @@ def dashboard_edit_product(request, pk):
     context.update({
         'form': form,
         'product': product,
-        'specs': specs
+        'specs': specs,
+        'title': f'Chỉnh sửa sản phẩm: {product.name}'
     })
     return render(request, 'store/product_form.html', context)
 
 
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
-@login_required(login_url='store:login')
-@user_passes_test(is_admin, login_url='store:login')
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     product.delete()
     messages.success(request, '🗑️ Đã xoá sản phẩm')
-    return redirect('store:dashboard')
+    return redirect('store:admin_products')
 
 
 # ================== CATEGORY MANAGEMENT ==================
@@ -928,12 +993,14 @@ def category_delete(request, pk):
 # ================== USER MANAGEMENT ==================
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
 def user_list(request):
     """List all users"""
     users = User.objects.all().order_by('-date_joined')
     context = get_base_context(request)
     context['users'] = users
-    return render(request, 'store/user_list.html', context)
+    return render(request, 'admin/admin_users.html', context)
 
 
 @login_required(login_url='store:login')
@@ -954,7 +1021,7 @@ def user_edit(request, pk):
     context = get_base_context(request)
     context['form'] = form
     context['edit_user'] = user
-    return render(request, 'profile.html', context)
+    return render(request, 'admin/admin_user_form.html', context)
 
 
 @login_required(login_url='store:login')
@@ -965,12 +1032,22 @@ def user_delete(request, pk):
     
     # Prevent deleting self
     if user.id == request.user.id:
+        if request.method == 'POST':
+            return JsonResponse({'error': 'Bạn không thể xoá tài khoản của chính mình'}, status=400)
         messages.error(request, '❌ Bạn không thể xoá tài khoản của chính mình')
         return redirect('store:user_list')
     
-    username = user.username
-    user.delete()
-    messages.success(request, f'🗑️ Đã xoá thành viên {username}')
+    # Handle POST request for deletion
+    if request.method == 'POST':
+        username = user.username
+        user.delete()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Đã xoá thành viên {username}'})
+        messages.success(request, f'🗑️ Đã xoá thành viên {username}')
+        return redirect('store:user_list')
+    
+    # GET request - redirect for safety
+    messages.warning(request, '❌ Phương thức yêu cầu không hợp lệ')
     return redirect('store:user_list')
 
 
@@ -1326,8 +1403,6 @@ def remove_from_cart_ajax(request):
 # ================== ADMIN PRODUCTS & ORDERS ==================
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
-@login_required(login_url='store:login')
-@user_passes_test(is_admin, login_url='store:login')
 def admin_products(request):
     """Admin products management page"""
     from django.core.paginator import Paginator
@@ -1354,7 +1429,21 @@ def admin_orders(request):
     """Admin orders management page"""
     from django.core.paginator import Paginator
     
+    # Get all orders
+    query = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '')
+    
     orders = Order.objects.all().order_by('-created_at')
+    
+    if query:
+        orders = orders.filter(
+            Q(order_number__icontains=query) |
+            Q(user__username__icontains=query) |
+            Q(user__email__icontains=query)
+        )
+    
+    if status_filter and status_filter != 'all':
+        orders = orders.filter(status=status_filter)
     
     # Pagination
     paginator = Paginator(orders, 20)
@@ -1366,6 +1455,40 @@ def admin_orders(request):
         'orders': orders_page,
     })
     return render(request, 'admin/admin_orders.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def update_order_status(request):
+    """AJAX endpoint to update order status"""
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            order_id = data.get('order_id')
+            new_status = data.get('status')
+            
+            order = get_object_or_404(Order, id=order_id)
+            
+            valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+            if new_status not in valid_statuses:
+                return JsonResponse({'success': False, 'error': 'Trạng thái không hợp lệ'})
+            
+            old_status = order.status
+            order.status = new_status
+            order.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'✅ Cập nhật trạng thái từ {old_status} sang {new_status}',
+                'new_status': new_status
+            })
+        except Order.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Đơn hàng không tồn tại'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+    return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'}, status=400)
 
 
 # ================== PLACEHOLDER VIEW ==================

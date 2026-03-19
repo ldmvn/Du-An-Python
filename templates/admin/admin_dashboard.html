@@ -141,19 +141,84 @@
     </div>
 </div>
 
+<script type="application/json" id="dashboardData">
+{{ monthly_revenue|safe }}
+</script>
+
 <script>
-// Revenue Chart
-const revenueCtx = document.getElementById('revenueChart');
-if (revenueCtx) {
-    const revenueChart = new Chart(revenueCtx, {
+// Monthly revenue data
+const monthlyRevenueData = JSON.parse(document.getElementById('dashboardData').textContent);
+
+// Destroy ALL chart instances and reset canvas
+function destroyRevenueChart() {
+    const revenueCanvas = document.getElementById('revenueChart');
+    if (!revenueCanvas) return;
+    
+    // Method 1: Destroy instance if stored on window
+    if (window.revenueChartInstance) {
+        try {
+            window.revenueChartInstance.destroy();
+        } catch(e) {
+            console.log('Error destroying chart instance:', e.message);
+        }
+        window.revenueChartInstance = null;
+    }
+    
+    // Method 2: Check and destroy chart stored on canvas element (Chart.js v3+)
+    if (revenueCanvas.__chartjs__) {
+        try {
+            revenueCanvas.__chartjs__.destroy();
+            delete revenueCanvas.__chartjs__;
+        } catch(e) {
+            console.log('Error destroying canvas.__chartjs__:', e.message);
+        }
+    }
+    
+    // Method 3: Clear canvas context completely
+    const ctx = revenueCanvas.getContext('2d');
+    if (ctx) {
+        ctx.clearRect(0, 0, revenueCanvas.width, revenueCanvas.height);
+    }
+    
+    // Method 4: Reset canvas width/height to force full reset
+    const width = revenueCanvas.width;
+    const height = revenueCanvas.height;
+    revenueCanvas.width = 1;
+    revenueCanvas.height = 1;
+    revenueCanvas.width = width;
+    revenueCanvas.height = height;
+    
+    // Method 5: Destroy any instances in Chart.instances array (v3+)
+    if (window.Chart && Array.isArray(window.Chart.instances)) {
+        for (let i = window.Chart.instances.length - 1; i >= 0; i--) {
+            if (window.Chart.instances[i] && window.Chart.instances[i].canvas === revenueCanvas) {
+                try {
+                    window.Chart.instances[i].destroy();
+                    window.Chart.instances.splice(i, 1);
+                } catch(e) {
+                    console.log('Error destroying chart from registry:', e.message);
+                }
+            }
+        }
+    }
+}
+
+// Initialize revenue chart
+function initRevenueChart() {
+    const revenueCtx = document.getElementById('revenueChart');
+    if (!revenueCtx) return;
+    
+    // Destroy any existing chart first
+    destroyRevenueChart();
+    
+    // Create new chart
+    window.revenueChartInstance = new Chart(revenueCtx, {
         type: 'line',
         data: {
             labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
             datasets: [{
                 label: 'Doanh thu (VND)',
-                data: [
-                    {% for item in monthly_revenue %}{{ item }},{% endfor %}
-                ],
+                data: monthlyRevenueData,
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.05)',
                 borderWidth: 2,
@@ -198,7 +263,7 @@ if (revenueCtx) {
 function exportRevenueData() {
     const data = {
         'Tháng': ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
-        'Doanh thu': [{% for item in monthly_revenue %}{{ item }},{% endfor %}]
+        'Doanh thu': monthlyRevenueData
     };
     
     const ws = XLSX.utils.aoa_to_sheet([
@@ -209,6 +274,25 @@ function exportRevenueData() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Doanh thu");
     XLSX.writeFile(wb, "doanh_thu_" + new Date().toISOString().split('T')[0] + ".xlsx");
+}
+
+// Initialize chart when DOM is loaded
+function startChartInit() {
+    // Ensure Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.log('Chart.js not ready, retrying...');
+        setTimeout(startChartInit, 100);
+        return;
+    }
+    
+    initRevenueChart();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startChartInit);
+} else {
+    // DOM is already loaded, start chart initialization
+    startChartInit();
 }
 </script>
 
