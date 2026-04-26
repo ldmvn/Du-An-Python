@@ -10,48 +10,6 @@
     font-family: "Times New Roman", Times, serif;
 }
 
-/* Thu nho cot phai (thong tin mua hang) */
-.pd-main-grid {
-    grid-template-columns: minmax(0, 1.12fr) minmax(340px, 0.88fr);
-}
-
-.pd-info-col {
-    width: 100%;
-    max-width: 540px;
-    justify-self: end;
-}
-
-.pd-info-col .pd-price-card {
-    padding: 12px;
-}
-
-.pd-info-col .pd-sale-price {
-    font-size: 28px;
-}
-
-.pd-info-col .pd-option-block {
-    padding: 12px;
-}
-
-.pd-info-col .pd-option-head h3 {
-    font-size: 17px;
-}
-
-.pd-info-col .pd-option-main {
-    font-size: 14px;
-}
-
-.pd-info-col .pd-option-card small,
-.pd-info-col .pd-selected-copy {
-    font-size: 12px;
-}
-
-@media (max-width: 1024px) {
-    .pd-info-col {
-        max-width: 100%;
-    }
-}
-
 .pd-spec-modal-overlay {
     position: fixed;
     inset: 0;
@@ -194,35 +152,6 @@
     font-size: 24px;
 }
 
-.pd-color-thumb {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #d1d5db;
-    flex-shrink: 0;
-    display: inline-flex;
-}
-
-.pd-color-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-#color-options {
-    display: flex !important;
-    gap: 10px;
-    overflow-x: auto !important;
-    flex-wrap: nowrap !important;
-    padding-bottom: 6px;
-}
-
-#color-options .pd-color-card {
-    flex: 0 0 190px !important;
-}
-
 @media (max-width: 768px) {
     .pd-spec-modal-overlay {
         padding: 0;
@@ -257,10 +186,6 @@
     .pd-spec-empty {
         font-size: 16px;
     }
-
-    #color-options .pd-color-card {
-        flex-basis: 160px;
-    }
 }
 </style>
 {% endblock %}
@@ -269,7 +194,7 @@
 <div class="pd-shell">
     <div class="pd-container">
         <nav class="pd-breadcrumb" aria-label="breadcrumb">
-            <a href="{% url 'store:home' %}">Trang chủ</a>
+            <a href="{% url 'store:home' %}">Trang chÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§</a>
             <span>/</span>
             {% if product.category %}
             <a href="{% url 'store:home' %}?brand={{ product.category.name|urlencode }}">{{ product.category.name }}</a>
@@ -283,15 +208,15 @@
                 <h1>{{ product.name }}</h1>
                 <div class="pd-meta-row">
                     <div class="pd-score">
-                        <span class="pd-star">★</span>
+                        <span class="pd-star">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span>
                         <strong>{{ review_summary.avg|default:0 }}</strong>
-                        <span>({{ review_summary.count }} đánh giá)</span>
+                        <span>({{ review_summary.count }} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡)</span>
                     </div>
                     <div class="pd-shortcuts">
-                        <button type="button" class="pd-ghost-btn btn-wishlist" data-product-id="{{ product.id }}">Yêu thích</button>
-                        <a href="#pd-specs" class="pd-ghost-btn">Thông số</a>
-                        <a href="#pd-reviews" class="pd-ghost-btn">Đánh giá</a>
-                        <a href="#pd-related" class="pd-ghost-btn">So sánh</a>
+                        <button type="button" class="pd-ghost-btn btn-wishlist" data-product-id="{{ product.id }}">YÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªu thÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ch</button>
+                        <a href="#pd-specs" class="pd-ghost-btn">ThÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â´ng sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</a>
+                        <a href="#pd-reviews" class="pd-ghost-btn">ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡</a>
+                        <a href="#pd-related" class="pd-ghost-btn">So sÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh</a>
                     </div>
                 </div>
             </div>
@@ -316,7 +241,7 @@
                             </video>
                             {% endif %}
                         {% else %}
-                        <div class="pd-media-empty">Chưa có ảnh hoặc video</div>
+                        <div class="pd-media-empty">ChÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°a cÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£nh hoÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·c video</div>
                         <img id="pdMainImage" class="pd-main-media pd-hidden" alt="{{ product.name }}">
                         <video id="pdMainVideo" class="pd-main-media pd-hidden" controls autoplay muted playsinline></video>
                         {% endif %}
@@ -343,12 +268,12 @@
                         
                         <!-- Navigation Buttons -->
                         {% if media_gallery|length > 1 %}
-                        <button id="pdPrevBtn" class="pd-nav-btn pd-nav-prev" title="Ảnh trước">
+                        <button id="pdPrevBtn" class="pd-nav-btn pd-nav-prev" title="ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢nh trÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Âºc">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="15 18 9 12 15 6"></polyline>
                             </svg>
                         </button>
-                        <button id="pdNextBtn" class="pd-nav-btn pd-nav-next" title="Ảnh tiếp theo">
+                        <button id="pdNextBtn" class="pd-nav-btn pd-nav-next" title="ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢nh tiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿p theo">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="9 18 15 12 9 6"></polyline>
                             </svg>
@@ -376,7 +301,7 @@
                                                 <video muted playsinline>
                                                     <source src="{{ media.url }}">
                                                 </video>
-                                                <span class="pd-thumb-badge">Phát</span>
+                                                <span class="pd-thumb-badge">PhÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡t</span>
                                             </button>
                                             {% endif %}
                                         {% endfor %}
@@ -415,13 +340,13 @@
                                     id="pdFeaturesBtn"
                                     data-media-type="feature"
                                     data-url=""
-                                    aria-label="Tính năng nổi bật"
-                                    title="Tính năng nổi bật"
+                                    aria-label="TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­nh nÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ng nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢i bÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­t"
+                                    title="TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­nh nÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ng nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢i bÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­t"
                                 >
                                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                                     </svg>
-                                    <span class="pd-media-label">Tính năng</span>
+                                    <span class="pd-media-label">TÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­nh nÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ng</span>
                                 </button>
                                 {% endif %}
                                 
@@ -444,8 +369,8 @@
 
                     <aside class="pd-spec-card pd-spec-card-left" id="pd-specs">
                         <div class="pd-spec-header">
-                            <h2>Thông số kỹ thuật</h2>
-                            <button type="button" class="pd-spec-more" id="specToggleBtn">Xem tất cả</button>
+                            <h2>ThÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â´ng sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ kÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ thuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­t</h2>
+                            <button type="button" class="pd-spec-more" id="specToggleBtn">Xem tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥t cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£</button>
                         </div>
                         <div class="pd-spec-list pd-spec-list-collapsed" id="specList">
                             {% for spec in specifications %}
@@ -465,21 +390,25 @@
                         <div class="pd-price-card">
                             <div class="pd-price-top">
                                 <div class="pd-price-stack">
-                                    <div class="pd-sale-price" id="current-price">{{ base_price|intcomma }}đ</div>
+                                    <div class="pd-sale-price" id="current-price">{{ base_price|intcomma }}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</div>
                                     <div class="pd-old-line">
                                         {% if product.discount > 0 %}
-                                        <span class="pd-old-price" id="old-price">{{ product.price|intcomma }}đ</span>
+                                        <span class="pd-old-price" id="old-price">{{ product.price|intcomma }}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</span>
                                         <span class="pd-discount-pill">-{{ product.discount }}%</span>
                                         {% endif %}
                                     </div>
                                 </div>
+                                <div class="pd-tradein">
+                                    <span>Thu cÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© lÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªn ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âi</span>
+                                    <strong id="tradein-price">{{ base_price|add:"-500000"|intcomma }}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</strong>
+                                </div>
                             </div>
-                            <div class="pd-promo-line">Giá đã gồm ưu đãi online. Có hỗ trợ thu cũ, trả góp và giao nhanh trong ngày.</div>
+                            <div class="pd-promo-line">GiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“m ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°u ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£i online. CÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ thu cÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©, trÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³p vÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  giao nhanh trong ngÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â y.</div>
                         </div>
 
                         <div class="pd-option-block">
                             <div class="pd-option-head">
-                                <h3>Dung lượng</h3>
+                                <h3>Dung lÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ng</h3>
                             </div>
                             <div class="pd-variant-grid" id="storage-options">
                                 {% for option in storage_options %}
@@ -498,7 +427,7 @@
 
                         <div class="pd-option-block">
                             <div class="pd-option-head">
-                                <h3>Màu sắc</h3>
+                                <h3>MÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â u sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯c</h3>
                                 <div class="pd-selected-copy" id="selectedColorLabel">{{ color_options.0.name }}</div>
                             </div>
                             <div class="pd-color-grid" id="color-options">
@@ -508,21 +437,14 @@
                                     class="pd-color-card {% if forloop.first %}is-active{% endif %}"
                                     data-color-name="{{ color.name }}"
                                     data-color-price="{{ color.price_delta }}"
-                                    data-color-image="{{ color.image_url|default:'' }}"
                                 >
-                                    {% if color.image_url %}
-                                    <span class="pd-color-thumb">
-                                        <img src="{{ color.image_url }}" alt="{{ color.name }}">
-                                    </span>
-                                    {% else %}
                                     <span class="pd-color-swatch" data-color="{{ color.hex }}"></span>
-                                    {% endif %}
                                     <span class="pd-color-copy">
                                         <strong>{{ color.name }}</strong>
                                         {% if color.price_delta %}
-                                        <small>+{{ color.price_delta|intcomma }}đ</small>
+                                        <small>+{{ color.price_delta|intcomma }}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</small>
                                         {% else %}
-                                        <small>Giá chuẩn</small>
+                                        <small>GiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ chuÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©n</small>
                                         {% endif %}
                                     </span>
                                 </button>
@@ -532,12 +454,12 @@
 
                         <div class="pd-actions">
                             <button type="button" class="pd-buy-btn btn-buy-now" data-product-id="{{ product.id }}">Mua ngay</button>
-                            <button type="button" class="pd-cart-btn btn-add-cart" data-product-id="{{ product.id }}">Thêm vào giỏ hàng</button>
-                            <button type="button" class="pd-installment-btn">Trả góp 0%</button>
+                            <button type="button" class="pd-cart-btn btn-add-cart" data-product-id="{{ product.id }}">ThÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªm vÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â o giÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â hÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ng</button>
+                            <button type="button" class="pd-installment-btn">TrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£ gÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³p 0%</button>
                         </div>
 
                         <div class="pd-promo-box">
-                            <div class="pd-promo-title">Khuyến mãi đi kèm</div>
+                            <div class="pd-promo-title">KhuyÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿n mÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£i ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œi kÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨m</div>
                             <div class="pd-promo-list">
                                 {% for promo in promotions %}
                                 <div class="pd-promo-item">
@@ -553,13 +475,13 @@
                         <section class="pd-reviews-card" id="pd-reviews">
                             <div class="pd-review-summary">
                                 <div>
-                                    <h2>Đánh giá & bình luận</h2>
+                                    <h2>ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ & bÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬nh luÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­n</h2>
                                     <div class="pd-review-score-big">{{ review_summary.avg|default:0 }}/5</div>
                                     <div class="pd-review-stars-line">
                                         {% for _ in "12345" %}
-                                        <span>★</span>
+                                        <span>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span>
                                         {% endfor %}
-                                        <span class="pd-review-count">({{ review_summary.count }} đánh giá)</span>
+                                        <span class="pd-review-count">({{ review_summary.count }} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡)</span>
                                     </div>
                                 </div>
                             </div>
@@ -567,18 +489,18 @@
                             <form method="POST" class="pd-review-form">
                                 {% csrf_token %}
                                 <div class="pd-rating-picker">
-                                    <span>Chọn số sao</span>
+                                    <span>ChÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Ân sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ sao</span>
                                     <div class="pd-rating-buttons">
                                         {% for star in review_summary.stars %}
                                         <label class="pd-rate-chip">
                                             <input type="radio" name="rating" value="{{ star }}" {% if selected_review and selected_review.rating == star %}checked{% endif %} {% if not selected_review and star == 5 %}checked{% endif %}>
-                                            <span>{{ star }} ★</span>
+                                            <span>{{ star }} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span>
                                         </label>
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <textarea name="comment" rows="4" class="pd-review-textarea" placeholder="Chia sẻ cảm nhận thực tế về sản phẩm...">{% if selected_review %}{{ selected_review.comment }}{% endif %}</textarea>
-                                <button type="submit" class="pd-review-submit">Gửi đánh giá</button>
+                                <textarea name="comment" rows="4" class="pd-review-textarea" placeholder="Chia sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â» cÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£m nhÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­n thÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±c tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£n phÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©m...">{% if selected_review %}{{ selected_review.comment }}{% endif %}</textarea>
+                                <button type="submit" class="pd-review-submit">GÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­i ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡</button>
                             </form>
 
                             <div class="pd-comment-list">
@@ -589,18 +511,18 @@
                                         <div class="pd-comment-stars">
                                             {% for _ in "12345"|slice:":" %}
                                             {% if forloop.counter <= review.rating %}
-                                            <span class="is-filled">★</span>
+                                            <span class="is-filled">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span>
                                             {% else %}
-                                            <span>★</span>
+                                            <span>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</span>
                                             {% endif %}
                                             {% endfor %}
                                         </div>
                                     </div>
                                     <div class="pd-comment-date">{{ review.created_at|date:"d/m/Y H:i" }}</div>
-                                    <p>{{ review.comment|default:"Khách hàng chưa để lại bình luận chi tiết." }}</p>
+                                    <p>{{ review.comment|default:"KhÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ch hÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ng chÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°a ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â»ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ lÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡i bÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬nh luÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­n chi tiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿t." }}</p>
                                 </article>
                                 {% empty %}
-                                <div class="pd-empty-comment">Chưa có đánh giá nào cho sản phẩm này.</div>
+                                <div class="pd-empty-comment">ChÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°a cÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡nh giÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â o cho sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£n phÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©m nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â y.</div>
                                 {% endfor %}
                             </div>
                         </section>
@@ -613,10 +535,10 @@
         {% if related_products %}
         <section class="pd-related" id="pd-related">
             <div class="pd-section-head">
-                <h2>Sản phẩm liên quan</h2>
+                <h2>SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£n phÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©m liÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âªn quan</h2>
                 <div class="pd-slider-actions">
-                    <button type="button" class="pd-slider-btn" id="relatedPrevBtn">‹</button>
-                    <button type="button" class="pd-slider-btn" id="relatedNextBtn">›</button>
+                    <button type="button" class="pd-slider-btn" id="relatedPrevBtn">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹</button>
+                    <button type="button" class="pd-slider-btn" id="relatedNextBtn">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âº</button>
                 </div>
             </div>
             <div class="pd-related-track" id="pdRelatedTrack">
@@ -631,7 +553,7 @@
                     </div>
                     <div class="pd-related-body">
                         <h3>{{ p.name }}</h3>
-                        <div class="pd-related-price">{{ p.get_discounted_price|intcomma }}đ</div>
+                        <div class="pd-related-price">{{ p.get_discounted_price|intcomma }}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ</div>
                         <div class="pd-related-sub">{{ p.ram }} / {{ p.rom }}</div>
                     </div>
                 </a>
@@ -670,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const featurePanel = document.getElementById('pdFeaturePanel');
     const stage = document.getElementById('pdStage');
     const currentPrice = document.getElementById('current-price');
+    const tradeinPrice = document.getElementById('tradein-price');
     const selectedColorLabel = document.getElementById('selectedColorLabel');
     const storageButtons = document.querySelectorAll('#storage-options .pd-option-card');
     const colorButtons = document.querySelectorAll('#color-options .pd-color-card');
@@ -688,29 +611,30 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     function formatPrice(value) {
-        return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        return new Intl.NumberFormat('vi-VN').format(value) + 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œ';
     }
 
     function renderPrice() {
         const total = state.basePrice + state.colorDelta;
         if (currentPrice) currentPrice.textContent = formatPrice(total);
+        if (tradeinPrice) tradeinPrice.textContent = formatPrice(Math.max(total - 500000, 0));
     }
 
     const specCategories = [
-        'Màn hình',
+        'MÃ n hÃ¬nh',
         'Camera sau',
-        'Camera trước',
-        'Vi xử lý & đồ họa',
-        'Giao tiếp & kết nối',
-        'RAM & lưu trữ',
-        'Tính năng khác',
-        'Bộ xử lý & Đồ họa',
-        'Kích thước & Trọng lượng',
-        'Thông số khác',
-        'Pin & công nghệ sạc',
-        'Tiện ích khác',
-        'Cổng kết nối',
-        'Thông tin chung'
+        'Camera trÆ°á»›c',
+        'Vi xá»­ lÃ½ & Ä‘á»“ há»a',
+        'Giao tiáº¿p & káº¿t ná»‘i',
+        'RAM & lÆ°u trá»¯',
+        'TÃ­nh nÄƒng khÃ¡c',
+        'Bá»™ xá»­ lÃ½ & Äá»“ há»a',
+        'KÃ­ch thÆ°á»›c & Trá»ng lÆ°á»£ng',
+        'ThÃ´ng sá»‘ khÃ¡c',
+        'Pin & cÃ´ng nghá»‡ sáº¡c',
+        'Tiá»‡n Ã­ch khÃ¡c',
+        'Cá»•ng káº¿t ná»‘i',
+        'ThÃ´ng tin chung'
     ];
     const groupedSpecs = {};
     let activeSpecCategory = specCategories[0];
@@ -739,20 +663,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function resolveCategoryByKey(specKey) {
         const key = normalizeSpecText(specKey);
 
-        if (key.includes('man hinh') || key.includes('display')) return 'Màn hình';
-        if (key.includes('camera truoc') || key.includes('selfie')) return 'Camera trước';
+        if (key.includes('man hinh') || key.includes('display')) return 'MÃ n hÃ¬nh';
+        if (key.includes('camera truoc') || key.includes('selfie')) return 'Camera trÆ°á»›c';
         if (key.includes('camera sau') || key.includes('camera chinh')) return 'Camera sau';
-        if (key.includes('bo xu ly') || key.includes('processor')) return 'Bộ xử lý & Đồ họa';
-        if (key.includes('chip') || key.includes('cpu') || key.includes('gpu') || key.includes('do hoa')) return 'Vi xử lý & đồ họa';
-        if (key.includes('ram') || key.includes('rom') || key.includes('luu tru') || key.includes('bo nho')) return 'RAM & lưu trữ';
-        if (key.includes('pin') || key.includes('sac') || key.includes('mah') || key.includes('w')) return 'Pin & công nghệ sạc';
-        if (key.includes('cong ket noi') || key.includes('usb') || key.includes('type-c') || key.includes('jack')) return 'Cổng kết nối';
-        if (key.includes('giao tiep') || key.includes('ket noi') || key.includes('wifi') || key.includes('bluetooth') || key.includes('nfc') || key.includes('mang')) return 'Giao tiếp & kết nối';
-        if (key.includes('kich thuoc') || key.includes('trong luong') || key.includes('do day')) return 'Kích thước & Trọng lượng';
-        if (key.includes('tien ich')) return 'Tiện ích khác';
-        if (key.includes('tinh nang') || key.includes('bao mat') || key.includes('khang nuoc') || key.includes('cam bien')) return 'Tính năng khác';
-        if (key.includes('thong tin chung') || key.includes('he dieu hanh') || key.includes('xuat xu')) return 'Thông tin chung';
-        return 'Thông số khác';
+        if (key.includes('bo xu ly') || key.includes('processor')) return 'Bá»™ xá»­ lÃ½ & Äá»“ há»a';
+        if (key.includes('chip') || key.includes('cpu') || key.includes('gpu') || key.includes('do hoa')) return 'Vi xá»­ lÃ½ & Ä‘á»“ há»a';
+        if (key.includes('ram') || key.includes('rom') || key.includes('luu tru') || key.includes('bo nho')) return 'RAM & lÆ°u trá»¯';
+        if (key.includes('pin') || key.includes('sac') || key.includes('mah') || key.includes('w')) return 'Pin & cÃ´ng nghá»‡ sáº¡c';
+        if (key.includes('cong ket noi') || key.includes('usb') || key.includes('type-c') || key.includes('jack')) return 'Cá»•ng káº¿t ná»‘i';
+        if (key.includes('giao tiep') || key.includes('ket noi') || key.includes('wifi') || key.includes('bluetooth') || key.includes('nfc') || key.includes('mang')) return 'Giao tiáº¿p & káº¿t ná»‘i';
+        if (key.includes('kich thuoc') || key.includes('trong luong') || key.includes('do day')) return 'KÃ­ch thÆ°á»›c & Trá»ng lÆ°á»£ng';
+        if (key.includes('tien ich')) return 'Tiá»‡n Ã­ch khÃ¡c';
+        if (key.includes('tinh nang') || key.includes('bao mat') || key.includes('khang nuoc') || key.includes('cam bien')) return 'TÃ­nh nÄƒng khÃ¡c';
+        if (key.includes('thong tin chung') || key.includes('he dieu hanh') || key.includes('xuat xu')) return 'ThÃ´ng tin chung';
+        return 'ThÃ´ng sá»‘ khÃ¡c';
     }
 
     (specData || []).forEach(function (spec) {
@@ -935,15 +859,6 @@ document.addEventListener('DOMContentLoaded', function () {
             button.classList.add('is-active');
             state.colorDelta = Number(button.dataset.colorPrice || 0);
             if (selectedColorLabel) selectedColorLabel.textContent = button.dataset.colorName || '';
-            const colorImage = button.dataset.colorImage || '';
-            if (colorImage) {
-                showMedia('image', colorImage);
-                thumbButtons.forEach(function (item) { item.classList.remove('is-active'); });
-                const matchedThumb = Array.from(thumbButtons).find(function (item) {
-                    return item.dataset && item.dataset.url === colorImage;
-                });
-                if (matchedThumb) matchedThumb.classList.add('is-active');
-            }
             renderPrice();
         });
     });

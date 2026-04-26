@@ -2,65 +2,61 @@
 {% load static humanize %}
 
 {% block title %}Dashboard - Admin Panel{% endblock %}
-{% block page_title %}📊 Bảng Điều Khiển{% endblock %}
+{% block page_title %}Bảng điều khiển{% endblock %}
 
 {% block content %}
-<!-- Statistics Row 1 -->
 <div class="ldm-stats-grid">
     <div class="ldm-stat-card">
         <h3>Đơn hàng hôm nay</h3>
         <div class="value">{{ today_orders|default:0 }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Chỉ tiêu hôm nay</div>
+        <div class="ldm-stat-subtext">Chỉ tiêu hôm nay</div>
     </div>
     <div class="ldm-stat-card">
         <h3>Đơn hàng tháng này</h3>
-        <div class="value" style="color:#10b981;">{{ month_orders|default:0 }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Chỉ tiêu tháng</div>
+        <div class="value ldm-stat-value-green">{{ month_orders|default:0 }}</div>
+        <div class="ldm-stat-subtext">Chỉ tiêu tháng</div>
     </div>
     <div class="ldm-stat-card">
         <h3>Doanh thu hôm nay</h3>
-        <div class="value" style="font-size:20px;">{{ today_revenue|default:"0₫" }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Tổng doanh thu</div>
+        <div class="value ldm-stat-value-sm">{{ today_revenue|default:"0₫" }}</div>
+        <div class="ldm-stat-subtext">Tổng doanh thu</div>
     </div>
     <div class="ldm-stat-card">
         <h3>Giá trị đơn TB</h3>
-        <div class="value" style="font-size:20px;">{{ aov|default:"0₫" }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Average Order Value</div>
+        <div class="value ldm-stat-value-sm">{{ aov|default:"0₫" }}</div>
+        <div class="ldm-stat-subtext">Average Order Value</div>
     </div>
     <div class="ldm-stat-card">
         <h3>Tổng sản phẩm</h3>
-        <div class="value" style="color:#8b5cf6;">{{ total_products|default:0 }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Sản phẩm đang bán</div>
+        <div class="value ldm-stat-value-purple">{{ total_products|default:0 }}</div>
+        <div class="ldm-stat-subtext">Sản phẩm đang bán</div>
     </div>
     <div class="ldm-stat-card">
         <h3>Tổng khách hàng</h3>
-        <div class="value" style="color:#f59e0b;">{{ total_users|default:0 }}</div>
-        <div style="font-size:12px;color:#94a3b8;">Khách hàng đã đăng ký</div>
+        <div class="value ldm-stat-value-orange">{{ total_users|default:0 }}</div>
+        <div class="ldm-stat-subtext">Khách hàng đã đăng ký</div>
     </div>
 </div>
 
-<!-- Revenue Chart Section -->
 <div class="ldm-section">
     <div class="ldm-section-header">
-        <h2 class="ldm-section-title">📈 Doanh thu tháng này</h2>
+        <h2 class="ldm-section-title">Doanh thu tháng này</h2>
         <div class="ldm-toolbar">
             <button class="ldm-button ldm-button-secondary" onclick="exportRevenueData()">
                 <i class="ri-download-line"></i> Xuất Excel
             </button>
         </div>
     </div>
-    <div style="padding: 24px;">
-        <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+    <div class="ldm-chart-wrap">
+        <canvas id="revenueChart" class="ldm-dashboard-chart"></canvas>
     </div>
 </div>
 
-<!-- Recent Orders & Products -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-    <!-- Recent Orders -->
+<div class="ldm-dashboard-split">
     <div class="ldm-section">
         <div class="ldm-section-header">
-            <h2 class="ldm-section-title">📦 Đơn hàng gần đây</h2>
-            <a href="{% url 'store:admin_orders' %}" style="color:var(--ldm-primary);text-decoration:none;font-size:13px;">Xem tất cả →</a>
+            <h2 class="ldm-section-title">Đơn hàng gần đây</h2>
+            <a href="{% url 'store:admin_orders' %}" class="ldm-section-link">Xem tất cả →</a>
         </div>
         <div class="ldm-table-wrap">
             <table class="ldm-table">
@@ -84,13 +80,13 @@
                             {% elif order.status == 'pending' %}
                             <span class="ldm-badge ldm-badge-warning">⏳ Chờ xử lý</span>
                             {% else %}
-                            <span class="ldm-badge" style="background:#dbeafe;color:#082f49;">{{ order.get_status_display }}</span>
+                            <span class="ldm-badge ldm-badge-info">{{ order.get_status_display }}</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align:center;padding:32px;color:#94a3b8;">Chưa có đơn hàng nào</td>
+                        <td colspan="4" class="ldm-empty-table-sm">Chưa có đơn hàng nào</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -98,11 +94,10 @@
         </div>
     </div>
 
-    <!-- Recent Products -->
     <div class="ldm-section">
         <div class="ldm-section-header">
-            <h2 class="ldm-section-title">📱 Sản phẩm mới nhất</h2>
-            <a href="{% url 'store:admin_products' %}" style="color:var(--ldm-primary);text-decoration:none;font-size:13px;">Xem tất cả →</a>
+            <h2 class="ldm-section-title">Sản phẩm mới nhất</h2>
+            <a href="{% url 'store:admin_products' %}" class="ldm-section-link">Xem tất cả →</a>
         </div>
         <div class="ldm-table-wrap">
             <table class="ldm-table">
@@ -121,18 +116,18 @@
                         <td>{{ product.price|intcomma }}₫</td>
                         <td>
                             {% if product.stock > 20 %}
-                            <span style="color:#10b981;font-weight:600;">{{ product.stock }}</span>
+                            <span class="ldm-stock-good">{{ product.stock }}</span>
                             {% elif product.stock > 5 %}
-                            <span style="color:#f59e0b;font-weight:600;">{{ product.stock }}</span>
+                            <span class="ldm-stock-warn">{{ product.stock }}</span>
                             {% else %}
-                            <span style="color:#ef4444;font-weight:600;">{{ product.stock }}</span>
+                            <span class="ldm-stock-bad">{{ product.stock }}</span>
                             {% endif %}
                         </td>
                         <td>{{ product.sold_count|default:0 }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" style="text-align:center;padding:32px;color:#94a3b8;">Chưa có sản phẩm nào</td>
+                        <td colspan="4" class="ldm-empty-table-sm">Chưa có sản phẩm nào</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -146,15 +141,12 @@
 </script>
 
 <script>
-// Monthly revenue data
 const monthlyRevenueData = JSON.parse(document.getElementById('dashboardData').textContent);
 
-// Destroy ALL chart instances and reset canvas
 function destroyRevenueChart() {
     const revenueCanvas = document.getElementById('revenueChart');
     if (!revenueCanvas) return;
-    
-    // Method 1: Destroy instance if stored on window
+
     if (window.revenueChartInstance) {
         try {
             window.revenueChartInstance.destroy();
@@ -163,8 +155,7 @@ function destroyRevenueChart() {
         }
         window.revenueChartInstance = null;
     }
-    
-    // Method 2: Check and destroy chart stored on canvas element (Chart.js v3+)
+
     if (revenueCanvas.__chartjs__) {
         try {
             revenueCanvas.__chartjs__.destroy();
@@ -173,22 +164,19 @@ function destroyRevenueChart() {
             console.log('Error destroying canvas.__chartjs__:', e.message);
         }
     }
-    
-    // Method 3: Clear canvas context completely
+
     const ctx = revenueCanvas.getContext('2d');
     if (ctx) {
         ctx.clearRect(0, 0, revenueCanvas.width, revenueCanvas.height);
     }
-    
-    // Method 4: Reset canvas width/height to force full reset
+
     const width = revenueCanvas.width;
     const height = revenueCanvas.height;
     revenueCanvas.width = 1;
     revenueCanvas.height = 1;
     revenueCanvas.width = width;
     revenueCanvas.height = height;
-    
-    // Method 5: Destroy any instances in Chart.instances array (v3+)
+
     if (window.Chart && Array.isArray(window.Chart.instances)) {
         for (let i = window.Chart.instances.length - 1; i >= 0; i--) {
             if (window.Chart.instances[i] && window.Chart.instances[i].canvas === revenueCanvas) {
@@ -203,15 +191,12 @@ function destroyRevenueChart() {
     }
 }
 
-// Initialize revenue chart
 function initRevenueChart() {
     const revenueCtx = document.getElementById('revenueChart');
     if (!revenueCtx) return;
-    
-    // Destroy any existing chart first
+
     destroyRevenueChart();
-    
-    // Create new chart
+
     window.revenueChartInstance = new Chart(revenueCtx, {
         type: 'line',
         data: {
@@ -259,48 +244,36 @@ function initRevenueChart() {
     });
 }
 
-// Export Revenue Data to Excel
 function exportRevenueData() {
     const data = {
         'Tháng': ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
         'Doanh thu': monthlyRevenueData
     };
-    
+
     const ws = XLSX.utils.aoa_to_sheet([
         Object.keys(data),
         ...Object.values(data)[0].map((_, i) => Object.keys(data).map(k => data[k][i]))
     ]);
-    
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Doanh thu");
     XLSX.writeFile(wb, "doanh_thu_" + new Date().toISOString().split('T')[0] + ".xlsx");
 }
 
-// Initialize chart when DOM is loaded
 function startChartInit() {
-    // Ensure Chart.js is loaded
     if (typeof Chart === 'undefined') {
         console.log('Chart.js not ready, retrying...');
         setTimeout(startChartInit, 100);
         return;
     }
-    
+
     initRevenueChart();
 }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startChartInit);
 } else {
-    // DOM is already loaded, start chart initialization
     startChartInit();
 }
 </script>
-
-<style>
-@media (max-width: 968px) {
-    [style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
 {% endblock %}

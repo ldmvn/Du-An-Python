@@ -30,7 +30,7 @@
         <!-- Product Price -->
         <div class="product-price">
             <span class="product-price-current">
-                {{ product.get_discounted_price|floatformat:0|add:0 }}₫
+                {{ product.get_discounted_price|floatformat:0|add:0 }}₫``
             </span>
             {% if product.discount > 0 %}
                 <span class="product-price-original">

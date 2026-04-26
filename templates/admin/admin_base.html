@@ -11,325 +11,10 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
     {% block extra_css %}{% endblock %}
-    <style>
-        /* ====== RESET ====== */
-        *, *::before, *::after { box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; font-family: 'Signika', sans-serif; background: #f8fafc; }
-
-        /* ====== COLORS ====== */
-        :root {
-            --ldm-primary: #3b82f6;
-            --ldm-primary-dark: #2563eb;
-            --ldm-success: #10b981;
-            --ldm-warning: #f59e0b;
-            --ldm-danger: #ef4444;
-            --ldm-light: #f1f5f9;
-            --ldm-border: #e2e8f0;
-            --ldm-text: #1e293b;
-            --ldm-text-secondary: #64748b;
-        }
-
-        /* ====== TOPBAR ====== */
-        .ldm-topbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--ldm-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            z-index: 200;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .ldm-topbar-brand {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--ldm-primary);
-            letter-spacing: 2px;
-        }
-        .ldm-topbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .ldm-topbar-link {
-            color: var(--ldm-text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .ldm-topbar-link:hover { color: var(--ldm-primary); }
-
-        /* ====== SIDEBAR ====== */
-        .ldm-sidebar {
-            position: fixed;
-            top: 60px;
-            left: 0;
-            width: 200px;
-            height: calc(100vh - 60px);
-            background: white;
-            border-right: 1px solid var(--ldm-border);
-            overflow-y: auto;
-            z-index: 100;
-            padding: 20px 0;
-        }
-        .ldm-sidebar-item {
-            padding: 12px 20px;
-            color: var(--ldm-text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-        .ldm-sidebar-item:hover,
-        .ldm-sidebar-item.active {
-            background: var(--ldm-light);
-            color: var(--ldm-primary);
-            border-left-color: var(--ldm-primary);
-        }
-        .ldm-sidebar-group-title {
-            padding: 16px 20px 8px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--ldm-text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* ====== MAIN CONTENT ====== */
-        .ldm-main {
-            margin-left: 200px;
-            margin-top: 60px;
-            height: calc(100vh - 60px);
-            overflow-y: auto;
-            padding: 24px;
-        }
-        .ldm-page-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--ldm-text);
-            margin: 0 0 24px 0;
-        }
-
-        /* ====== STATS GRID ====== */
-        .ldm-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-        .ldm-stat-card {
-            background: white;
-            border: 1px solid var(--ldm-border);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .ldm-stat-card h3 {
-            margin: 0;
-            font-size: 12px;
-            color: var(--ldm-text-secondary);
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .ldm-stat-card .value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--ldm-primary);
-        }
-
-        /* ====== SECTION ====== */
-        .ldm-section {
-            background: white;
-            border: 1px solid var(--ldm-border);
-            border-radius: 12px;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-        .ldm-section-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--ldm-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .ldm-section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--ldm-text);
-            margin: 0;
-        }
-        .ldm-toolbar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .ldm-input, .ldm-select {
-            padding: 10px 14px;
-            border: 1px solid var(--ldm-border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Signika', sans-serif;
-            color: var(--ldm-text);
-            outline: none;
-        }
-        .ldm-input:focus, .ldm-select:focus {
-            border-color: var(--ldm-primary);
-            background: #f0f7ff;
-        }
-        .ldm-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Signika', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .ldm-button-primary {
-            background: var(--ldm-primary);
-            color: white;
-        }
-        .ldm-button-primary:hover {
-            background: var(--ldm-primary-dark);
-        }
-        .ldm-button-secondary {
-            background: var(--ldm-light);
-            color: var(--ldm-text);
-            border: 1px solid var(--ldm-border);
-        }
-        .ldm-button-secondary:hover {
-            background: #e2e8f0;
-        }
-        .ldm-button-danger {
-            background: var(--ldm-danger);
-            color: white;
-        }
-        .ldm-button-danger:hover {
-            background: #dc2626;
-        }
-
-        /* ====== TABLE ====== */
-        .ldm-table-wrap {
-            overflow-x: auto;
-            padding: 0 24px 24px;
-        }
-        .ldm-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .ldm-table thead {
-            background: var(--ldm-light);
-        }
-        .ldm-table th {
-            padding: 14px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--ldm-text-secondary);
-            border-bottom: 1px solid var(--ldm-border);
-        }
-        .ldm-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .ldm-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-        /* ====== BADGE ====== */
-        .ldm-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .ldm-badge-success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        .ldm-badge-warning {
-            background: #fef08a;
-            color: #713f12;
-        }
-        .ldm-badge-danger {
-            background: #fee2e2;
-            color: #7f1d1d;
-        }
-
-        /* ====== PAGINATION ====== */
-        .ldm-pagination {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            padding: 20px 24px;
-            flex-wrap: wrap;
-        }
-        .ldm-pagination a,
-        .ldm-pagination span {
-            padding: 8px 12px;
-            border: 1px solid var(--ldm-border);
-            border-radius: 6px;
-            text-decoration: none;
-            color: var(--ldm-text);
-            font-weight: 500;
-        }
-        .ldm-pagination a:hover {
-            background: var(--ldm-primary);
-            color: white;
-            border-color: var(--ldm-primary);
-        }
-        .ldm-pagination span.active {
-            background: var(--ldm-primary);
-            color: white;
-            border-color: var(--ldm-primary);
-        }
-
-        /* ====== RESPONSIVE ====== */
-        @media (max-width: 968px) {
-            .ldm-stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 768px) {
-            .ldm-sidebar { width: 140px; }
-            .ldm-main { margin-left: 140px; padding: 16px; }
-            .ldm-stats-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 600px) {
-            .ldm-sidebar { display: none; }
-            .ldm-main { margin-left: 0; }
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
 </head>
 <body>
-    <!-- TOPBAR -->
     <div class="ldm-topbar">
         <div class="ldm-topbar-brand">LDM ADMIN</div>
         <div class="ldm-topbar-actions">
@@ -342,52 +27,44 @@
         </div>
     </div>
 
-    <!-- SIDEBAR -->
     <nav class="ldm-sidebar">
-        <!-- Dashboard Section -->
         <div class="ldm-sidebar-group-title">THỐNG KÊ</div>
         <a href="{% url 'store:dashboard' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
             <i class="ri-bar-chart-2-line"></i> Bảng điều khiển
         </a>
 
-        <!-- Management Section -->
-        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">QUẢN LÝ SẢN PHẨM</div>
+        <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">QUẢN LÝ SẢN PHẨM</div>
         <a href="{% url 'store:admin_products' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_products' %}active{% endif %}">
             <i class="ri-product-hunt-line"></i> Sản phẩm
         </a>
         <a href="{% url 'store:category_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
             <i class="ri-price-tag-3-line"></i> Danh mục
         </a>
-        
-        <!-- Orders & Sales Section -->
-        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">BÁN HÀNG</div>
+
+        <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">BÁN HÀNG</div>
         <a href="{% url 'store:admin_orders' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}">
             <i class="ri-shopping-cart-line"></i> Đơn hàng
         </a>
-        
-        <!-- Content Section -->
-        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">NỘI DUNG</div>
+
+        <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">NỘI DUNG</div>
         <a href="{% url 'store:banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'banner_admin_list' %}active{% endif %}">
             <i class="ri-image-add-line"></i> Image Banner
         </a>
         <a href="{% url 'store:video_banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'video_banner_admin_list' %}active{% endif %}">
             <i class="ri-video-line"></i> Videos Banner
         </a>
-        
-        <!-- User Management Section -->
-        <div class="ldm-sidebar-group-title" style="margin-top: 20px;">NGƯỜI DÙNG</div>
+
+        <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">NGƯỜI DÙNG</div>
         <a href="{% url 'store:user_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
             <i class="ri-user-3-line"></i> Thành viên
         </a>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <div class="ldm-main">
         <h1 class="ldm-page-title">{% block page_title %}Dashboard{% endblock %}</h1>
         {% block content %}{% endblock %}
     </div>
 
-    <!-- ADMIN SCRIPTS -->
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'js/admin.js' %}"></script>
     {% block extra_js %}{% endblock %}

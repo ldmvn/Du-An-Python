@@ -2,6 +2,8 @@ from django.contrib import admin
 from .models import (
     Category,
     Product,
+    ProductColor,
+    ProductMedia,
     ProductSpecification,
     Order,
     OrderItem,
@@ -16,6 +18,18 @@ class ProductSpecificationInline(admin.TabularInline):
     model = ProductSpecification
     extra = 1
 
+
+class ProductMediaInline(admin.TabularInline):
+    model = ProductMedia
+    extra = 1
+    fields = ('file', 'title', 'is_primary', 'sort_order')
+
+
+class ProductColorInline(admin.TabularInline):
+    model = ProductColor
+    extra = 1
+    fields = ('name', 'image', 'hex', 'price_delta', 'sort_order')
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     # show discount and allow inline editing of price and discount for quick adjustments
@@ -23,7 +37,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'ram', 'rom', 'created_at')
     search_fields = ('name',)
     list_editable = ('ram', 'rom', 'price', 'discount', 'stock')
-    inlines = [ProductSpecificationInline]
+    inlines = [ProductSpecificationInline, ProductMediaInline, ProductColorInline]
 
 # ================== CATEGORY ==================
 

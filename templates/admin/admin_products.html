@@ -2,31 +2,31 @@
 {% load static humanize %}
 
 {% block title %}Quản lý sản phẩm - Admin Panel{% endblock %}
-{% block page_title %}📱 Quản Lý Sản Phẩm{% endblock %}
+{% block page_title %}Quản lý sản phẩm{% endblock %}
 
 {% block content %}
 <div class="ldm-section">
     <div class="ldm-section-header">
         <h2 class="ldm-section-title">Danh sách sản phẩm</h2>
         <div class="ldm-toolbar">
-            <input type="text" id="productSearch" placeholder="🔍 Tìm kiếm sản phẩm..." class="ldm-input" style="min-width:250px;">
+            <input type="text" id="productSearch" placeholder="Tìm kiếm sản phẩm..." class="ldm-input ldm-toolbar-input-sm">
             <a href="{% url 'store:product_create' %}" class="ldm-button ldm-button-primary">
                 <i class="ri-add-line"></i> Thêm sản phẩm
             </a>
         </div>
     </div>
-    
+
     <div class="ldm-table-wrap">
         <table class="ldm-table">
             <thead>
                 <tr>
-                    <th style="width:50px;">#</th>
+                    <th class="ldm-col-50">#</th>
                     <th>Hình ảnh</th>
                     <th>Tên sản phẩm</th>
-                    <th style="text-align:right;">Giá</th>
-                    <th style="text-align:center;">Kho</th>
-                    <th style="text-align:center;">Danh mục</th>
-                    <th style="text-align:center;">Hành động</th>
+                    <th class="ldm-text-right">Giá</th>
+                    <th class="ldm-text-center">Kho</th>
+                    <th class="ldm-text-center">Danh mục</th>
+                    <th class="ldm-text-center">Hành động</th>
                 </tr>
             </thead>
             <tbody id="productsTableBody">
@@ -35,37 +35,37 @@
                     <td><strong>{{ forloop.counter }}</strong></td>
                     <td>
                         {% if product.image %}
-                        <img src="{{ product.image.url }}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;">
+                        <img src="{{ product.image.url }}" class="ldm-thumb-40" alt="{{ product.name }}">
                         {% else %}
-                        <div style="width:40px;height:40px;border-radius:6px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;">📱</div>
+                        <div class="ldm-thumb-placeholder">📱</div>
                         {% endif %}
                     </td>
                     <td><strong>{{ product.name }}</strong></td>
-                    <td style="text-align:right;">{{ product.price|intcomma }}₫</td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-right">{{ product.price|intcomma }}₫</td>
+                    <td class="ldm-text-center">
                         {% if product.stock > 20 %}
-                        <span style="color:#10b981;font-weight:600;">{{ product.stock }}</span>
+                        <span class="ldm-stock-good">{{ product.stock }}</span>
                         {% elif product.stock > 5 %}
-                        <span style="color:#f59e0b;font-weight:600;">{{ product.stock }}</span>
+                        <span class="ldm-stock-warn">{{ product.stock }}</span>
                         {% else %}
-                        <span style="color:#ef4444;font-weight:600;">{{ product.stock }}</span>
+                        <span class="ldm-stock-bad">{{ product.stock }}</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         {% if product.category %}
-                        <span style="font-size:13px;color:#64748b;">{{ product.category.name }}</span>
+                        <span class="ldm-cell-note">{{ product.category.name }}</span>
                         {% else %}
-                        <span style="font-size:13px;color:#94a3b8;">—</span>
+                        <span class="ldm-cell-note-muted">—</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
-                        <a href="{% url 'store:dashboard_edit_product' product.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Sửa</a>
-                        <button class="ldm-button ldm-button-danger delete-product-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" style="padding:6px 12px;font-size:12px;">Xóa</button>
+                    <td class="ldm-text-center">
+                        <a href="{% url 'store:dashboard_edit_product' product.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Sửa</a>
+                        <button class="ldm-button ldm-button-danger ldm-button-xs delete-product-btn" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}">Xóa</button>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">📦 Chưa có sản phẩm nào</td>
+                    <td colspan="7" class="ldm-empty-table">📦 Chưa có sản phẩm nào</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -96,7 +96,6 @@
 </div>
 
 <script>
-// Delete product handler
 document.querySelectorAll('.delete-product-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const productId = this.dataset.productId;
@@ -107,11 +106,10 @@ document.querySelectorAll('.delete-product-btn').forEach(btn => {
     });
 });
 
-// Simple search filter
 document.getElementById('productSearch').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const rows = document.querySelectorAll('#productsTableBody tr');
-    
+
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';

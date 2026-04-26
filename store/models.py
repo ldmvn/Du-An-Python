@@ -14,6 +14,10 @@ def banner_upload_path(instance, filename):
         return f'banner/image/{filename}'
 
 
+def product_media_upload_path(instance, filename):
+    return f'Sanpham/{instance.product_id}/{filename}'
+
+
 class UserProfile(models.Model):
     """Extended user profile for additional fields"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -78,6 +82,8 @@ class Product(models.Model):
     rom = models.CharField(max_length=10, choices=ROM_CHOICES, default='128GB', help_text="Bộ nhớ ROM")
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+    feature_image = models.ImageField(upload_to='Sanpham/features/', blank=True, null=True)
+    feature_content = models.TextField(blank=True, default='')
     stock = models.IntegerField(default=0, help_text="Số lượng sản phẩm trong kho")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -101,6 +107,32 @@ class Product(models.Model):
     def get_review_count(self):
         """Đếm số lượng reviews"""
         return self.review_set.count()
+
+
+    def get_primary_media(self):
+        primary_media = self.media_items.filter(is_primary=True).first()
+        if primary_media:
+            return primary_media
+        return self.media_items.order_by('sort_order', 'id').first()
+
+
+class ProductColor(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='colors'
+    )
+    name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='Sanpham/colors/', blank=True, null=True)
+    hex = models.CharField(max_length=7, default='#d1d5db')
+    price_delta = models.IntegerField(default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
 
 
 class Order(models.Model):
@@ -202,6 +234,62 @@ class Banner(models.Model):
     @property
     def is_video(self):
         return self.media_extension in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}
+
+
+class ProductMedia(models.Model):
+    MEDIA_TYPE_CHOICES = [
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ]
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='media_items'
+    )
+    file = models.FileField(upload_to=product_media_upload_path)
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES)
+    title = models.CharField(max_length=255, blank=True, default='')
+    is_primary = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f"{self.product.name} - {self.media_type}"
+
+    @property
+    def extension(self):
+        if not self.file:
+            return ''
+        return os.path.splitext(self.file.name)[1].lower()
+
+    @property
+    def url(self):
+        if self.file:
+            return self.file.url
+        return ''
+
+    @property
+    def is_video(self):
+        return self.media_type == 'video'
+
+    @property
+    def is_image(self):
+        return self.media_type == 'image'
+
+    def save(self, *args, **kwargs):
+        if self.extension in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}:
+            self.media_type = 'video'
+        else:
+            self.media_type = 'image'
+
+        super().save(*args, **kwargs)
+
+        if self.is_primary:
+            ProductMedia.objects.filter(product=self.product).exclude(pk=self.pk).update(is_primary=False)
 
 
 class Wishlist(models.Model):

@@ -2,76 +2,7 @@
 {% load static %}
 
 {% block title %}Chỉnh sửa thành viên - Admin Panel{% endblock %}
-{% block page_title %}👤 Chỉnh Sửa Thành Viên{% endblock %}
-
-{% block extra_css %}
-<style>
-    .ldm-user-form-wrap {
-        padding: 24px;
-    }
-
-    .ldm-user-form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-    }
-
-    .ldm-user-form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .ldm-user-form-group label {
-        font-size: 14px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .ldm-user-form-group .form-control {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: 'Signika', sans-serif;
-        color: #1e293b;
-        outline: none;
-    }
-
-    .ldm-user-form-group .form-control:focus {
-        border-color: #3b82f6;
-        background: #f0f7ff;
-    }
-
-    .ldm-user-form-check {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .ldm-user-form-error {
-        color: #dc2626;
-        font-size: 13px;
-    }
-
-    .ldm-user-form-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 24px;
-    }
-
-    @media (max-width: 768px) {
-        .ldm-user-form-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
+{% block page_title %}Chỉnh sửa thành viên{% endblock %}
 
 {% block content %}
 <div class="ldm-section">
@@ -108,7 +39,7 @@
                     {% if form.last_name.errors %}<div class="ldm-user-form-error">{{ form.last_name.errors.0 }}</div>{% endif %}
                 </div>
 
-                <div class="ldm-user-form-group" style="grid-column: 1 / -1;">
+                <div class="ldm-user-form-group ldm-user-form-group-full">
                     <label for="id_password">Mật khẩu mới (để trống nếu không đổi)</label>
                     {{ form.password }}
                     {% if form.password.errors %}<div class="ldm-user-form-error">{{ form.password.errors.0 }}</div>{% endif %}
@@ -126,7 +57,7 @@
             </div>
 
             {% if form.non_field_errors %}
-                <div class="ldm-user-form-error" style="margin-top: 12px;">{{ form.non_field_errors.0 }}</div>
+            <div class="ldm-user-form-error ldm-user-form-error-top">{{ form.non_field_errors.0 }}</div>
             {% endif %}
 
             <div class="ldm-user-form-actions">

@@ -1,30 +1,29 @@
-﻿{% extends 'store/base.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
 
 {% block title %}Quản lý thành viên - MOBILE STORE{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin.css' %}">{% endblock %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="ldm-admin-container">
-    <!-- Header -->
     <div class="ldm-admin-header">
-        <h1>👥 Quản lý thành viên</h1>
+        <h1>Quản lý thành viên</h1>
     </div>
-    
-    <!-- Danh sách -->
+
     {% if users %}
     <table class="ldm-table">
         <thead>
             <tr>
-                <th style="width: 60px;">ID</th>
-                <th style="width: 150px;">Tên đăng nhập</th>
-                <th style="width: 200px;">Email</th>
-                <th style="width: 150px;">Tên đầy đủ</th>
-                <th style="width: 100px;">Trạng thái</th>
-                <th style="width: 120px;">Quyền</th>
-                <th style="width: 150px;">Hành động</th>
+                <th class="ldm-col-60">ID</th>
+                <th class="ldm-col-150">Tên đăng nhập</th>
+                <th class="ldm-col-200">Email</th>
+                <th class="ldm-col-150">Tên đầy đủ</th>
+                <th class="ldm-col-100">Trạng thái</th>
+                <th class="ldm-col-120">Quyền</th>
+                <th class="ldm-col-150">Hành động</th>
             </tr>
         </thead>
         <tbody>
@@ -37,7 +36,7 @@
                     {% if user.first_name or user.last_name %}
                         {{ user.first_name }} {{ user.last_name }}
                     {% else %}
-                        <span style="color: #999;">—</span>
+                        <span class="ldm-cell-note-muted">—</span>
                     {% endif %}
                 </td>
                 <td>
@@ -51,7 +50,7 @@
                     {% if user.is_staff %}
                         <span class="ldm-badge-staff">⚙️ Admin</span>
                     {% else %}
-                        <span style="color: #999;">Khách</span>
+                        <span class="ldm-cell-note-muted">Khách</span>
                     {% endif %}
                 </td>
                 <td>
@@ -60,7 +59,7 @@
                         {% if user.id != request.user.id %}
                         <a href="{% url 'store:user_delete' user.id %}" class="ldm-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️ Xóa</a>
                         {% else %}
-                        <button class="ldm-btn-delete" disabled style="opacity: 0.5; cursor: not-allowed;">🗑️ Xóa</button>
+                        <button class="ldm-btn-delete ldm-btn-disabled" disabled>🗑️ Xóa</button>
                         {% endif %}
                     </div>
                 </td>
@@ -73,12 +72,9 @@
         <p>Chưa có thành viên nào</p>
     </div>
     {% endif %}
-    
-    <!-- Liên kết quay lại dashboard -->
-    <div style="margin-top: 30px; text-align: center;">
-        <a href="{% url 'store:dashboard' %}" style="color: #2563eb; text-decoration: none; font-weight: 600;">← Quay lại Dashboard</a>
+
+    <div class="ldm-back-row">
+        <a href="{% url 'store:dashboard' %}" class="ldm-back-link-clean">← Quay lại Dashboard</a>
     </div>
 </div>
 {% endblock %}
-
-

@@ -2,134 +2,7 @@
 {% load static humanize %}
 
 {% block title %}Quản lý đơn hàng - Admin Panel{% endblock %}
-{% block page_title %}📦 Quản Lý Đơn Hàng{% endblock %}
-
-{% block extra_css %}
-<style>
-    .ldm-orders-toolbar-input {
-        min-width: 300px;
-    }
-
-    .ldm-order-filters {
-        margin: 0 24px 20px;
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .ldm-filter-btn {
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        color: #475569;
-        padding: 8px 12px;
-    }
-
-    .ldm-filter-btn.is-active {
-        background: #3b82f6;
-        border-color: #3b82f6;
-        color: #fff;
-        font-weight: 600;
-    }
-
-    .ldm-filter-btn:hover {
-        border-color: #93c5fd;
-    }
-
-    .ldm-order-id {
-        color: #3b82f6;
-        font-weight: 700;
-    }
-
-    .ldm-order-user-name {
-        font-weight: 600;
-    }
-
-    .ldm-order-user-email {
-        font-size: 12px;
-        color: #94a3b8;
-        margin-top: 2px;
-    }
-
-    .ldm-order-items-badge {
-        display: inline-block;
-        background: #f1f5f9;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-    }
-
-    .ldm-order-total {
-        font-weight: 700;
-        color: #1e293b;
-    }
-
-    .ldm-payment-badge {
-        display: inline-block;
-        font-size: 12px;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-weight: 600;
-    }
-
-    .ldm-payment-vietqr {
-        background: #e0e7ff;
-        color: #4f46e5;
-    }
-
-    .ldm-payment-cod {
-        background: #fce7f3;
-        color: #db2777;
-    }
-
-    .ldm-payment-other {
-        background: #f3e8ff;
-        color: #7e22ce;
-    }
-
-    .order-status-select {
-        font-family: inherit;
-        padding: 6px 8px;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        font-size: 13px;
-        background: white;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .order-status-select:hover,
-    .order-status-select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
-    }
-
-    .ldm-order-date {
-        font-size: 12px;
-        color: #64748b;
-    }
-
-    .ldm-order-actions {
-        display: inline-flex;
-        gap: 6px;
-    }
-
-    .ldm-order-actions .ldm-button {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    @media (max-width: 768px) {
-        .ldm-orders-toolbar-input {
-            min-width: 220px;
-        }
-
-        .ldm-order-filters {
-            margin: 0 16px 14px;
-        }
-    }
-</style>
-{% endblock %}
+{% block page_title %}Quản lý đơn hàng{% endblock %}
 
 {% block content %}
 {% csrf_token %}
@@ -137,11 +10,10 @@
     <div class="ldm-section-header">
         <h2 class="ldm-section-title">Danh sách đơn hàng</h2>
         <div class="ldm-toolbar">
-            <input type="text" id="orderSearch" placeholder="🔍 Tìm kiếm đơn hàng (ID/Khách hàng)..." class="ldm-input ldm-orders-toolbar-input">
+            <input type="text" id="orderSearch" placeholder="Tìm kiếm đơn hàng (ID/Khách hàng)..." class="ldm-input ldm-orders-toolbar-input">
         </div>
     </div>
-    
-    <!-- Status Filter Buttons -->
+
     <div class="ldm-order-filters">
         <button class="ldm-button ldm-filter-btn is-active" data-status="all">Tất cả</button>
         <button class="ldm-button ldm-filter-btn" data-status="pending">Chờ xác nhận</button>
@@ -155,15 +27,15 @@
         <table class="ldm-table">
             <thead>
                 <tr>
-                    <th style="width:50px;">#</th>
-                    <th style="width:80px;">Mã đơn</th>
+                    <th class="ldm-col-50">#</th>
+                    <th class="ldm-col-80">Mã đơn</th>
                     <th>Khách hàng</th>
-                    <th style="text-align:center;">Sản phẩm</th>
-                    <th style="text-align:right;">Tổng tiền</th>
-                    <th style="text-align:center;">Thanh toán</th>
-                    <th style="text-align:center;">Trạng thái</th>
-                    <th style="text-align:center;">Ngày</th>
-                    <th style="text-align:center;">Hành động</th>
+                    <th class="ldm-text-center">Sản phẩm</th>
+                    <th class="ldm-text-right">Tổng tiền</th>
+                    <th class="ldm-text-center">Thanh toán</th>
+                    <th class="ldm-text-center">Trạng thái</th>
+                    <th class="ldm-text-center">Ngày</th>
+                    <th class="ldm-text-center">Hành động</th>
                 </tr>
             </thead>
             <tbody id="ordersTableBody">
@@ -175,13 +47,13 @@
                         <div class="ldm-order-user-name">{{ order.user.get_full_name|default:order.user.username }}</div>
                         <div class="ldm-order-user-email">{{ order.user.email }}</div>
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         {% with item_count=order.items.count %}
-                            <span class="ldm-order-items-badge">{{ item_count }} sản phẩm</span>
+                        <span class="ldm-order-items-badge">{{ item_count }} sản phẩm</span>
                         {% endwith %}
                     </td>
-                    <td style="text-align:right;"><span class="ldm-order-total">{{ order.total_amount|intcomma }}₫</span></td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-right"><span class="ldm-order-total">{{ order.total_amount|intcomma }}₫</span></td>
+                    <td class="ldm-text-center">
                         {% if order.payment_method == 'vietqr' %}
                         <span class="ldm-payment-badge ldm-payment-vietqr">VietQR</span>
                         {% elif order.payment_method == 'cod' %}
@@ -190,7 +62,7 @@
                         <span class="ldm-payment-badge ldm-payment-other">{{ order.payment_method }}</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}">
                             <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Chờ xác nhận</option>
                             <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Xử lý</option>
@@ -199,17 +71,17 @@
                             <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy</option>
                         </select>
                     </td>
-                    <td style="text-align:center;"><span class="ldm-order-date">{{ order.created_at|date:"d/m/Y" }}</span></td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center"><span class="ldm-order-date">{{ order.created_at|date:"d/m/Y" }}</span></td>
+                    <td class="ldm-text-center">
                         <div class="ldm-order-actions">
-                            <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary">Chi tiết</a>
-                            <button class="ldm-button ldm-button-danger delete-order-btn" data-order-id="{{ order.id }}">Xóa</button>
+                            <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Chi tiết</a>
+                            <button class="ldm-button ldm-button-danger ldm-button-xs delete-order-btn" data-order-id="{{ order.id }}">Xóa</button>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;">📭 Chưa có đơn hàng nào</td>
+                    <td colspan="9" class="ldm-empty-table">📭 Chưa có đơn hàng nào</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -240,74 +112,59 @@
 </div>
 
 <script>
-// Status filter
 document.querySelectorAll('.ldm-filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const status = this.dataset.status;
         const rows = document.querySelectorAll('#ordersTableBody tr');
-        
-        document.querySelectorAll('.ldm-filter-btn').forEach(b => {
-            b.classList.remove('is-active');
-        });
+
+        document.querySelectorAll('.ldm-filter-btn').forEach(b => b.classList.remove('is-active'));
         this.classList.add('is-active');
-        
+
         rows.forEach(row => {
-            if (status === 'all') {
-                row.style.display = '';
-            } else {
-                row.style.display = row.dataset.status === status ? '' : 'none';
-            }
+            row.style.display = status === 'all' || row.dataset.status === status ? '' : 'none';
         });
     });
 });
 
-// Search filter
 document.getElementById('orderSearch').addEventListener('keyup', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const rows = document.querySelectorAll('#ordersTableBody tr');
-    
+
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         row.style.display = text.includes(searchTerm) ? '' : 'none';
     });
 });
 
-// Delete order handler
 document.querySelectorAll('.delete-order-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         if (confirm('Xóa đơn hàng này?')) {
-            const orderId = this.dataset.orderId;
-            window.location = `/order/delete/${orderId}/`;
+            window.location = `/order/delete/${this.dataset.orderId}/`;
         }
     });
 });
 
-// Update order status
 document.querySelectorAll('.order-status-select').forEach(select => {
     select.addEventListener('change', function() {
         const orderId = this.dataset.orderId;
         const newStatus = this.value;
         const oldStatus = this.dataset.currentStatus;
-        
+
         if (!confirm(`Cập nhật trạng thái đơn hàng thành "${newStatus}"?`)) {
             this.value = oldStatus;
             return;
         }
-        
-        // Get CSRF token
+
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
         const updateUrl = '{% url "store:update_order_status" %}';
-        
+
         fetch(updateUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken
             },
-            body: JSON.stringify({
-                order_id: orderId,
-                status: newStatus
-            })
+            body: JSON.stringify({ order_id: orderId, status: newStatus })
         })
         .then(response => response.json())
         .then(data => {

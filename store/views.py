@@ -10,7 +10,7 @@ from django.db.models import Q
 import os
 import requests
 
-from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner, Wishlist
+from .models import Product, ProductColor, ProductMedia, ProductSpecification, Review, UserProfile, Category, Order, OrderItem, Banner, Wishlist
 from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm
 
 
@@ -117,6 +117,172 @@ def _is_image_upload(uploaded_file):
         return False
     allowed_image_formats = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
     return os.path.splitext(uploaded_file.name)[1].lower() in allowed_image_formats
+
+
+def _sync_product_media(product, request):
+    delete_media_ids = request.POST.getlist('delete_media')
+    if delete_media_ids:
+        for media in product.media_items.filter(id__in=delete_media_ids):
+            if media.file:
+                media.file.delete(save=False)
+            media.delete()
+
+    primary_media_id = request.POST.get('primary_media')
+    if primary_media_id:
+        product.media_items.update(is_primary=False)
+        product.media_items.filter(id=primary_media_id).update(is_primary=True)
+
+    # Handle separate video and image uploads
+    current_max_sort = product.media_items.order_by('-sort_order').values_list('sort_order', flat=True).first() or 0
+    has_primary = product.media_items.filter(is_primary=True).exists()
+    
+    # Process video files
+    video_files = request.FILES.getlist('video_files')
+    if video_files:
+        for index, uploaded_file in enumerate(video_files, start=1):
+            media = ProductMedia.objects.create(
+                product=product,
+                file=uploaded_file,
+                media_type='video',
+                is_primary=not has_primary and index == 1,
+                sort_order=current_max_sort + index
+            )
+            if media.is_primary:
+                has_primary = True
+            current_max_sort += 1
+    
+    # Process image files
+    image_files = request.FILES.getlist('image_files')
+    if image_files:
+        for index, uploaded_file in enumerate(image_files, start=1):
+            media = ProductMedia.objects.create(
+                product=product,
+                file=uploaded_file,
+                media_type='image',
+                is_primary=not has_primary and index == 1,
+                sort_order=current_max_sort + index
+            )
+            if media.is_primary:
+                has_primary = True
+            current_max_sort += 1
+    
+    # Legacy support: handle old media_files field for backward compatibility
+    uploaded_files = request.FILES.getlist('media_files')
+    if uploaded_files:
+        for index, uploaded_file in enumerate(uploaded_files, start=1):
+            media = ProductMedia.objects.create(
+                product=product,
+                file=uploaded_file,
+                media_type='image',
+                is_primary=not has_primary and index == 1,
+                sort_order=current_max_sort + index
+            )
+            if media.is_primary:
+                has_primary = True
+            current_max_sort += 1
+
+    if product.media_items.exists() and not product.media_items.filter(is_primary=True).exists():
+        first_media = product.media_items.order_by('sort_order', 'id').first()
+        if first_media:
+            first_media.is_primary = True
+            first_media.save()
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _sync_product_colors(product, request):
+    """
+    Sync colors submitted from custom admin product form.
+    Supports:
+    - Add new color
+    - Update existing color
+    - Delete color
+    - Upload/replace/clear color image
+    """
+    row_keys = request.POST.getlist('color_row_keys')
+    if not row_keys:
+        return
+
+    color_qs = product.colors.all()
+    color_map = {str(c.id): c for c in color_qs}
+    sort_order = 0
+
+    for row_key in row_keys:
+        color_id = (request.POST.get(f'color_id__{row_key}', '') or '').strip()
+        is_deleted = request.POST.get(f'color_delete__{row_key}') == '1'
+        name = (request.POST.get(f'color_name__{row_key}', '') or '').strip()
+        hex_value = (request.POST.get(f'color_hex__{row_key}', '') or '#d1d5db').strip() or '#d1d5db'
+        price_delta = _safe_int(request.POST.get(f'color_price__{row_key}'), 0)
+        image_file = request.FILES.get(f'color_image__{row_key}')
+        clear_image = request.POST.get(f'color_clear_image__{row_key}') == '1'
+
+        if color_id and color_id in color_map:
+            color_obj = color_map[color_id]
+        else:
+            color_obj = None
+
+        if is_deleted:
+            if color_obj:
+                if color_obj.image:
+                    color_obj.image.delete(save=False)
+                color_obj.delete()
+            continue
+
+        # Ignore empty new rows
+        if not color_obj and not name:
+            continue
+
+        if not color_obj:
+            color_obj = ProductColor(product=product)
+
+        color_obj.name = name or color_obj.name
+        color_obj.hex = hex_value
+        color_obj.price_delta = price_delta
+        color_obj.sort_order = sort_order
+        sort_order += 1
+
+        if clear_image and color_obj.image:
+            color_obj.image.delete(save=False)
+            color_obj.image = None
+        if image_file:
+            color_obj.image = image_file
+
+        color_obj.save()
+
+
+def _build_product_media_gallery(product):
+    media_items = list(product.media_items.all())
+    gallery = []
+
+    for media in media_items:
+        gallery.append({
+            'id': media.id,
+            'url': media.file.url,
+            'thumb_url': media.file.url,
+            'title': media.title or product.name,
+            'media_type': media.media_type,
+            'is_primary': media.is_primary,
+        })
+
+    if not gallery and product.image:
+        gallery.append({
+            'id': f'fallback-{product.id}',
+            'url': product.image.url,
+            'thumb_url': product.image.url,
+            'title': product.name,
+            'media_type': 'image',
+            'is_primary': True,
+        })
+
+    if gallery and not any(item['is_primary'] for item in gallery):
+        gallery[0]['is_primary'] = True
+
+    return gallery
 
 
 def _banner_media_type_filter(media_type):
@@ -384,37 +550,122 @@ def home(request):
 @login_required(login_url='store:login')
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
-    
-    # Get related products from same category
+    if request.method == 'POST':
+        rating = int(request.POST.get('rating', '0') or 0)
+        comment = (request.POST.get('comment') or '').strip()
+        if rating < 1 or rating > 5:
+            messages.error(request, 'Vui lòng chọn số sao từ 1 đến 5.')
+            return redirect('store:product_detail', id=id)
+
+        review, created = Review.objects.get_or_create(
+            product=product,
+            user=request.user,
+            defaults={'rating': rating, 'comment': comment}
+        )
+        if not created:
+            review.rating = rating
+            review.comment = comment
+            review.save()
+
+        messages.success(request, 'Đánh giá của bạn đã được lưu.')
+        return redirect('store:product_detail', id=id)
+
+    media_gallery = _build_product_media_gallery(product)
+    primary_media = next((item for item in media_gallery if item['is_primary']), media_gallery[0] if media_gallery else None)
+    first_video = next((item for item in media_gallery if item.get('media_type') == 'video'), None)
+    feature_image_url = product.feature_image.url if product.feature_image else ''
+    raw_feature_content = (product.feature_content or '').strip()
+    feature_points = []
+    if raw_feature_content:
+        for line in raw_feature_content.splitlines():
+            cleaned_line = line.strip().lstrip('-').lstrip('•').strip()
+            if cleaned_line:
+                feature_points.append(cleaned_line)
+        if not feature_points:
+            feature_points = [raw_feature_content]
+    reviews = product.review_set.select_related('user').order_by('-created_at')
+
     related_products = Product.objects.filter(
         category=product.category
-    ).exclude(id=product.id)[:4]
-    
-    # Color options for display
-    colors = [
-        ('Hồng', '#ffb6c1'),
-        ('Đen', '#1f2937'),
-        ('Xanh dương', '#3b82f6'),
-        ('Vàng', '#fbbf24'),
-        ('Xanh lá', '#10b981'),
-    ]
-    
-    # RAM options with price increments
-    # Base price is the product's discounted price
+    ).exclude(id=product.id)[:8]
+
     base_price = product.get_discounted_price()
-    ram_options = [
-        {'capacity': '128GB', 'price': base_price},
-        {'capacity': '256GB', 'price': base_price + 500000},
-        {'capacity': '512GB', 'price': base_price + 1000000},
+    storage_options = [
+        {'capacity': product.rom or '128GB', 'price': base_price, 'label': 'Tiêu chuẩn'},
+        {'capacity': '256GB', 'price': base_price + 1500000, 'label': 'Phổ biến'},
+        {'capacity': '512GB', 'price': base_price + 4000000, 'label': 'Cao cấp'},
     ]
-    
+    db_colors = list(product.colors.all())
+    if db_colors:
+        color_options = [
+            {
+                'name': color.name,
+                'hex': color.hex or '#d1d5db',
+                'price_delta': color.price_delta or 0,
+                'image_url': color.image.url if color.image else '',
+            }
+            for color in db_colors
+        ]
+    else:
+        color_options = [
+            {'name': 'Titan Den', 'hex': '#2d2f34', 'price_delta': 0, 'image_url': ''},
+            {'name': 'Titan Trang', 'hex': '#e7e5e4', 'price_delta': 200000, 'image_url': ''},
+            {'name': 'Titan Xanh', 'hex': '#72879a', 'price_delta': 200000, 'image_url': ''},
+            {'name': 'Titan Sa Mac', 'hex': '#b6855f', 'price_delta': 300000, 'image_url': ''},
+        ]
+    promotions = [
+        {'icon': 'gift', 'text': 'Giảm thêm 500.000đ khi thanh toán qua VNPAY.'},
+        {'icon': 'shield', 'text': 'Tặng gói bảo hành rơi vỡ 6 tháng đầu.'},
+        {'icon': 'truck', 'text': 'Giao nhanh 2 giờ nội thành cho đơn đủ điều kiện.'},
+        {'icon': 'credit-card', 'text': 'Trả góp 0% qua thẻ tín dụng hoặc công ty tài chính.'},
+    ]
+    specs = list(product.specs.all())
+    spec_items = [
+        {'key': 'Màn hình', 'value': '6.9 inch OLED Super Retina XDR'},
+        {'key': 'Chip', 'value': 'Apple A19 Pro'},
+        {'key': 'Camera sau', 'value': '48MP + 12MP + 48MP'},
+        {'key': 'Camera trước', 'value': '12MP TrueDepth'},
+        {'key': 'Pin', 'value': '4.800 mAh, sạc nhanh 35W'},
+        {'key': 'RAM', 'value': product.ram},
+        {'key': 'Bộ nhớ', 'value': product.rom},
+    ]
+    for spec in specs:
+        spec_items.append({'key': spec.key, 'value': spec.value})
+
+    description_blocks = [
+        {
+            'title': 'Thiết kế cao cấp',
+            'body': product.description or 'Khung viền hoàn thiện cao cấp, cảm giác cầm chắc tay và hướng tới trải nghiệm flagship đúng nghĩa.'
+        },
+        {
+            'title': 'Hiệu năng và camera',
+            'body': 'Máy hướng tới nhóm người dùng cần hiệu năng mạnh, camera ổn định và thời lượng pin đủ cho cường độ sử dụng cao trong ngày.'
+        },
+    ]
+    review_summary = {
+        'avg': product.get_avg_rating(),
+        'count': product.get_review_count(),
+        'stars': [5, 4, 3, 2, 1],
+    }
+
     context = get_base_context(request)
     context.update({
         'product': product,
         'related_products': related_products,
-        'colors': colors,
-        'ram_options': ram_options,
+        'media_gallery': media_gallery,
+        'primary_media': primary_media,
+        'first_video': first_video,
+        'feature_image_url': feature_image_url,
+        'feature_points': feature_points,
+        'storage_options': storage_options,
+        'color_options': color_options,
+        'promotions': promotions,
         'base_price': base_price,
+        'specifications': spec_items,
+        'description_blocks': description_blocks,
+        'reviews': reviews,
+        'review_summary': review_summary,
+        'selected_review': reviews.filter(user=request.user).first() if request.user.is_authenticated else None,
     })
     return render(request, 'store/product_detail.html', context)
 
@@ -1091,7 +1342,9 @@ def product_create(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            product = form.save()
+            _sync_product_media(product, request)
+            _sync_product_colors(product, request)
             messages.success(request, '✅ Thêm sản phẩm thành công')
             return redirect('store:admin_products')
     else:
@@ -1100,6 +1353,8 @@ def product_create(request):
     context = get_base_context(request)
     context['form'] = form
     context['title'] = 'Thêm sản phẩm mới'
+    context['product_media'] = []
+    context['product_colors'] = []
     return render(request, 'store/product_form.html', context)
 
 
@@ -1112,7 +1367,9 @@ def dashboard_edit_product(request, pk):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            form.save()
+            product = form.save()
+            _sync_product_media(product, request)
+            _sync_product_colors(product, request)
             messages.success(request, '✅ Cập nhật sản phẩm thành công')
             return redirect('store:admin_products')
     else:
@@ -1122,6 +1379,8 @@ def dashboard_edit_product(request, pk):
     context.update({
         'form': form,
         'product': product,
+        'product_media': product.media_items.all(),
+        'product_colors': product.colors.all(),
         'specs': specs,
         'title': f'Chỉnh sửa sản phẩm: {product.name}'
     })

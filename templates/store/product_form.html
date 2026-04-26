@@ -2,191 +2,313 @@
 {% load static %}
 
 {% block title %}{% if product %}Chỉnh sửa{% else %}Thêm{% endif %} sản phẩm - Admin Panel{% endblock %}
-{% block page_title %}📝 {% if product %}Chỉnh sửa{% else %}Thêm{% endif %} Sản Phẩm{% endblock %}
+{% block page_title %}{% if product %}Chỉnh sửa{% else %}Thêm{% endif %} sản phẩm{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/product-form.css' %}">
+<style>
+.product-color-section {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+.product-color-list { display: flex; flex-direction: column; gap: 12px; }
+.product-color-row {
+    display: grid;
+    grid-template-columns: 1.4fr 110px 120px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+.product-color-actions { display: flex; gap: 8px; align-items: center; }
+.product-color-preview { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b7280; }
+.product-color-preview img { width: 34px; height: 34px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; }
+@media (max-width: 900px) { .product-color-row { grid-template-columns: 1fr; } }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="product-form-wrapper">
     <div class="product-form-card">
-        <!-- Title -->
-        <h2 class="product-form-title">{{ title|default:"Thêm sản phẩm mới" }}</h2>
+        <h2 class="product-form-title">{{ title }}</h2>
 
-        <!-- Form -->
         <form method="POST" enctype="multipart/form-data" class="product-form" novalidate>
             {% csrf_token %}
 
-            <!-- Non-field Errors -->
             {% if form.non_field_errors %}
             <div class="product-form-errors">
                 {% for error in form.non_field_errors %}
-                    <p>❌ {{ error }}</p>
+                <p>{{ error }}</p>
                 {% endfor %}
             </div>
             {% endif %}
 
-            <!-- Two Column Layout -->
             <div class="product-form-grid">
-                <!-- Product Name -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Tên sản phẩm <span class="required">*</span>
-                    </label>
+                    <label class="product-form-label">Tên sản phẩm <span class="required">*</span></label>
                     {{ form.name }}
-                    {% if form.name.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.name.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.name.errors %}<div class="product-form-error">{{ form.name.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- Category -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Danh mục <span class="required">*</span>
-                    </label>
+                    <label class="product-form-label">Danh mục</label>
                     {{ form.category }}
-                    {% if form.category.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.category.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.category.errors %}<div class="product-form-error">{{ form.category.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- Price -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Giá (₫) <span class="required">*</span>
-                    </label>
+                    <label class="product-form-label">Giá gốc <span class="required">*</span></label>
                     {{ form.price }}
-                    {% if form.price.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.price.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.price.errors %}<div class="product-form-error">{{ form.price.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- Stock -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Kho hàng (số lượng) <span class="required">*</span>
-                    </label>
+                    <label class="product-form-label">Kho hàng <span class="required">*</span></label>
                     {{ form.stock }}
-                    {% if form.stock.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.stock.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.stock.errors %}<div class="product-form-error">{{ form.stock.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- Discount -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Giảm giá (%) 
-                        <span class="optional">0-100</span>
-                    </label>
+                    <label class="product-form-label">Giảm giá (%)</label>
                     {{ form.discount }}
-                    {% if form.discount.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.discount.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.discount.errors %}<div class="product-form-error">{{ form.discount.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- RAM -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Dung lượng RAM
-                    </label>
+                    <label class="product-form-label">RAM</label>
                     {{ form.ram }}
-                    {% if form.ram.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.ram.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.ram.errors %}<div class="product-form-error">{{ form.ram.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <!-- ROM -->
                 <div class="product-form-field">
-                    <label class="product-form-label">
-                        Dung lượng ROM
-                    </label>
+                    <label class="product-form-label">ROM</label>
                     {{ form.rom }}
-                    {% if form.rom.errors %}
-                        <div class="product-form-error">
-                            {% for error in form.rom.errors %}{{ error }}{% endfor %}
-                        </div>
-                    {% endif %}
+                    {% if form.rom.errors %}<div class="product-form-error">{{ form.rom.errors|join:", " }}</div>{% endif %}
                 </div>
             </div>
 
-            <!-- Description -->
             <div class="product-form-description">
-                <label class="product-form-label">
-                    Mô tả sản phẩm
-                </label>
+                <label class="product-form-label">Mô tả sản phẩm</label>
                 {{ form.description }}
-                {% if form.description.errors %}
-                    <div class="product-form-error">
-                        {% for error in form.description.errors %}{{ error }}{% endfor %}
-                    </div>
-                {% endif %}
+                {% if form.description.errors %}<div class="product-form-error">{{ form.description.errors|join:", " }}</div>{% endif %}
             </div>
 
-            <!-- Image -->
+            <div class="product-form-feature">
+                <label class="product-form-label">Tính năng nổi bật (ảnh + nội dung)</label>
+                <div class="product-form-feature-grid">
+                    <div class="product-form-feature-image">
+                        {% if product and product.feature_image %}
+                        <div class="product-form-image-preview">
+                            <p class="product-form-image-preview-label">Ảnh tính năng hiện tại</p>
+                            <img src="{{ product.feature_image.url }}" alt="{{ product.name }}">
+                        </div>
+                        {% endif %}
+                        {{ form.feature_image }}
+                        {% if form.feature_image.errors %}<div class="product-form-error">{{ form.feature_image.errors|join:", " }}</div>{% endif %}
+                        <p class="product-form-image-info">Ảnh này sẽ hiển thị ở khối "Tính năng" trên trang chi tiết sản phẩm.</p>
+                    </div>
+                    <div class="product-form-feature-content">
+                        {{ form.feature_content }}
+                        {% if form.feature_content.errors %}<div class="product-form-error">{{ form.feature_content.errors|join:", " }}</div>{% endif %}
+                        <p class="product-form-image-info">Nhập mỗi dòng một ý nổi bật để hiển thị dạng bullet.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="product-form-image">
-                <label class="product-form-label">
-                    Hình ảnh {% if not product %}(Bắt buộc){% endif %}<span class="required">{% if not product %}*{% endif %}</span>
-                </label>
-                
+                <label class="product-form-label">Ảnh đại diện</label>
                 <div class="product-form-image-container">
-                    <!-- Current Image Preview -->
                     {% if product and product.image %}
                     <div class="product-form-image-preview">
-                        <p class="product-form-image-preview-label">Hình ảnh hiện tại:</p>
+                        <p class="product-form-image-preview-label">Ảnh hiện tại</p>
                         <img src="{{ product.image.url }}" alt="{{ product.name }}">
                     </div>
                     {% endif %}
 
-                    <!-- File Input -->
                     <div class="product-form-image-input">
                         {{ form.image }}
-                        {% if form.image.errors %}
-                            <div class="product-form-error">
-                                {% for error in form.image.errors %}{{ error }}{% endfor %}
-                            </div>
-                        {% endif %}
-                        <p class="product-form-image-info">
-                            📌 Định dạng: JPG, PNG, GIF, WebP<br>
-                            📌 Kích thước tối đa: 5MB
-                        </p>
+                        {% if form.image.errors %}<div class="product-form-error">{{ form.image.errors|join:", " }}</div>{% endif %}
+                        <p class="product-form-image-info">Ảnh đại diện vẫn dùng cho danh sách sản phẩm. Gallery/video bên dưới sẽ lưu trong `media/Sanpham`.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+            <div class="product-form-media-section">
+                <label class="product-form-label">Thêm Video</label>
+                <div class="product-form-media-input">
+                    <input type="file" name="video_files" class="form-control" accept="video/*" multiple>
+                    <p class="product-form-image-info">
+                        Hỗ trợ tải nhiều video cùng lúc.<br>
+                        Video: MP4, WEBM, OGG, MOV tối đa 50MB mỗi file.
+                    </p>
+                </div>
+            </div>
+
+            <div class="product-form-media-section">
+                <label class="product-form-label">Thêm Ảnh</label>
+                <div class="product-form-media-input">
+                    <input type="file" name="image_files" class="form-control" accept="image/*" multiple>
+                    <p class="product-form-image-info">
+                        Hỗ trợ tải nhiều ảnh cùng lúc.<br>
+                        Ảnh: JPG, PNG, GIF, WEBP tối đa 10MB mỗi file.
+                    </p>
+                </div>
+            </div>
+
+            {% if product_media %}
+            <div class="product-form-media-library">
+                <p class="product-form-image-preview-label product-form-media-title">Media hiện có</p>
+                
+                <!-- Videos Section -->
+                {% with videos=product_media|dictsort:"is_image" %}
+                    {% with video_items=videos|slice:":100" %}
+                        {% if video_items %}
+                        <div class="product-form-media-subsection">
+                            <h4 class="product-form-media-subtitle">Video</h4>
+                            <div class="product-form-media-grid">
+                                {% for media in product_media %}
+                                    {% if media.is_video %}
+                                    <div class="product-form-media-card">
+                                        <div class="product-form-media-frame">
+                                            <video src="{{ media.file.url }}" class="product-form-media-preview" muted></video>
+                                            <span class="product-form-media-badge">Video</span>
+                                        </div>
+                                        <label class="product-form-media-option">
+                                            <input type="radio" name="primary_media" value="{{ media.id }}" {% if media.is_primary %}checked{% endif %}>
+                                            Chính (làm video chính hiển thị)
+                                        </label>
+                                        <label class="product-form-media-option product-form-media-option-delete">
+                                            <input type="checkbox" name="delete_media" value="{{ media.id }}">
+                                            Xóa video này
+                                        </label>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endwith %}
+                {% endwith %}
+
+                <!-- Images Section -->
+                <div class="product-form-media-subsection">
+                    <h4 class="product-form-media-subtitle">Ảnh</h4>
+                    <div class="product-form-media-grid">
+                        {% for media in product_media %}
+                            {% if media.is_image %}
+                            <div class="product-form-media-card">
+                                <div class="product-form-media-frame">
+                                    <img src="{{ media.file.url }}" alt="{{ product.name }}" class="product-form-media-preview">
+                                </div>
+                                <label class="product-form-media-option">
+                                    <input type="radio" name="primary_media" value="{{ media.id }}" {% if media.is_primary %}checked{% endif %}>
+                                    Chính
+                                </label>
+                                <label class="product-form-media-option product-form-media-option-delete">
+                                    <input type="checkbox" name="delete_media" value="{{ media.id }}">
+                                    Xóa ảnh này
+                                </label>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="product-color-section">
+                <label class="product-form-label">Mau sac san pham (them / xoa mau va anh mau)</label>
+                <div id="productColorList" class="product-color-list">
+                    {% for color in product_colors %}
+                    <div class="product-color-row" data-row-key="existing-{{ color.id }}">
+                        <input type="hidden" name="color_row_keys" value="existing-{{ color.id }}">
+                        <input type="hidden" name="color_id__existing-{{ color.id }}" value="{{ color.id }}">
+                        <input type="hidden" name="color_delete__existing-{{ color.id }}" value="0" class="color-delete-flag">
+
+                        <input type="text" name="color_name__existing-{{ color.id }}" value="{{ color.name }}" placeholder="Ten mau">
+                        <input type="text" name="color_hex__existing-{{ color.id }}" value="{{ color.hex|default:'#d1d5db' }}" placeholder="#d1d5db">
+                        <input type="number" name="color_price__existing-{{ color.id }}" value="{{ color.price_delta|default:0 }}" placeholder="Cong gia">
+                        <div>
+                            <input type="file" name="color_image__existing-{{ color.id }}" accept="image/*">
+                            {% if color.image %}
+                            <div class="product-color-preview">
+                                <img src="{{ color.image.url }}" alt="{{ color.name }}">
+                                <label><input type="checkbox" name="color_clear_image__existing-{{ color.id }}" value="1"> Xoa anh hien tai</label>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="product-color-actions">
+                            <button type="button" class="ldm-button ldm-button-secondary btn-remove-color">Xoa mau</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="margin-top: 10px;">
+                    <button type="button" class="ldm-button ldm-button-secondary" id="btnAddColor">+ Them mau</button>
+                </div>
+            </div>
             <div class="product-form-actions">
                 <button type="submit" class="ldm-button ldm-button-primary">
-                    {% if product %}
-                    ✏️ Cập nhật sản phẩm
-                    {% else %}
-                    ✅ Thêm sản phẩm
-                    {% endif %}
+                    {% if product %}Cập nhật sản phẩm{% else %}Thêm sản phẩm{% endif %}
                 </button>
-                
-                {% if product %}
-                <a href="{% url 'store:admin_products' %}" class="ldm-button ldm-button-secondary">
-                    ← Quay lại
-                </a>
-                {% else %}
-                <a href="{% url 'store:admin_products' %}" class="ldm-button ldm-button-secondary">
-                    ← Hủy
-                </a>
-                {% endif %}
+                <a href="{% url 'store:admin_products' %}" class="ldm-button ldm-button-secondary">Quay lại</a>
             </div>
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const colorList = document.getElementById('productColorList');
+    const addBtn = document.getElementById('btnAddColor');
+    if (!colorList || !addBtn) return;
+
+    function bindRemoveButton(row) {
+        const btn = row.querySelector('.btn-remove-color');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            const deleteFlag = row.querySelector('.color-delete-flag');
+            const isExisting = String(row.dataset.rowKey || '').startsWith('existing-');
+            if (isExisting && deleteFlag) {
+                deleteFlag.value = '1';
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        });
+    }
+
+    function buildRow(key) {
+        const row = document.createElement('div');
+        row.className = 'product-color-row';
+        row.dataset.rowKey = key;
+        row.innerHTML = `
+            <input type="hidden" name="color_row_keys" value="${key}">
+            <input type="hidden" name="color_id__${key}" value="">
+            <input type="hidden" name="color_delete__${key}" value="0" class="color-delete-flag">
+
+            <input type="text" name="color_name__${key}" placeholder="Ten mau">
+            <input type="text" name="color_hex__${key}" value="#d1d5db" placeholder="#d1d5db">
+            <input type="number" name="color_price__${key}" value="0" placeholder="Cong gia">
+            <div><input type="file" name="color_image__${key}" accept="image/*"></div>
+            <div class="product-color-actions">
+                <button type="button" class="ldm-button ldm-button-secondary btn-remove-color">Xoa mau</button>
+            </div>
+        `;
+        bindRemoveButton(row);
+        return row;
+    }
+
+    colorList.querySelectorAll('.product-color-row').forEach(bindRemoveButton);
+
+    addBtn.addEventListener('click', function () {
+        const key = 'new-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        colorList.appendChild(buildRow(key));
+    });
+});
+</script>
 {% endblock %}

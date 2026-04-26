@@ -5,6 +5,10 @@ from .models import Product, ProductSpecification, UserProfile, Category, Banner
 import re
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
 class CategoryForm(forms.ModelForm):
     """Form for managing product categories/brands"""
     class Meta:
@@ -75,13 +79,38 @@ class UserManagementForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
+    media_files = forms.FileField(
+        required=False,
+        widget=MultipleFileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/*,video/*',
+            'multiple': True
+        })
+    )
+
     class Meta:
         model = Product
-        fields = ['category', 'name', 'price', 'stock', 'ram', 'rom', 'discount', 'description', 'image']
+        fields = [
+            'category',
+            'name',
+            'price',
+            'stock',
+            'ram',
+            'rom',
+            'discount',
+            'description',
+            'image',
+            'feature_image',
+            'feature_content',
+        ]
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['category'].required = False
+        self.fields['feature_content'].widget.attrs.update({
+            'rows': 6,
+            'placeholder': 'Mỗi dòng là một ý nổi bật. Ví dụ:\nThiết kế nguyên khối bền chắc\nPin lớn cho cả ngày\nCamera tele zoom quang học',
+        })
     
     def clean_price(self):
         price = self.cleaned_data.get('price')
@@ -117,6 +146,43 @@ class ProductForm(forms.ModelForm):
                 )
         
         return image
+
+    def clean_media_files(self):
+        files = self.files.getlist('media_files')
+        allowed_image_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+        allowed_video_formats = ['mp4', 'webm', 'ogg', 'mov', 'm4v']
+
+        for uploaded_file in files:
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+
+            if file_extension in allowed_image_formats:
+                if uploaded_file.size > 10 * 1024 * 1024:
+                    raise forms.ValidationError('Mỗi ảnh gallery chỉ được tối đa 10MB.')
+                continue
+
+            if file_extension in allowed_video_formats:
+                if uploaded_file.size > 50 * 1024 * 1024:
+                    raise forms.ValidationError('Mỗi video gallery chỉ được tối đa 50MB.')
+                continue
+
+            raise forms.ValidationError('Gallery chỉ nhận ảnh JPG, PNG, GIF, WEBP hoặc video MP4, WEBM, OGG, MOV.')
+
+        return files
+
+    def clean_feature_image(self):
+        feature_image = self.cleaned_data.get('feature_image')
+        if not feature_image:
+            return feature_image
+
+        allowed_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+        file_extension = feature_image.name.split('.')[-1].lower()
+        if file_extension not in allowed_formats:
+            raise forms.ValidationError('Ảnh tính năng chỉ nhận JPG, JPEG, PNG, GIF, WEBP.')
+
+        if feature_image.size > 10 * 1024 * 1024:
+            raise forms.ValidationError('Ảnh tính năng tối đa 10MB.')
+
+        return feature_image
 
 
 ProductSpecFormSet = inlineformset_factory(

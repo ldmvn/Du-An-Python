@@ -94,7 +94,7 @@
             <button type="button" onclick="closeBannerModal()" class="banner-modal-close">&times;</button>
         </h3>
 
-        <form id="bannerForm" enctype="multipart/form-data">
+        <form id="bannerForm" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" id="bannerId" name="banner_id" value="">
 

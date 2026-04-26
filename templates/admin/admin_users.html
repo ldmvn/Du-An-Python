@@ -2,209 +2,7 @@
 {% load static %}
 
 {% block title %}Quản lý thành viên - Admin Panel{% endblock %}
-{% block page_title %}👥 Quản Lý Thành Viên{% endblock %}
-
-{% block extra_css %}
-<style>
-    .ldm-users-note {
-        margin: 0;
-        color: var(--ldm-text-secondary);
-        font-size: 14px;
-    }
-
-    .ldm-alerts {
-        display: grid;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-
-    .ldm-alert {
-        padding: 12px 14px;
-        border-radius: 8px;
-        font-size: 14px;
-        border: 1px solid transparent;
-    }
-
-    .ldm-alert-success {
-        background: #dcfce7;
-        color: #166534;
-        border-color: #86efac;
-    }
-
-    .ldm-alert-error {
-        background: #fee2e2;
-        color: #991b1b;
-        border-color: #fca5a5;
-    }
-
-    .ldm-alert-info {
-        background: #dbeafe;
-        color: #1e3a8a;
-        border-color: #93c5fd;
-    }
-
-    .ldm-user-fullname-empty {
-        color: #94a3b8;
-    }
-
-    .ldm-pill {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .ldm-pill-active {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .ldm-pill-inactive {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .ldm-pill-admin {
-        background: #e0e7ff;
-        color: #3730a3;
-    }
-
-    .ldm-pill-customer {
-        background: #f1f5f9;
-        color: #475569;
-    }
-
-    .ldm-user-actions {
-        display: inline-flex;
-        gap: 6px;
-    }
-
-    .ldm-user-actions .ldm-button {
-        padding: 6px 10px;
-        font-size: 12px;
-    }
-
-    .ldm-button-muted {
-        background: #d1d5db;
-        color: #9ca3af;
-        border: none;
-        cursor: not-allowed;
-    }
-
-    .ldm-form-grid {
-        display: grid;
-        gap: 14px;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .ldm-form-field label {
-        display: block;
-        margin-bottom: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ldm-text);
-    }
-
-    .ldm-form-field .ldm-input,
-    .ldm-form-field input[type="text"],
-    .ldm-form-field input[type="email"],
-    .ldm-form-field input[type="password"] {
-        width: 100%;
-    }
-
-    .ldm-form-field-full {
-        grid-column: 1 / -1;
-    }
-
-    .ldm-form-help {
-        margin: 6px 0 0;
-        color: var(--ldm-text-secondary);
-        font-size: 12px;
-    }
-
-    .ldm-form-check {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        border: 1px solid var(--ldm-border);
-        border-radius: 8px;
-        background: #f8fafc;
-    }
-
-    .ldm-form-check input {
-        width: 16px;
-        height: 16px;
-    }
-
-    .ldm-form-error {
-        color: #dc2626;
-        font-size: 12px;
-        margin-top: 6px;
-    }
-
-    .ldm-form-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 18px;
-    }
-
-    .ldm-empty-state {
-        text-align: center;
-        padding: 38px 20px;
-        color: var(--ldm-text-secondary);
-    }
-
-    .ldm-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.45);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-    }
-
-    .ldm-modal-content {
-        width: 100%;
-        max-width: 420px;
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid var(--ldm-border);
-        padding: 20px;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
-    }
-
-    .ldm-modal-title {
-        margin: 0 0 10px;
-        color: #b91c1c;
-        font-size: 18px;
-    }
-
-    .ldm-modal-text {
-        margin: 0 0 12px;
-        color: var(--ldm-text-secondary);
-        line-height: 1.5;
-    }
-
-    .ldm-modal-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .ldm-modal-actions .ldm-button {
-        flex: 1;
-    }
-
-    @media (max-width: 768px) {
-        .ldm-form-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
+{% block page_title %}Quản lý thành viên{% endblock %}
 
 {% block content %}
 <div class="ldm-section">
@@ -214,7 +12,7 @@
             <p class="ldm-users-note">Quản lý tài khoản người dùng hệ thống</p>
         </div>
         <div class="ldm-toolbar">
-            <input type="text" id="userSearch" placeholder="🔍 Tìm kiếm thành viên..." class="ldm-input" style="min-width:260px;">
+            <input type="text" id="userSearch" placeholder="Tìm kiếm thành viên..." class="ldm-input ldm-toolbar-input-md">
             {% if not show_form %}
             <a href="?add=true" class="ldm-button ldm-button-primary">
                 <i class="ri-user-add-line"></i> Thêm thành viên
@@ -224,12 +22,12 @@
     </div>
 
     {% if messages %}
-    <div class="ldm-table-wrap" style="padding-bottom: 0;">
+    <div class="ldm-table-wrap ldm-table-wrap-flat-bottom">
         <div class="ldm-alerts">
             {% for message in messages %}
-                <div class="ldm-alert {% if message.tags == 'success' %}ldm-alert-success{% elif message.tags == 'error' %}ldm-alert-error{% else %}ldm-alert-info{% endif %}">
-                    {{ message }}
-                </div>
+            <div class="ldm-alert {% if message.tags == 'success' %}ldm-alert-success{% elif message.tags == 'error' %}ldm-alert-error{% else %}ldm-alert-info{% endif %}">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -240,13 +38,13 @@
         <table class="ldm-table">
             <thead>
                 <tr>
-                    <th style="width:80px;">ID</th>
-                    <th style="width:160px;">Tên đăng nhập</th>
+                    <th class="ldm-col-80">ID</th>
+                    <th class="ldm-col-160">Tên đăng nhập</th>
                     <th>Email</th>
-                    <th style="width:200px;">Tên đầy đủ</th>
-                    <th style="text-align:center; width:120px;">Trạng thái</th>
-                    <th style="text-align:center; width:120px;">Quyền</th>
-                    <th style="text-align:center; width:170px;">Hành động</th>
+                    <th class="ldm-col-200">Tên đầy đủ</th>
+                    <th class="ldm-text-center ldm-col-120">Trạng thái</th>
+                    <th class="ldm-text-center ldm-col-120">Quyền</th>
+                    <th class="ldm-text-center ldm-col-170">Hành động</th>
                 </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -262,27 +60,27 @@
                             <span class="ldm-user-fullname-empty">—</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         {% if user.is_active %}
-                            <span class="ldm-pill ldm-pill-active">Hoạt động</span>
+                        <span class="ldm-pill ldm-pill-active">Hoạt động</span>
                         {% else %}
-                            <span class="ldm-pill ldm-pill-inactive">Vô hiệu</span>
+                        <span class="ldm-pill ldm-pill-inactive">Vô hiệu</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         {% if user.is_staff %}
-                            <span class="ldm-pill ldm-pill-admin">Admin</span>
+                        <span class="ldm-pill ldm-pill-admin">Admin</span>
                         {% else %}
-                            <span class="ldm-pill ldm-pill-customer">Khách hàng</span>
+                        <span class="ldm-pill ldm-pill-customer">Khách hàng</span>
                         {% endif %}
                     </td>
-                    <td style="text-align:center;">
+                    <td class="ldm-text-center">
                         <div class="ldm-user-actions">
-                            <a href="{% url 'store:user_edit' user.id %}" class="ldm-button ldm-button-secondary">Sửa</a>
+                            <a href="{% url 'store:user_edit' user.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Sửa</a>
                             {% if user.id != request.user.id %}
-                            <button class="ldm-button ldm-button-danger ldm-delete-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}">Xóa</button>
+                            <button class="ldm-button ldm-button-danger ldm-button-xs ldm-delete-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}">Xóa</button>
                             {% else %}
-                            <button class="ldm-button ldm-button-muted" disabled>Xóa</button>
+                            <button class="ldm-button ldm-button-muted ldm-button-xs" disabled>Xóa</button>
                             {% endif %}
                         </div>
                     </td>
@@ -302,7 +100,7 @@
         <h2 class="ldm-section-title">{% if edit_user %}Sửa thành viên{% else %}Thêm thành viên{% endif %}</h2>
     </div>
 
-    <div class="ldm-table-wrap" style="padding-top: 20px;">
+    <div class="ldm-table-wrap ldm-table-wrap-top-gap">
         <form method="post">
             {% csrf_token %}
             <div class="ldm-form-grid">
@@ -354,7 +152,7 @@
 
             {% if form.non_field_errors %}
                 {% for error in form.non_field_errors %}
-                <div class="ldm-form-error" style="margin-top: 12px;">{{ error }}</div>
+                <div class="ldm-form-error ldm-form-error-top">{{ error }}</div>
                 {% endfor %}
             {% endif %}
 
@@ -380,7 +178,6 @@
 </div>
 
 <script>
-// CSRF Token
 function getCookie(name) {
     let cookie = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
     return cookie ? cookie.split('=')[1] : '';
@@ -388,7 +185,6 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-// Search filter
 const userSearchInput = document.getElementById('userSearch');
 if (userSearchInput) {
     userSearchInput.addEventListener('keyup', function (event) {
@@ -401,7 +197,6 @@ if (userSearchInput) {
     });
 }
 
-// Delete user handler
 let userToDelete = null;
 
 document.querySelectorAll('.ldm-delete-user-btn').forEach(btn => {
@@ -422,7 +217,7 @@ document.getElementById('cancelDeleteBtn').addEventListener('click', function() 
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (!userToDelete) return;
-    
+
     fetch(`/dashboard/users/delete/${userToDelete.id}/`, {
         method: 'POST',
         headers: {
@@ -445,11 +240,11 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
     });
 });
 
-    document.getElementById('deleteUserModal').addEventListener('click', function(event) {
-        if (event.target.id === 'deleteUserModal') {
-            this.style.display = 'none';
-            userToDelete = null;
-        }
-    });
+document.getElementById('deleteUserModal').addEventListener('click', function(event) {
+    if (event.target.id === 'deleteUserModal') {
+        this.style.display = 'none';
+        userToDelete = null;
+    }
+});
 </script>
 {% endblock %}

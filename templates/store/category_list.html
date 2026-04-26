@@ -1,15 +1,15 @@
-﻿{% extends "admin/admin_base.html" %}
+{% extends "admin/admin_base.html" %}
 {% load static %}
 
 {% block title %}Quản lý danh mục - Admin Panel{% endblock %}
-{% block page_title %}🏷️ Quản Lý Danh Mục{% endblock %}
+{% block page_title %}Quản lý danh mục{% endblock %}
 
 {% block content %}
 <div class="ldm-section">
     <div class="ldm-section-header">
         <h2 class="ldm-section-title">Danh sách danh mục</h2>
         <div class="ldm-toolbar">
-            <input type="text" id="categorySearch" placeholder="🔍 Tìm kiếm danh mục..." class="ldm-input" style="min-width:250px;">
+            <input type="text" id="categorySearch" placeholder="Tìm kiếm danh mục..." class="ldm-input ldm-toolbar-input-sm">
             <a href="{% url 'store:category_create' %}" class="ldm-button ldm-button-primary">
                 <i class="ri-add-line"></i> Thêm danh mục
             </a>
@@ -20,10 +20,10 @@
         <table class="ldm-table">
             <thead>
                 <tr>
-                    <th style="width:60px;">#</th>
+                    <th class="ldm-col-60">#</th>
                     <th>Tên danh mục</th>
-                    <th style="text-align:center; width:180px;">Số sản phẩm</th>
-                    <th style="text-align:center; width:190px;">Hành động</th>
+                    <th class="ldm-text-center ldm-col-180">Số sản phẩm</th>
+                    <th class="ldm-text-center ldm-col-190">Hành động</th>
                 </tr>
             </thead>
             <tbody id="categoriesTableBody">
@@ -31,17 +31,17 @@
                 <tr>
                     <td><strong>{{ forloop.counter }}</strong></td>
                     <td><strong>{{ category.name }}</strong></td>
-                    <td style="text-align:center;">
-                        <span style="font-size:13px;color:#64748b;font-weight:600;">{{ category.products.count }} sản phẩm</span>
+                    <td class="ldm-text-center">
+                        <span class="ldm-cell-note ldm-cell-note-strong">{{ category.products.count }} sản phẩm</span>
                     </td>
-                    <td style="text-align:center;">
-                        <a href="{% url 'store:category_edit' category.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Sửa</a>
-                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-button ldm-button-danger" style="padding:6px 12px;font-size:12px;" onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">Xóa</a>
+                    <td class="ldm-text-center">
+                        <a href="{% url 'store:category_edit' category.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Sửa</a>
+                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-button ldm-button-danger ldm-button-xs" onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">Xóa</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align:center;padding:40px;color:#94a3b8;">📦 Chưa có danh mục nào</td>
+                    <td colspan="4" class="ldm-empty-table">📦 Chưa có danh mục nào</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -61,5 +61,3 @@ document.getElementById('categorySearch').addEventListener('keyup', function(e) 
 });
 </script>
 {% endblock %}
-
-

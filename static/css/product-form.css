@@ -109,6 +109,30 @@
     margin-bottom: 24px;
 }
 
+.product-form-feature {
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid #f1d3d3;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fff8fb 0%, #fff 100%);
+}
+
+.product-form-feature-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.product-form-feature-content textarea {
+    min-height: 150px;
+}
+
+@media (max-width: 900px) {
+    .product-form-feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Image Upload Section */
 .product-form-image {
     margin-bottom: 24px;
@@ -147,6 +171,130 @@
     color: #64748b;
     margin-top: 8px;
     line-height: 1.6;
+}
+
+.product-form-media-library {
+    margin-top: 20px;
+}
+
+.product-form-media-title {
+    margin-bottom: 12px;
+}
+
+.product-form-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.product-form-media-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+}
+
+.product-form-media-frame {
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.product-form-media-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.product-form-media-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.product-form-media-option-delete {
+    color: #dc2626;
+    margin-bottom: 0;
+}
+
+/* ========== Separate Media Sections (Video and Image) ========== */
+.product-form-media-section {
+    margin-top: 24px;
+    padding: 20px;
+    border: 2px dashed #e5e7eb;
+    border-radius: 12px;
+    background: #fafbfc;
+}
+
+.product-form-media-section label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.product-form-media-input {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product-form-media-input input[type="file"] {
+    display: block;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.product-form-media-input input[type="file"]:hover {
+    border-color: #9ca3af;
+}
+
+/* ========== Media Library with Subsections ========== */
+.product-form-media-subsection {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.product-form-media-subsection:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.product-form-media-subtitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.product-form-media-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(220, 38, 38, 0.9);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
 }
 
 /* Action Buttons */
