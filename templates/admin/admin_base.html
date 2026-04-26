@@ -368,7 +368,10 @@
         <!-- Content Section -->
         <div class="ldm-sidebar-group-title" style="margin-top: 20px;">NỘI DUNG</div>
         <a href="{% url 'store:banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'banner_admin_list' %}active{% endif %}">
-            <i class="ri-image-add-line"></i> Banner
+            <i class="ri-image-add-line"></i> Image Banner
+        </a>
+        <a href="{% url 'store:video_banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'video_banner_admin_list' %}active{% endif %}">
+            <i class="ri-video-line"></i> Videos Banner
         </a>
         
         <!-- User Management Section -->

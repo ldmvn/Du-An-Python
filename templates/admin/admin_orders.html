@@ -4,24 +4,151 @@
 {% block title %}Quản lý đơn hàng - Admin Panel{% endblock %}
 {% block page_title %}📦 Quản Lý Đơn Hàng{% endblock %}
 
+{% block extra_css %}
+<style>
+    .ldm-orders-toolbar-input {
+        min-width: 300px;
+    }
+
+    .ldm-order-filters {
+        margin: 0 24px 20px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .ldm-filter-btn {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #475569;
+        padding: 8px 12px;
+    }
+
+    .ldm-filter-btn.is-active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .ldm-filter-btn:hover {
+        border-color: #93c5fd;
+    }
+
+    .ldm-order-id {
+        color: #3b82f6;
+        font-weight: 700;
+    }
+
+    .ldm-order-user-name {
+        font-weight: 600;
+    }
+
+    .ldm-order-user-email {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .ldm-order-items-badge {
+        display: inline-block;
+        background: #f1f5f9;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .ldm-order-total {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .ldm-payment-badge {
+        display: inline-block;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .ldm-payment-vietqr {
+        background: #e0e7ff;
+        color: #4f46e5;
+    }
+
+    .ldm-payment-cod {
+        background: #fce7f3;
+        color: #db2777;
+    }
+
+    .ldm-payment-other {
+        background: #f3e8ff;
+        color: #7e22ce;
+    }
+
+    .order-status-select {
+        font-family: inherit;
+        padding: 6px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 13px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .order-status-select:hover,
+    .order-status-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .ldm-order-date {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .ldm-order-actions {
+        display: inline-flex;
+        gap: 6px;
+    }
+
+    .ldm-order-actions .ldm-button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+        .ldm-orders-toolbar-input {
+            min-width: 220px;
+        }
+
+        .ldm-order-filters {
+            margin: 0 16px 14px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 {% csrf_token %}
 <div class="ldm-section">
     <div class="ldm-section-header">
         <h2 class="ldm-section-title">Danh sách đơn hàng</h2>
         <div class="ldm-toolbar">
-            <input type="text" id="orderSearch" placeholder="🔍 Tìm kiếm đơn hàng (ID/Khách hàng)..." class="ldm-input" style="min-width:300px;">
+            <input type="text" id="orderSearch" placeholder="🔍 Tìm kiếm đơn hàng (ID/Khách hàng)..." class="ldm-input ldm-orders-toolbar-input">
         </div>
     </div>
     
     <!-- Status Filter Buttons -->
-    <div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="ldm-button ldm-filter-btn" data-status="all" style="background:#3b82f6;color:white;font-weight:600;">✓ Tất cả</button>
-        <button class="ldm-button ldm-filter-btn" data-status="pending" style="border:1px solid #fbbf24;color:#f59e0b;">⏳ Chờ xác nhận</button>
-        <button class="ldm-button ldm-filter-btn" data-status="processing" style="border:1px solid #60a5fa;color:#3b82f6;">⚙️ Xử lý</button>
-        <button class="ldm-button ldm-filter-btn" data-status="shipped" style="border:1px solid #34d399;color:#10b981;">📦 Đã gửi</button>
-        <button class="ldm-button ldm-filter-btn" data-status="delivered" style="border:1px solid #10b981;color:#10b981;">✓ Hoàn thành</button>
-        <button class="ldm-button ldm-filter-btn" data-status="cancelled" style="border:1px solid #ef4444;color:#ef4444;">✕ Hủy</button>
+    <div class="ldm-order-filters">
+        <button class="ldm-button ldm-filter-btn is-active" data-status="all">Tất cả</button>
+        <button class="ldm-button ldm-filter-btn" data-status="pending">Chờ xác nhận</button>
+        <button class="ldm-button ldm-filter-btn" data-status="processing">Xử lý</button>
+        <button class="ldm-button ldm-filter-btn" data-status="shipped">Đã gửi</button>
+        <button class="ldm-button ldm-filter-btn" data-status="delivered">Hoàn thành</button>
+        <button class="ldm-button ldm-filter-btn" data-status="cancelled">Hủy</button>
     </div>
 
     <div class="ldm-table-wrap">
@@ -43,28 +170,28 @@
                 {% for order in orders %}
                 <tr data-status="{{ order.status|lower }}">
                     <td><strong>{{ forloop.counter }}</strong></td>
-                    <td><strong style="color:#3b82f6;">ORD-{{ order.id }}</strong></td>
+                    <td><span class="ldm-order-id">ORD-{{ order.id }}</span></td>
                     <td>
-                        <div style="font-weight:600;">{{ order.user.get_full_name|default:order.user.username }}</div>
-                        <div style="font-size:12px;color:#94a3b8;">{{ order.user.email }}</div>
+                        <div class="ldm-order-user-name">{{ order.user.get_full_name|default:order.user.username }}</div>
+                        <div class="ldm-order-user-email">{{ order.user.email }}</div>
                     </td>
                     <td style="text-align:center;">
                         {% with item_count=order.items.count %}
-                            <span style="display:inline-block;background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:12px;">{{ item_count }} sản phẩm</span>
+                            <span class="ldm-order-items-badge">{{ item_count }} sản phẩm</span>
                         {% endwith %}
                     </td>
-                    <td style="text-align:right;font-weight:600;color:#1e293b;">{{ order.total_amount|intcomma }}₫</td>
+                    <td style="text-align:right;"><span class="ldm-order-total">{{ order.total_amount|intcomma }}₫</span></td>
                     <td style="text-align:center;">
                         {% if order.payment_method == 'vietqr' %}
-                        <span style="font-size:12px;background:#e0e7ff;color:#4f46e5;padding:4px 8px;border-radius:4px;">VietQR</span>
+                        <span class="ldm-payment-badge ldm-payment-vietqr">VietQR</span>
                         {% elif order.payment_method == 'cod' %}
-                        <span style="font-size:12px;background:#fce7f3;color:#ec4899;padding:4px 8px;border-radius:4px;">COD</span>
+                        <span class="ldm-payment-badge ldm-payment-cod">COD</span>
                         {% else %}
-                        <span style="font-size:12px;background:#f3e8ff;color:#a855f7;padding:4px 8px;border-radius:4px;">{{ order.payment_method }}</span>
+                        <span class="ldm-payment-badge ldm-payment-other">{{ order.payment_method }}</span>
                         {% endif %}
                     </td>
                     <td style="text-align:center;">
-                        <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}" style="padding:6px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:13px;background:white;cursor:pointer;">
+                        <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}">
                             <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Chờ xác nhận</option>
                             <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Xử lý</option>
                             <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Đã gửi</option>
@@ -72,10 +199,12 @@
                             <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy</option>
                         </select>
                     </td>
-                    <td style="text-align:center;font-size:12px;color:#64748b;">{{ order.created_at|date:"d/m/Y" }}</td>
+                    <td style="text-align:center;"><span class="ldm-order-date">{{ order.created_at|date:"d/m/Y" }}</span></td>
                     <td style="text-align:center;">
-                        <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Chi tiết</a>
-                        <button class="ldm-button ldm-button-danger delete-order-btn" data-order-id="{{ order.id }}" style="padding:6px 12px;font-size:12px;">Xóa</button>
+                        <div class="ldm-order-actions">
+                            <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary">Chi tiết</a>
+                            <button class="ldm-button ldm-button-danger delete-order-btn" data-order-id="{{ order.id }}">Xóa</button>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -110,65 +239,6 @@
     {% endif %}
 </div>
 
-<style>
-.ldm-status {
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.ldm-status-pending {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.ldm-status-processing {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.ldm-status-shipped {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.ldm-status-delivered {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.ldm-status-cancelled {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.ldm-filter-btn:hover {
-    background: #f1f5f9 !important;
-    color: #1e293b !important;
-}
-
-.order-status-select {
-    font-family: inherit;
-    transition: all 0.2s;
-}
-
-.order-status-select:hover {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.order-status-select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-</style>
-</style>
-
 <script>
 // Status filter
 document.querySelectorAll('.ldm-filter-btn').forEach(btn => {
@@ -177,11 +247,9 @@ document.querySelectorAll('.ldm-filter-btn').forEach(btn => {
         const rows = document.querySelectorAll('#ordersTableBody tr');
         
         document.querySelectorAll('.ldm-filter-btn').forEach(b => {
-            b.style.background = 'white';
-            b.style.color = '#64748b';
+            b.classList.remove('is-active');
         });
-        this.style.background = '#3b82f6';
-        this.style.color = 'white';
+        this.classList.add('is-active');
         
         rows.forEach(row => {
             if (status === 'all') {

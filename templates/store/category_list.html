@@ -1,61 +1,65 @@
-﻿{% extends 'store/base.html' %}
+﻿{% extends "admin/admin_base.html" %}
 {% load static %}
 
-{% block title %}Quản lý nhà sản xuất - MOBILE STORE{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin.css' %}">{% endblock %}
+{% block title %}Quản lý danh mục - Admin Panel{% endblock %}
+{% block page_title %}🏷️ Quản Lý Danh Mục{% endblock %}
 
 {% block content %}
-<div class="ldm-admin-container">
-    <!-- Header -->
-    <div class="ldm-admin-header">
-        <h1>⚙️ Quản lý nhà sản xuất</h1>
-        <a href="{% url 'store:category_create' %}" class="ldm-btn-add">+ Thêm nhà sản xuất</a>
+<div class="ldm-section">
+    <div class="ldm-section-header">
+        <h2 class="ldm-section-title">Danh sách danh mục</h2>
+        <div class="ldm-toolbar">
+            <input type="text" id="categorySearch" placeholder="🔍 Tìm kiếm danh mục..." class="ldm-input" style="min-width:250px;">
+            <a href="{% url 'store:category_create' %}" class="ldm-button ldm-button-primary">
+                <i class="ri-add-line"></i> Thêm danh mục
+            </a>
+        </div>
     </div>
-    
-    <!-- Danh sách -->
-    {% if categories %}
-    <table class="ldm-table">
-        <thead>
-            <tr>
-                <th style="width: 60px;">ID</th>
-                <th>Tên nhà sản xuất</th>
-                <th style="width: 120px;">Số sản phẩm</th>
-                <th style="width: 150px;">Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-            <tr>
-                <td><strong>#{{ category.id }}</strong></td>
-                <td><strong>{{ category.name }}</strong></td>
-                <td><span class="ldm-badge-product-count">{{ category.products.count }} sản phẩm</span></td>
-                <td>
-                    <div class="ldm-action-btns">
-                        <a href="{% url 'store:category_edit' category.id %}" class="ldm-btn-edit">✏️ Sửa</a>
-                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-btn-delete" onclick="return confirm('Bạn có chắc muốn xóa?')">🗑️ Xóa</a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="ldm-empty-state">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4m0 0L4 7m16 0v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7m16 0L12 3m0 0L4 7m0 0v10a2 2 0 002 2h12a2 2 0 002-2V7"/>
-        </svg>
-        <p>Chưa có nhà sản xuất nào</p>
-        <a href="{% url 'store:category_create' %}" class="ldm-btn-add">+ Thêm cái đầu tiên</a>
-    </div>
-    {% endif %}
-    
-    <!-- Liên kết quay lại dashboard -->
-    <div style="margin-top: 30px; text-align: center;">
-        <a href="{% url 'store:dashboard' %}" style="color: #2563eb; text-decoration: none; font-weight: 600;">← Quay lại Dashboard</a>
+
+    <div class="ldm-table-wrap">
+        <table class="ldm-table">
+            <thead>
+                <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Tên danh mục</th>
+                    <th style="text-align:center; width:180px;">Số sản phẩm</th>
+                    <th style="text-align:center; width:190px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="categoriesTableBody">
+                {% for category in categories %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td><strong>{{ category.name }}</strong></td>
+                    <td style="text-align:center;">
+                        <span style="font-size:13px;color:#64748b;font-weight:600;">{{ category.products.count }} sản phẩm</span>
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{% url 'store:category_edit' category.id %}" class="ldm-button ldm-button-secondary" style="padding:6px 12px;font-size:12px;">Sửa</a>
+                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-button ldm-button-danger" style="padding:6px 12px;font-size:12px;" onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">Xóa</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center;padding:40px;color:#94a3b8;">📦 Chưa có danh mục nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+
+<script>
+document.getElementById('categorySearch').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#categoriesTableBody tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
 {% endblock %}
 
 

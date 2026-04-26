@@ -1,79 +1,290 @@
 {% extends 'admin/admin_base.html' %}
 {% load static %}
 
-{% block title %}Quản lý thành viên{% endblock %}
+{% block title %}Quản lý thành viên - Admin Panel{% endblock %}
+{% block page_title %}👥 Quản Lý Thành Viên{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ldm-users-note {
+        margin: 0;
+        color: var(--ldm-text-secondary);
+        font-size: 14px;
+    }
+
+    .ldm-alerts {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .ldm-alert {
+        padding: 12px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        border: 1px solid transparent;
+    }
+
+    .ldm-alert-success {
+        background: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+    }
+
+    .ldm-alert-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fca5a5;
+    }
+
+    .ldm-alert-info {
+        background: #dbeafe;
+        color: #1e3a8a;
+        border-color: #93c5fd;
+    }
+
+    .ldm-user-fullname-empty {
+        color: #94a3b8;
+    }
+
+    .ldm-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .ldm-pill-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .ldm-pill-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .ldm-pill-admin {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .ldm-pill-customer {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .ldm-user-actions {
+        display: inline-flex;
+        gap: 6px;
+    }
+
+    .ldm-user-actions .ldm-button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .ldm-button-muted {
+        background: #d1d5db;
+        color: #9ca3af;
+        border: none;
+        cursor: not-allowed;
+    }
+
+    .ldm-form-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ldm-form-field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ldm-text);
+    }
+
+    .ldm-form-field .ldm-input,
+    .ldm-form-field input[type="text"],
+    .ldm-form-field input[type="email"],
+    .ldm-form-field input[type="password"] {
+        width: 100%;
+    }
+
+    .ldm-form-field-full {
+        grid-column: 1 / -1;
+    }
+
+    .ldm-form-help {
+        margin: 6px 0 0;
+        color: var(--ldm-text-secondary);
+        font-size: 12px;
+    }
+
+    .ldm-form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid var(--ldm-border);
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .ldm-form-check input {
+        width: 16px;
+        height: 16px;
+    }
+
+    .ldm-form-error {
+        color: #dc2626;
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .ldm-form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .ldm-empty-state {
+        text-align: center;
+        padding: 38px 20px;
+        color: var(--ldm-text-secondary);
+    }
+
+    .ldm-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .ldm-modal-content {
+        width: 100%;
+        max-width: 420px;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--ldm-border);
+        padding: 20px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+    }
+
+    .ldm-modal-title {
+        margin: 0 0 10px;
+        color: #b91c1c;
+        font-size: 18px;
+    }
+
+    .ldm-modal-text {
+        margin: 0 0 12px;
+        color: var(--ldm-text-secondary);
+        line-height: 1.5;
+    }
+
+    .ldm-modal-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .ldm-modal-actions .ldm-button {
+        flex: 1;
+    }
+
+    @media (max-width: 768px) {
+        .ldm-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    <!-- Header -->
-    <div style="margin-bottom: 30px;">
-        <h2 style="margin: 0; color: var(--ldm-text); font-size: 28px; font-weight: 700;">👥 Quản lý thành viên</h2>
-        <p style="margin: 5px 0 0 0; color: var(--ldm-text-secondary); font-size: 14px;">Quản lý tài khoản người dùng hệ thống</p>
+<div class="ldm-section">
+    <div class="ldm-section-header">
+        <div>
+            <h2 class="ldm-section-title">Danh sách thành viên</h2>
+            <p class="ldm-users-note">Quản lý tài khoản người dùng hệ thống</p>
+        </div>
+        <div class="ldm-toolbar">
+            <input type="text" id="userSearch" placeholder="🔍 Tìm kiếm thành viên..." class="ldm-input" style="min-width:260px;">
+            {% if not show_form %}
+            <a href="?add=true" class="ldm-button ldm-button-primary">
+                <i class="ri-user-add-line"></i> Thêm thành viên
+            </a>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- Messages -->
     {% if messages %}
-    <div style="margin-bottom: 20px;">
-        {% for message in messages %}
-        <div style="padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; 
-                    {% if message.tags == 'success' %}background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;
-                    {% elif message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
-                    {% else %}background: #dbeafe; color: #0c2340; border: 1px solid #93c5fd;{% endif %}">
-            {{ message }}
+    <div class="ldm-table-wrap" style="padding-bottom: 0;">
+        <div class="ldm-alerts">
+            {% for message in messages %}
+                <div class="ldm-alert {% if message.tags == 'success' %}ldm-alert-success{% elif message.tags == 'error' %}ldm-alert-error{% else %}ldm-alert-info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Users Table -->
     {% if users %}
-    <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-        <table style="width: 100%; border-collapse: collapse;">
+    <div class="ldm-table-wrap">
+        <table class="ldm-table">
             <thead>
-                <tr style="background: var(--ldm-light); border-bottom: 1px solid var(--ldm-border);">
-                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 80px;">ID</th>
-                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 150px;">Tên đăng nhập</th>
-                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 200px;">Email</th>
-                    <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--ldm-text); width: 150px;">Tên đầy đủ</th>
-                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 100px;">Trạng thái</th>
-                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 100px;">Quyền</th>
-                    <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--ldm-text); width: 150px;">Hành động</th>
+                <tr>
+                    <th style="width:80px;">ID</th>
+                    <th style="width:160px;">Tên đăng nhập</th>
+                    <th>Email</th>
+                    <th style="width:200px;">Tên đầy đủ</th>
+                    <th style="text-align:center; width:120px;">Trạng thái</th>
+                    <th style="text-align:center; width:120px;">Quyền</th>
+                    <th style="text-align:center; width:170px;">Hành động</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="usersTableBody">
                 {% for user in users %}
-                <tr style="border-bottom: 1px solid var(--ldm-border); transition: background 0.2s;">
-                    <td style="padding: 16px; color: var(--ldm-text);"><strong>#{{ user.id }}</strong></td>
-                    <td style="padding: 16px; color: var(--ldm-text);"><strong>{{ user.username }}</strong></td>
-                    <td style="padding: 16px; color: var(--ldm-text-secondary);">{{ user.email }}</td>
-                    <td style="padding: 16px; color: var(--ldm-text);">
+                <tr>
+                    <td><strong>#{{ user.id }}</strong></td>
+                    <td><strong>{{ user.username }}</strong></td>
+                    <td>{{ user.email|default:'—' }}</td>
+                    <td>
                         {% if user.first_name or user.last_name %}
                             {{ user.first_name }} {{ user.last_name }}
                         {% else %}
-                            <span style="color: #999;">—</span>
+                            <span class="ldm-user-fullname-empty">—</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 16px; text-align: center;">
+                    <td style="text-align:center;">
                         {% if user.is_active %}
-                            <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 12px; font-weight: 600;">✓ Hoạt động</span>
+                            <span class="ldm-pill ldm-pill-active">Hoạt động</span>
                         {% else %}
-                            <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 4px; font-size: 12px; font-weight: 600;">✗ Vô hiệu</span>
+                            <span class="ldm-pill ldm-pill-inactive">Vô hiệu</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 16px; text-align: center;">
+                    <td style="text-align:center;">
                         {% if user.is_staff %}
-                            <span style="display: inline-block; padding: 4px 12px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; font-weight: 600;">⚙️ Admin</span>
+                            <span class="ldm-pill ldm-pill-admin">Admin</span>
                         {% else %}
-                            <span style="display: inline-block; padding: 4px 12px; background: #f3f4f6; color: #6b7280; border-radius: 4px; font-size: 12px;">Khách hàng</span>
+                            <span class="ldm-pill ldm-pill-customer">Khách hàng</span>
                         {% endif %}
                     </td>
-                    <td style="padding: 16px; text-align: center;">
-                        <a href="{% url 'store:user_edit' user.id %}" style="display: inline-block; padding: 6px 12px; background: var(--ldm-primary); color: white; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600; margin-right: 6px; transition: background 0.2s;" onmouseover="this.style.background='var(--ldm-primary-dark)'" onmouseout="this.style.background='var(--ldm-primary)'">✏️ Sửa</a>
-                        {% if user.id != request.user.id %}
-                        <button class="ldm-delete-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}" style="display: inline-block; padding: 6px 12px; background: var(--ldm-danger); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--ldm-danger)'">🗑️ Xóa</button>
-                        {% else %}
-                        <button style="display: inline-block; padding: 6px 12px; background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: not-allowed;">🗑️ Xóa</button>
-                        {% endif %}
+                    <td style="text-align:center;">
+                        <div class="ldm-user-actions">
+                            <a href="{% url 'store:user_edit' user.id %}" class="ldm-button ldm-button-secondary">Sửa</a>
+                            {% if user.id != request.user.id %}
+                            <button class="ldm-button ldm-button-danger ldm-delete-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}">Xóa</button>
+                            {% else %}
+                            <button class="ldm-button ldm-button-muted" disabled>Xóa</button>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -81,26 +292,89 @@
         </table>
     </div>
     {% else %}
-    <div style="background: white; padding: 40px; border-radius: 8px; text-align: center;">
-        <p style="color: var(--ldm-text-secondary); font-size: 16px;">📭 Chưa có thành viên nào</p>
-    </div>
+    <div class="ldm-empty-state">📭 Chưa có thành viên nào</div>
     {% endif %}
-
-    <!-- Back Link -->
-    <div style="margin-top: 30px; text-align: center;">
-        <a href="{% url 'store:dashboard' %}" style="color: var(--ldm-primary); text-decoration: none; font-weight: 600; font-size: 14px;">← Quay lại Dashboard</a>
-    </div>
 </div>
 
-<!-- Delete User Modal -->
-<div id="deleteUserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 8px; padding: 30px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <h3 style="margin: 0 0 10px 0; color: var(--ldm-danger); font-size: 18px;">⚠️ Xác nhận xóa thành viên</h3>
-        <p style="margin: 0 0 20px 0; color: var(--ldm-text-secondary); line-height: 1.5;">Bạn có chắc muốn xóa thành viên <strong id="deleteUserName" style="color: var(--ldm-text);"></strong>?</p>
-        <p style="margin: 0 0 20px 0; color: var(--ldm-text-secondary); font-size: 14;">Hành động này không thể hoàn tác.</p>
-        <div style="display: flex; gap: 10px;">
-            <button id="cancelDeleteBtn" style="flex: 1; padding: 10px; background: var(--ldm-light); color: var(--ldm-text); border: 1px solid var(--ldm-border); border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Hủy</button>
-            <button id="confirmDeleteBtn" style="flex: 1; padding: 10px; background: var(--ldm-danger); color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Xóa</button>
+{% if show_form %}
+<div class="ldm-section">
+    <div class="ldm-section-header">
+        <h2 class="ldm-section-title">{% if edit_user %}Sửa thành viên{% else %}Thêm thành viên{% endif %}</h2>
+    </div>
+
+    <div class="ldm-table-wrap" style="padding-top: 20px;">
+        <form method="post">
+            {% csrf_token %}
+            <div class="ldm-form-grid">
+                <div class="ldm-form-field">
+                    <label for="id_username">Tên đăng nhập</label>
+                    <input class="ldm-input" type="text" name="username" value="{{ form.username.value|default:'' }}" placeholder="Tên đăng nhập" required>
+                    {% if form.username.errors %}<div class="ldm-form-error">{{ form.username.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="ldm-form-field">
+                    <label for="id_email">Email</label>
+                    <input class="ldm-input" type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="Email">
+                    {% if form.email.errors %}<div class="ldm-form-error">{{ form.email.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="ldm-form-field">
+                    <label for="id_first_name">Tên</label>
+                    <input class="ldm-input" type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" placeholder="Tên">
+                    {% if form.first_name.errors %}<div class="ldm-form-error">{{ form.first_name.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="ldm-form-field">
+                    <label for="id_last_name">Họ</label>
+                    <input class="ldm-input" type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" placeholder="Họ">
+                    {% if form.last_name.errors %}<div class="ldm-form-error">{{ form.last_name.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="ldm-form-field ldm-form-field-full">
+                    <label for="id_password">Mật khẩu</label>
+                    <input class="ldm-input" type="password" name="password" placeholder="Để trống để giữ mật khẩu hiện tại">
+                    <p class="ldm-form-help">{% if form.password.help_text %}{{ form.password.help_text|safe }}{% else %}Tối thiểu 8 ký tự{% endif %}</p>
+                    {% if form.password.errors %}<div class="ldm-form-error">{{ form.password.errors.0 }}</div>{% endif %}
+                </div>
+
+                <label class="ldm-form-check">
+                    <input type="checkbox" name="is_active" value="on" {% if edit_user and edit_user.is_active %}checked{% elif not edit_user %}checked{% endif %}>
+                    <span>Bật hoạt động</span>
+                </label>
+
+                <label class="ldm-form-check">
+                    <input type="checkbox" name="is_staff" value="on" {% if edit_user and edit_user.is_staff %}checked{% endif %}>
+                    <span>Cấp quyền Admin</span>
+                </label>
+
+                {% if edit_user %}
+                <input type="hidden" name="edit_user_id" value="{{ edit_user.id }}">
+                {% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                <div class="ldm-form-error" style="margin-top: 12px;">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="ldm-form-actions">
+                <a href="{% url 'store:user_list' %}" class="ldm-button ldm-button-secondary">Hủy</a>
+                <button type="submit" class="ldm-button ldm-button-primary">{% if edit_user %}Lưu thay đổi{% else %}Tạo thành viên{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="ldm-modal" id="deleteUserModal" role="dialog" aria-modal="true" aria-labelledby="deleteUserTitle">
+    <div class="ldm-modal-content">
+        <h3 class="ldm-modal-title" id="deleteUserTitle">Xác nhận xóa thành viên</h3>
+        <p class="ldm-modal-text">Bạn có chắc muốn xóa thành viên <strong id="deleteUserName"></strong>?</p>
+        <p class="ldm-modal-text">Hành động này không thể hoàn tác.</p>
+        <div class="ldm-modal-actions">
+            <button id="cancelDeleteBtn" class="ldm-button ldm-button-secondary">Hủy</button>
+            <button id="confirmDeleteBtn" class="ldm-button ldm-button-danger">Xóa</button>
         </div>
     </div>
 </div>
@@ -114,7 +388,20 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-// Delete User Handler
+// Search filter
+const userSearchInput = document.getElementById('userSearch');
+if (userSearchInput) {
+    userSearchInput.addEventListener('keyup', function (event) {
+        const searchTerm = event.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTableBody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+}
+
+// Delete user handler
 let userToDelete = null;
 
 document.querySelectorAll('.ldm-delete-user-btn').forEach(btn => {
@@ -157,5 +444,12 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
         document.getElementById('deleteUserModal').style.display = 'none';
     });
 });
+
+    document.getElementById('deleteUserModal').addEventListener('click', function(event) {
+        if (event.target.id === 'deleteUserModal') {
+            this.style.display = 'none';
+            userToDelete = null;
+        }
+    });
 </script>
 {% endblock %}

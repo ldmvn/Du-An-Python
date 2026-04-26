@@ -339,7 +339,7 @@ class BannerForm(forms.ModelForm):
     """Form for managing banner images"""
     class Meta:
         model = Banner
-        fields = ['banner_id', 'image', 'title', 'description', 'is_active']
+        fields = ['banner_id', 'image', 'is_active']
         widgets = {
             'banner_id': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -347,16 +347,7 @@ class BannerForm(forms.ModelForm):
             }),
             'image': forms.FileInput(attrs={
                 'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Tiêu đề banner',
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Mô tả banner',
-                'rows': 3
+                'accept': 'image/*,video/*'
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
@@ -372,15 +363,18 @@ class BannerForm(forms.ModelForm):
     def clean_image(self):
         image = self.cleaned_data.get('image')
         if image:
-            allowed_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            allowed_image_formats = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            allowed_video_formats = ['mp4', 'webm', 'ogg', 'mov', 'm4v']
             file_extension = image.name.split('.')[-1].lower()
             
-            if file_extension not in allowed_formats:
-                raise forms.ValidationError('❌ Định dạng ảnh không hợp lệ! Chỉ nhận: JPG, PNG, GIF, WEBP')
+            if file_extension not in allowed_image_formats and file_extension not in allowed_video_formats:
+                raise forms.ValidationError('❌ Định dạng không hợp lệ! Chỉ nhận ảnh JPG, PNG, GIF, WEBP hoặc video MP4, WEBM, OGG, MOV')
             
-            max_size = 10 * 1024 * 1024  # 10MB for banners
+            max_size = 10 * 1024 * 1024 if file_extension in allowed_image_formats else 50 * 1024 * 1024
             if image.size > max_size:
-                raise forms.ValidationError(f'❌ Kích thước ảnh quá lớn! Tối đa 10MB')
+                if file_extension in allowed_image_formats:
+                    raise forms.ValidationError('❌ Kích thước ảnh quá lớn! Tối đa 10MB')
+                raise forms.ValidationError('❌ Kích thước video quá lớn! Tối đa 50MB')
         
         return image
 

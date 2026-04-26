@@ -1,7 +1,17 @@
+import os
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+
+def banner_upload_path(instance, filename):
+    ext = os.path.splitext(filename)[1].lower()
+    if ext in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}:
+        return f'banner/videos/{filename}'
+    else:
+        return f'banner/image/{filename}'
 
 
 class UserProfile(models.Model):
@@ -168,9 +178,9 @@ class ProductSpecification(models.Model):
 
 
 class Banner(models.Model):
-    """Banner image for homepage slider"""
+    """Banner media for homepage slider"""
     banner_id = models.IntegerField(unique=True, help_text="Banner position (1, 2, 3, ...)")
-    image = models.ImageField(upload_to='banner/', help_text="Banner image")
+    image = models.FileField(upload_to=banner_upload_path, help_text="Banner image or video")
     title = models.CharField(max_length=255, blank=True, default='')
     description = models.TextField(blank=True, default='')
     is_active = models.BooleanField(default=True)
@@ -182,6 +192,16 @@ class Banner(models.Model):
 
     def __str__(self):
         return f"Banner #{self.banner_id}"
+
+    @property
+    def media_extension(self):
+        if not self.image:
+            return ''
+        return os.path.splitext(self.image.name)[1].lower()
+
+    @property
+    def is_video(self):
+        return self.media_extension in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}
 
 
 class Wishlist(models.Model):

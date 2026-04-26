@@ -80,7 +80,7 @@
         });
     </script>
 </head>
-<body>
+<body{% if request.path == '/auth/' or request.path|startswith:'/login' or request.path|startswith:'/register' %} class="auth-page"{% endif %}>
     <!-- Messages/Notifications Data in JSON script tag -->
     <script type="application/json" id="ldm-messages-data">
     {% if messages %}[

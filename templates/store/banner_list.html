@@ -2,31 +2,55 @@
 {% load static %}
 
 {% block title %}Quản lý banner - Admin Panel{% endblock %}
-{% block page_title %}🖼️ Quản Lý Banner{% endblock %}
+{% block page_title %}{{ page_title_text|default:'🖼️ Quản Lý Banner' }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/banner-list.css' %}">
+{% endblock %}
 
 {% block content %}
 <script type="application/json" id="bannerUrls">
-{"addUrl": "{% url 'store:banner_add' %}", "deleteUrl": "{% url 'store:banner_delete' %}", "csrfToken": "{{ csrf_token }}"}
+{% if banner_mode == 'video' %}
+{"addUrl": "{% url 'store:video_banner_add' %}", "importUrl": "{% url 'store:video_banner_import' %}", "replaceUrl": "{% url 'store:video_banner_replace' %}", "deleteUrl": "{% url 'store:video_banner_delete' %}", "csrfToken": "{{ csrf_token }}"}
+{% else %}
+{"addUrl": "{% url 'store:banner_add' %}", "importUrl": "{% url 'store:banner_import' %}", "replaceUrl": "{% url 'store:banner_replace' %}", "deleteUrl": "{% url 'store:banner_delete' %}", "csrfToken": "{{ csrf_token }}"}
+{% endif %}
 </script>
 <div class="ldm-section">
     <div class="ldm-section-header">
-        <h2 class="ldm-section-title">Danh sách banner</h2>
+        <div>
+            <h2 class="ldm-section-title">{{ page_subtitle_text|default:'Danh sách banner' }}</h2>
+            <p style="margin:6px 0 0;color:#64748b;font-size:14px;">{% if banner_mode == 'video' %}Chỉ tải lên video cho mục Videos Banner.{% else %}Chỉ tải lên ảnh cho mục Banner.{% endif %}</p>
+        </div>
         <div class="ldm-toolbar">
+            {% if banner_mode == 'video' %}
+            <button id="importVideoBannerBtn" class="ldm-button ldm-button-secondary">
+                <i class="ri-folder-upload-line"></i> Tải video từ thư mục videos
+            </button>
+            {% else %}
+            <button id="importVideoBannerBtn" class="ldm-button ldm-button-secondary">
+                <i class="ri-folder-upload-line"></i> Tải ảnh từ thư mục banner
+            </button>
+            {% endif %}
             <button id="addBannerBtn" class="ldm-button ldm-button-primary">
-                <i class="ri-add-line"></i> Thêm banner mới
+                <i class="ri-add-line"></i> {% if banner_mode == 'video' %}Thêm video banner{% else %}Thêm banner ảnh{% endif %}
             </button>
         </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;">
+    <div class="banner-grid">
         {% for banner in banners %}
-        <div style="background:white;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;">
+        <div class="banner-card">
             <!-- Banner Image -->
-            <div style="width:100%;height:150px;background:#f1f5f9;overflow:hidden;position:relative;border-bottom:1px solid #e2e8f0;">
+            <div class="banner-image-container">
                 {% if banner.image %}
-                    <img src="{{ banner.image.url }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% if banner.is_video %}
+                            <video src="{{ banner.image.url }}" muted autoplay loop playsinline></video>
+                        {% else %}
+                            <img src="{{ banner.image.url }}" alt="Banner {{ banner.banner_id }}">
+                        {% endif %}
                 {% else %}
-                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:40px;">📷</div>
+                    <div class="banner-image-placeholder">{% if banner_mode == 'video' %}🎞️{% else %}📷{% endif %}</div>
                 {% endif %}
                 <!-- Active Badge -->
                 <div class="banner-badge {% if banner.is_active %}banner-active{% else %}banner-inactive{% endif %}">
@@ -35,288 +59,72 @@
             </div>
 
             <!-- Banner Info -->
-            <div style="padding:16px;flex:1;display:flex;flex-direction:column;gap:8px;">
-                <h4 style="margin:0;font-size:14px;font-weight:600;color:#1e293b;word-break:break-word;">{{ banner.title|default:"(Chưa đặt tên)" }}</h4>
-                <p style="margin:0;font-size:12px;color:#64748b;line-height:1.4;word-break:break-word;">{{ banner.description|truncatewords:15 }}</p>
-                
+            <div class="banner-info">
                 <!-- Metadata -->
-                <div style="font-size:11px;color:#94a3b8;margin-top:auto;">
+                <div class="banner-metadata">
                     <div>ID: #{{ banner.banner_id }}</div>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div style="display:flex;gap:8px;padding:12px;border-top:1px solid #e2e8f0;background:#f8fafc;">
-                <button class="banner-edit-btn ldm-button ldm-button-secondary" data-banner-id="{{ banner.banner_id }}" style="flex:1;padding:8px;font-size:12px;">
+            <div class="banner-actions">
+                <button class="banner-edit-btn ldm-button ldm-button-secondary" data-banner-id="{{ banner.banner_id }}">
                     <i class="ri-edit-line"></i> Sửa
                 </button>
-                <button class="banner-delete-btn ldm-button ldm-button-danger" data-banner-id="{{ banner.banner_id }}" style="flex:1;padding:8px;font-size:12px;">
+                <button class="banner-delete-btn ldm-button ldm-button-danger" data-banner-id="{{ banner.banner_id }}">
                     <i class="ri-delete-line"></i> Xóa
                 </button>
             </div>
         </div>
         {% empty %}
-        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#94a3b8;">
-            <div style="font-size:48px;margin-bottom:16px;">🖼️</div>
-            <p style="margin:0;font-size:16px;font-weight:600;">Chưa có banner nào</p>
-            <p style="margin:8px 0 0;font-size:14px;">Nhấn "Thêm banner mới" để tạo banner đầu tiên</p>
+        <div class="banner-empty-state">
+            <div class="banner-empty-state-icon">🖼️</div>
+            <p class="banner-empty-state-title">{% if banner_mode == 'video' %}Chưa có video banner nào{% else %}Chưa có banner nào{% endif %}</p>
+            <p class="banner-empty-state-subtitle">{% if banner_mode == 'video' %}Nhấn "Thêm video banner" để tạo video đầu tiên{% else %}Nhấn "Thêm banner mới" để tạo banner đầu tiên{% endif %}</p>
         </div>
         {% endfor %}
     </div>
 </div>
 
 <!-- Banner Modal -->
-<div id="bannerModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:12px;width:90%;max-width:500px;padding:24px;max-height:90vh;overflow-y:auto;">
-        <h3 style="margin:0 0 20px;font-size:18px;font-weight:700;color:#1e293b;display:flex;justify-content:space-between;align-items:center;">
-            <span id="modalTitle">Thêm banner mới</span>
-            <button onclick="closeBannerModal()" style="border:none;background:none;font-size:24px;color:#94a3b8;cursor:pointer;">&times;</button>
+<div id="bannerModal" class="banner-modal">
+    <div class="banner-modal-content">
+        <h3 class="banner-modal-title">
+            <span id="modalTitle">{% if banner_mode == 'video' %}Thêm video banner{% else %}Thêm banner ảnh{% endif %}</span>
+            <button type="button" onclick="closeBannerModal()" class="banner-modal-close">&times;</button>
         </h3>
 
         <form id="bannerForm" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" id="bannerId" name="banner_id" value="">
 
-            <!-- Title -->
-            <div style="margin-bottom:16px;">
-                <label style="display:block;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:6px;">Tiêu đề</label>
-                <input type="text" id="bannerTitle" name="title" placeholder="Nhập tiêu đề banner" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-            </div>
-
-            <!-- Description -->
-            <div style="margin-bottom:16px;">
-                <label style="display:block;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:6px;">Mô tả</label>
-                <textarea id="bannerDescription" name="description" placeholder="Nhập mô tả banner" style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;resize:vertical;min-height:80px;"></textarea>
-            </div>
-
             <!-- Image -->
-            <div style="margin-bottom:16px;">
-                <label style="display:block;font-size:13px;font-weight:600;color:#1e293b;margin-bottom:6px;">Hình ảnh</label>
-                <div style="display:flex;gap:12px;align-items:flex-start;">
-                    <img id="bannerPreview" style="display:none;width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;">
-                    <input type="file" id="bannerImage" name="image" accept="image/*" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:6px;">
+            <div class="banner-form-group">
+                <label class="banner-form-label">{% if banner_mode == 'video' %}Video banner{% else %}Ảnh banner{% endif %}</label>
+                <div class="banner-form-file-wrapper">
+                    <img id="bannerPreviewImage" class="banner-preview banner-preview-image" alt="preview">
+                    <video id="bannerPreviewVideo" class="banner-preview banner-preview-video" controls muted playsinline></video>
+                    <input type="file" id="bannerImage" name="image" accept="{% if banner_mode == 'video' %}video/*{% else %}image/*{% endif %}" class="banner-form-file-input banner-form-input">
                 </div>
             </div>
 
             <!-- Active Checkbox -->
-            <div style="margin-bottom:24px;display:flex;align-items:center;gap:10px;">
-                <input type="checkbox" id="bannerActive" name="is_active" checked style="width:16px;height:16px;cursor:pointer;">
-                <label for="bannerActive" style="cursor:pointer;font-size:14px;color:#1e293b;">Hiển thị banner này</label>
+            <div class="banner-form-checkbox">
+                <input type="checkbox" id="bannerActive" name="is_active" checked>
+                <label for="bannerActive">Hiển thị banner này</label>
             </div>
 
             <!-- Actions -->
-            <div style="display:flex;gap:12px;">
-                <button type="submit" class="ldm-button ldm-button-primary" style="flex:1;">Lưu lại</button>
-                <button type="button" onclick="closeBannerModal()" class="ldm-button ldm-button-secondary" style="flex:1;">Hủy</button>
+            <div class="banner-form-actions">
+                <button type="submit" class="ldm-button ldm-button-primary">Lưu lại</button>
+                <button type="button" onclick="closeBannerModal()" class="ldm-button ldm-button-secondary">Hủy</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-// Get URLs from data tag
-const bannerConfig = JSON.parse(document.getElementById('bannerUrls').textContent);
+{% endblock %}
 
-// Add banner button
-document.getElementById('addBannerBtn').addEventListener('click', function() {
-    openBannerModal(null);
-});
-
-// Edit banner buttons
-document.querySelectorAll('.banner-edit-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const bannerId = this.dataset.bannerId;
-        openBannerModal(bannerId);
-    });
-});
-
-// Delete banner buttons
-document.querySelectorAll('.banner-delete-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const bannerId = this.dataset.bannerId;
-        deleteBanner(bannerId);
-    });
-});
-
-function openBannerModal(bannerId) {
-    const modal = document.getElementById('bannerModal');
-    const form = document.getElementById('bannerForm');
-    const title = document.getElementById('modalTitle');
-    
-    form.reset();
-    document.getElementById('bannerPreview').style.display = 'none';
-    
-    if (bannerId) {
-        title.textContent = 'Chỉnh sửa banner';
-        document.getElementById('bannerId').value = bannerId;
-        // Load banner data via AJAX if needed
-    } else {
-        title.textContent = 'Thêm banner mới';
-        document.getElementById('bannerId').value = '';
-    }
-    
-    modal.style.display = 'flex';
-}
-
-function closeBannerModal() {
-    document.getElementById('bannerModal').style.display = 'none';
-}
-
-document.getElementById('bannerForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    fetch(bannerConfig.addUrl, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': bannerConfig.csrfToken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('✅ ' + data.message);
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showToast('❌ ' + (data.message || 'Lỗi'), 'error');
-        }
-    })
-    .catch(error => {
-        showToast('❌ Lỗi: ' + error, 'error');
-    });
-});
-
-function deleteBanner(bannerId) {
-    if (confirm('Bạn chắc chắn muốn xóa banner này?')) {
-        const formData = new FormData();
-        formData.append('banner_id', bannerId);
-        
-        fetch(bannerConfig.deleteUrl, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': bannerConfig.csrfToken
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('✅ ' + data.message);
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast('❌ ' + (data.message || 'Lỗi xóa'), 'error');
-            }
-        });
-    }
-}
-
-// Image preview
-document.getElementById('bannerImage').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const preview = document.getElementById('bannerPreview');
-            preview.src = event.target.result;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Toast function (if not already defined globally)
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed;top:20px;right:20px;background:${type==='error'?'#ef4444':'#10b981'};color:white;padding:12px 20px;border-radius:6px;z-index:2000;font-size:14px;font-weight:500;`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-// Close modal when clicking outside
-document.getElementById('bannerModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeBannerModal();
-    }
-});
-</script>
-
-<style>
-    .banner-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-    }
-    
-    .banner-active {
-        background: #10b981;
-    }
-    
-    .banner-inactive {
-        background: #ef4444;
-    }
-    
-    .ldm-section {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
-    }
-    .ldm-section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-    .ldm-section-title {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 700;
-        color: #1e293b;
-    }
-    .ldm-toolbar {
-        display: flex;
-        gap: 12px;
-    }
-    .ldm-button {
-        padding: 10px 16px;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .ldm-button-primary {
-        background: #3b82f6;
-        color: white;
-    }
-    .ldm-button-primary:hover {
-        background: #2563eb;
-    }
-    .ldm-button-secondary {
-        background: #f1f5f9;
-        color: #3b82f6;
-        border: 1px solid #e2e8f0;
-    }
-    .ldm-button-secondary:hover {
-        background: #e2e8f0;
-    }
-    .ldm-button-danger {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-    .ldm-button-danger:hover {
-        background: #fecaca;
-    }
-</style>
+{% block extra_js %}
+<script src="{% static 'js/banner-list.js' %}"></script>
 {% endblock %}

@@ -6,249 +6,189 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
+<link rel="stylesheet" href="{% static 'css/home-page.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="ldm-home">
 
-    <!-- Slider video hero -->
-    <section class="ldm-hero-slider">
-        <div class="ldm-hero-slider-wrap">
-            <div class="ldm-hero-stage" id="ldmHeroSlider">
-                <div class="ldm-hero-slide active" data-slide="0">
-                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
-                        <source src="/static/videos/applv1.mp4" type="video/mp4">
-                    </video>
-                    <div class="ldm-hero-overlay">
-                        <div class="ldm-hero-text">
-                            <h2>IPHONE</h2>
-                            <p>Trải nghiệm công nghệ vượt trội</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ldm-hero-slide" data-slide="1">
-                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
-                        <source src="/static/videos/sams.mp4" type="video/mp4">
-                    </video>
-                    <div class="ldm-hero-overlay">
-                        <div class="ldm-hero-text">
-                            <h2>SAMSUNG</h2>
-                            <p>Camera siêu zoom 100x</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ldm-hero-slide" data-slide="2">
-                    <video class="ldm-hero-video" autoplay muted loop playsinline preload="auto">
-                        <source src="/static/videos/xiao.mp4" type="video/mp4">
-                    </video>
-                    <div class="ldm-hero-overlay">
-                        <div class="ldm-hero-text">
-                            <h2>XIAOMI</h2>
-                            <p>Snapdragon 8 Elite – Hiệu năng vượt xa</p>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="button" class="ldm-hero-nav prev" id="ldmHeroPrev" aria-label="Slide trước">
-                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
+    <!-- Video lớn phía trên - Video Carousel -->
+    <section class="ldm-home-feature-hero">
+        <div class="ldm-home-feature-hero-card">
+            {% if hero_videos %}
+            <div class="ldm-video-carousel" id="videoCarousel">
+                {% for video in hero_videos %}
+                <video class="ldm-home-feature-video ldm-video-item" data-video-index="{{ forloop.counter0 }}" autoplay muted loop playsinline preload="metadata">
+                    <source src="{{ video.media_url }}">
+                </video>
+                {% endfor %}
+                {% if hero_videos|length > 1 %}
+                <button type="button" class="ldm-video-nav ldm-video-nav-prev" id="videoPrevBtn" aria-label="Video trước">
+                    <span aria-hidden="true">&#10094;</span>
                 </button>
-                <button type="button" class="ldm-hero-nav next" id="ldmHeroNext" aria-label="Slide sau">
-                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
+                <button type="button" class="ldm-video-nav ldm-video-nav-next" id="videoNextBtn" aria-label="Video tiếp theo">
+                    <span aria-hidden="true">&#10095;</span>
                 </button>
-
-                <div class="ldm-hero-dots" id="ldmHeroDots">
-                    <button type="button" class="ldm-hero-dot active" data-slide="0" aria-label="Slide 1"></button>
-                    <button type="button" class="ldm-hero-dot" data-slide="1" aria-label="Slide 2"></button>
-                    <button type="button" class="ldm-hero-dot" data-slide="2" aria-label="Slide 3"></button>
-                </div>
+                {% endif %}
             </div>
+            {% else %}
+            <div class="ldm-home-feature-placeholder">
+                CHƯA CÓ VIDEO TRONG MỤC VIDEOS
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Ảnh banner phía dưới -->
+    <section class="ldm-home-banner-section">
+        <div class="ldm-home-banner-carousel" id="bannerCarousel">
+            {% if hero_banners %}
+            <button type="button" class="ldm-banner-nav ldm-banner-nav-prev" id="bannerPrevBtn" aria-label="Banner trước">
+                <span aria-hidden="true">&#10094;</span>
+            </button>
+            <button type="button" class="ldm-banner-nav ldm-banner-nav-next" id="bannerNextBtn" aria-label="Banner tiếp theo">
+                <span aria-hidden="true">&#10095;</span>
+            </button>
+            <div class="ldm-home-banner-scroll" id="bannerScroll">
+                {% for banner in hero_banners %}
+                <article class="ldm-home-banner-card">
+                    <img src="{{ banner.media_url }}" alt="{{ banner.title|default:'Banner' }}">
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ldm-home-banner-grid">
+                <div class="ldm-home-banner-card ldm-home-banner-card-empty">Chưa có ảnh banner</div>
+                <div class="ldm-home-banner-card ldm-home-banner-card-empty"></div>
+                <div class="ldm-home-banner-card ldm-home-banner-card-empty"></div>
+            </div>
+            {% endif %}
         </div>
     </section>
 
     <!-- Tất cả sản phẩm (homepage now starts with brand filter links) -->
-    <section class="ldm-products-section" style="padding: 40px 20px; background: #f5f5f5;">
+    <section class="ldm-products-section">
         <div class="ldm-container">
-            <!-- Search & Filter Bar -->
-            <form method="get" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <!-- Brand Filter -->
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Hãng</label>
-                    <select name="brand" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
-                        <option value="">Tất cả hãng</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.name }}" {% if selected_brand == cat.name %}selected{% endif %}>{{ cat.name }}</option>
-                        {% endfor %}
-                    </select>
+            <div class="ldm-product-filters-panel">
+                <div class="ldm-product-chip-row ldm-product-chip-row-main">
+                    <a href="?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if price_range %}price_range={{ price_range|urlencode }}&{% endif %}" class="ldm-filter-chip ldm-filter-chip-outline {% if not selected_brand %}active{% endif %}">
+                        <i class="ri-filter-3-line"></i>
+                        Lọc
+                    </a>
+                    {% for cat in categories %}
+                    <a href="?brand={{ cat.name|urlencode }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if price_range %}&price_range={{ price_range|urlencode }}{% endif %}" class="ldm-filter-chip {% if selected_brand == cat.name %}active{% endif %}">
+                        {{ cat.name }}
+                    </a>
+                    {% endfor %}
                 </div>
-
-                <!-- Price Filter -->
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Giá</label>
-                    <select name="price_range" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
-                        <option value="">Tất cả giá</option>
-                        <option value="under_5m" {% if price_range == 'under_5m' %}selected{% endif %}>Dưới 5 triệu</option>
-                        <option value="5m_10m" {% if price_range == '5m_10m' %}selected{% endif %}>5 - 10 triệu</option>
-                        <option value="10m_20m" {% if price_range == '10m_20m' %}selected{% endif %}>10 - 20 triệu</option>
-                        <option value="over_20m" {% if price_range == 'over_20m' %}selected{% endif %}>Trên 20 triệu</option>
-                    </select>
-                </div>
-
-                <!-- Sort By -->
-                <div style="display: flex; flex-direction: column; gap: 5px;">
-                    <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #333; letter-spacing: 0.5px;">Sắp xếp</label>
-                    <select name="sort_by" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;" onchange="this.form.submit()">
-                        <option value="">Mặc định</option>
-                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
-                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
-                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Sản phẩm mới</option>
-                    </select>
-                </div>
-
-                <!-- Search Button -->
-                <div style="display: flex; flex-direction: column; justify-content: flex-end;">
-                    <button type="submit" style="padding: 10px 20px; background: #5b5bff; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.3s;">Tìm</button>
-                </div>
-
-                <!-- Keep search query if it exists -->
-                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
-            </form>
-
-            <!-- Section title -->
-            {% if search_query or selected_brand %}
-                {% if search_query and selected_brand %}
-                <h2 style="text-align: center; margin-bottom: 10px; font-size: 24px; font-weight: 600;">Kết quả tìm kiếm</h2>
-                <p style="text-align: center; margin-bottom: 30px; font-size: 14px; color: #666;">Từ khóa: <strong>"{{ search_query }}"</strong> | Nhà sản xuất: <strong>{{ selected_brand }}</strong></p>
-                {% elif search_query %}
-                <h2 style="text-align: center; margin-bottom: 10px; font-size: 24px; font-weight: 600;">Kết quả tìm kiếm</h2>
-                <p style="text-align: center; margin-bottom: 30px; font-size: 14px; color: #666;">Từ khóa: <strong>"{{ search_query }}"</strong></p>
-                {% else %}
-                <h2 style="text-align: center; margin-bottom: 30px; font-size: 24px; font-weight: 600;">Sản phẩm {{ selected_brand }}</h2>
-                {% endif %}
-            {% else %}
-            <h2 style="text-align: center; margin-bottom: 30px; font-size: 24px; font-weight: 600;">Tất cả sản phẩm</h2>
-            {% endif %}
+            </div>
 
             {% if products %}
-            <div class="ldm-product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+            <div class="ldm-product-grid">
                 {% for product in products %}
-                <div class="ldm-product-card" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative;">
-                    <!-- Discount Badge -->
+                <div class="ldm-product-card">
                     {% if product.discount > 0 %}
-                    <div style="position: absolute; top: 10px; left: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">
-                        Giảm {{ product.discount }}%
-                    </div>
+                    <div class="ldm-discount-badge">Giảm {{ product.discount }}%</div>
                     {% endif %}
-                    
-                    <!-- Wishlist button was moved lower to align with rating -->
 
-                    <a href="{% url 'store:product_detail' product.id %}" style="text-decoration: none; color: inherit; display: block;">
-                        <!-- Ảnh sản phẩm -->
-                        <div style="width: 100%; height: 250px; background: #f0f0f0; overflow: hidden;">
+                    <a href="{% url 'store:product_detail' product.id %}">
+                        <div class="ldm-product-image">
                             {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
                             {% else %}
-                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">
-                                <svg style="width: 64px; height: 64px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="ldm-product-no-image">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                             </div>
                             {% endif %}
                         </div>
-                        
-                        <!-- Thông tin sản phẩm -->
-                        <div style="padding: 15px;">
-                            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; height: 40px; overflow: hidden; text-overflow: ellipsis;">{{ product.name }}</h3>
-                            
-                            <!-- Giá -->
-                            <div style="margin-bottom: 10px;">
+
+                        <div class="ldm-product-info">
+                            <h3 class="ldm-product-name">{{ product.name }}</h3>
+
+                            <div class="ldm-product-price">
                                 {% if product.discount > 0 %}
-                                <div style="font-size: 12px; color: #999; text-decoration: line-through; margin-bottom: 2px;">{{ product.price|intcomma }} VND</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #dc3545;">{{ product.get_discounted_price|intcomma }} VND</div>
+                                <div class="ldm-product-price-original">{{ product.price|intcomma }} VND</div>
+                                <div class="ldm-product-price-current">{{ product.get_discounted_price|intcomma }} VND</div>
                                 {% else %}
-                                <div style="font-size: 16px; font-weight: 700; color: #2563eb;">{{ product.price|intcomma }} VND</div>
+                                <div class="ldm-product-price-no-discount">{{ product.price|intcomma }} VND</div>
                                 {% endif %}
                             </div>
 
-                            <!-- Rating & Review Count plus wishlist button -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: 13px;">
+                            <div class="ldm-product-rating-section">
                                 {% if product.get_avg_rating > 0 %}
-                                <div style="display: flex; align-items: center; gap: 3px;">
-                                    <span style="color: #ffc107;">★</span>
-                                    <span style="font-weight: 600; color: #333;">{{ product.get_avg_rating }}</span>
-                                    <span style="color: #999;">({{ product.get_review_count }})</span>
+                                <div class="ldm-product-rating">
+                                    <span class="ldm-product-rating-star">★</span>
+                                    <span class="ldm-product-rating-value">{{ product.get_avg_rating }}</span>
+                                    <span class="ldm-product-rating-count">({{ product.get_review_count }})</span>
                                 </div>
                                 {% else %}
-                                <div style="color: #999;">Chưa có đánh giá</div>
+                                <div class="ldm-product-no-rating">Chưa có đánh giá</div>
                                 {% endif %}
-
-                                <!-- Wishlist button with text -->
-                                <button class="wishlist-btn-inline" data-product-id="{{ product.id }}" style="background: white; border: 1px solid #ddd; padding: 4px 8px; cursor: pointer; color: #667eea; transition: all 0.2s; border-radius: 4px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500;">
-                                    <svg id="wishlist-{{ product.id }}" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                    </svg>
-                                    <span>Yêu thích</span>
-                                </button>
                             </div>
-
                         </div>
                     </a>
+
+                    <div style="padding: 0 15px 15px;">
+                        <button class="wishlist-btn-inline" data-product-id="{{ product.id }}">
+                            <svg id="wishlist-{{ product.id }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                            <span>Yêu thích</span>
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <p style="font-size: 18px; color: #666;">Chưa có sản phẩm. Vui lòng quay lại sau!</p>
+            <div class="ldm-no-products">
+                <p>Chưa có sản phẩm. Vui lòng quay lại sau!</p>
             </div>
             {% endif %}
         </div>
     </section>
 
     <!-- Phần USP -->
-    <section class="ldm-usp-section" style="padding: 60px 20px; background: #ffffff;">
-        <div class="ldm-container" style="max-width: 1200px; margin: 0 auto;">
-            <h2 style="text-align: center; margin-bottom: 40px; font-size: 28px; font-weight: 600;">TẠI SAO NÊN CHỌN CHÚNG TÔI?</h2>
-            <div class="ldm-usp-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
-                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <section class="ldm-usp-section">
+        <div class="ldm-container">
+            <h2 class="ldm-usp-title">TẠI SAO NÊN CHỌN CHÚNG TÔI?</h2>
+            <div class="ldm-usp-grid">
+                <div class="ldm-usp-card">
+                    <div class="ldm-usp-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
                     </div>
-                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Hàng Chính Hãng</h3>
-                    <p style="font-size: 13px; color: #666;">Cam kết 100% sản phẩm chính hãng, đầy đủ phụ kiện.</p>
+                    <h3 class="ldm-usp-title-text">Hàng Chính Hãng</h3>
+                    <p class="ldm-usp-description">Cam kết 100% sản phẩm chính hãng, đầy đủ phụ kiện.</p>
                 </div>
-                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
-                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div class="ldm-usp-card">
+                    <div class="ldm-usp-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
                     </div>
-                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Đổi Trả Dễ Dàng</h3>
-                    <p style="font-size: 13px; color: #666;">Hỗ trợ đổi trả trong 7 ngày nếu lỗi kỹ thuật.</p>
+                    <h3 class="ldm-usp-title-text">Đổi Trả Dễ Dàng</h3>
+                    <p class="ldm-usp-description">Hỗ trợ đổi trả trong 7 ngày nếu lỗi kỹ thuật.</p>
                 </div>
-                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
-                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div class="ldm-usp-card">
+                    <div class="ldm-usp-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
-                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Giao Hàng Nhanh</h3>
-                    <p style="font-size: 13px; color: #666;">Giao hàng toàn quốc từ 1-2 ngày làm việc.</p>
+                    <h3 class="ldm-usp-title-text">Giao Hàng Nhanh</h3>
+                    <p class="ldm-usp-description">Giao hàng toàn quốc từ 1-2 ngày làm việc.</p>
                 </div>
-                <div class="ldm-usp-card" style="text-align: center; padding: 20px;">
-                    <div class="ldm-usp-icon" style="margin-bottom: 15px;">
-                        <svg style="width: 48px; height: 48px; color: #2563eb; margin: 0 auto;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <div class="ldm-usp-card">
+                    <div class="ldm-usp-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                         </svg>
                     </div>
-                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Bảo Hành Uy Tín</h3>
-                    <p style="font-size: 13px; color: #666;">Bảo hành chính hãng từ 6-12 tháng.</p>
+                    <h3 class="ldm-usp-title-text">Bảo Hành Uy Tín</h3>
+                    <p class="ldm-usp-description">Bảo hành chính hãng từ 6-12 tháng.</p>
                 </div>
             </div>
         </div>
@@ -256,157 +196,10 @@
 
 </div>
 
-<!-- JavaScript điều khiển Hero Slider -->
-<script>
-(function() {
-    const slider = document.getElementById('ldmHeroSlider');
-    if (!slider) return;
+{% endblock %}
 
-    const slides = Array.from(slider.querySelectorAll('.ldm-hero-slide'));
-    const dotsWrap = document.getElementById('ldmHeroDots');
-    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('.ldm-hero-dot')) : [];
-    const prevBtn = document.getElementById('ldmHeroPrev');
-    const nextBtn = document.getElementById('ldmHeroNext');
-    const total = slides.length;
-
-    let idx = 0;
-    let timer = null;
-
-    function playVideo(video) {
-        if (!video) return;
-        video.muted = true;
-        video.playsInline = true;
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log('Video autoplay was prevented:', error);
-            });
-        }
-    }
-
-    function pauseVideo(video) {
-        if (!video) return;
-        try {
-            video.pause();
-        } catch(e) {}
-    }
-
-    function setActive(nextIdx) {
-        idx = (nextIdx + total) % total;
-        slides.forEach((s, i) => {
-            const active = i === idx;
-            s.classList.toggle('active', active);
-            const v = s.querySelector('video');
-            if (v) {
-                if (active) {
-                    playVideo(v);
-                } else {
-                    pauseVideo(v);
-                }
-            }
-        });
-        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    }
-
-    function next() { setActive(idx + 1); }
-    function prev() { setActive(idx - 1); }
-
-    function start() {
-        stop();
-        timer = setInterval(next, 7000);
-    }
-
-    function stop() {
-        if (timer) clearInterval(timer);
-        timer = null;
-    }
-
-    prevBtn && prevBtn.addEventListener('click', () => { prev(); start(); });
-    nextBtn && nextBtn.addEventListener('click', () => { next(); start(); });
-
-    dots.forEach((d) => {
-        d.addEventListener('click', () => {
-            const n = parseInt(d.getAttribute('data-slide') || '0', 10);
-            setActive(isNaN(n) ? 0 : n);
-            start();
-        });
-    });
-
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            stop();
-            slides.forEach(s => {
-                const v = s.querySelector('video');
-                if (v) pauseVideo(v);
-            });
-        } else {
-            const activeSlide = slides[idx];
-            if (activeSlide) {
-                const v = activeSlide.querySelector('video');
-                if (v) playVideo(v);
-            }
-            start();
-        }
-    });
-
-    setActive(0);
-    
-    setTimeout(() => {
-        const firstVideo = slides[0]?.querySelector('video');
-        if (firstVideo) playVideo(firstVideo);
-        start();
-    }, 500);
-})();
-
-// Wishlist toggle function
-function toggleWishlist(productId, event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const icon = document.getElementById('wishlist-' + productId);
-    const button = event.currentTarget;
-    
-    // Send request to toggle wishlist
-    fetch(`/wishlist/toggle/?product_id=${productId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'added') {
-                icon.style.color = '#dc3545';
-                button.style.transform = 'scale(1.1)';
-            } else {
-                icon.style.color = '#ddd';
-                button.style.transform = 'scale(1)';
-            }
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-                // Reload page to show/update wishlist section
-                location.reload();
-            }, 500);
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-// Initialize wishlist icons on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    wishlist.forEach(id => {
-        const icon = document.getElementById('wishlist-' + id);
-        if (icon) icon.style.color = '#dc3545';
-    });
-
-    // Wishlist button handler
-    document.querySelectorAll('.wishlist-btn-inline').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const productId = this.dataset.productId;
-            if (productId) {
-                toggleWishlistAjax(productId, this);
-            }
-        });
-    });
-});
-</script>
-
+{% block extra_js %}
+<script src="{% static 'js/home-slider.js' %}"></script>
 {% endblock %}
 `
 

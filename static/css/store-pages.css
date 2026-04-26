@@ -3390,8 +3390,10 @@
 
 .ldm-hero-stage {
     position: relative;
-    height: 55vh;
-    min-height: 340px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: clamp(240px, 42vw, 520px);
+    min-height: 240px;
     max-height: 520px;
     background: #111827;
 }
@@ -3413,7 +3415,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transform: scale(1.02);
+    object-position: center center;
+    background: #0f172a;
+    transform: scale(1);
     transition: transform 0.7s ease;
 }
 
@@ -3522,10 +3526,6 @@
 @media (max-width: 768px) {
     .ldm-hero-slider {
         padding: 0;
-    }
-
-    .ldm-hero-stage {
-        height: 38vh;
     }
 
     .ldm-hero-text {

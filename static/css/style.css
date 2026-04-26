@@ -108,11 +108,14 @@ body {
 
 /* Logo */
 .ldm-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
 }
 
 .ldm-logo-img {
-    height: 48px;
+    height: 52px;
     width: auto;
     object-fit: contain;
 }
@@ -745,15 +748,16 @@ body {
 
 /* Brand column */
 .ldm-footer-logo {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 14px;
 }
 
 .ldm-footer-logo-img {
-    height: 50px;
+    height: 56px;
     width: auto;
     object-fit: contain;
-    border-radius: 8px;
 }
 
 .ldm-footer-desc {

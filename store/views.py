@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
+from django.core.files.base import ContentFile
 from django.db.models import Q
+import os
 import requests
 
 from .models import Product, ProductSpecification, UserProfile, Category, Order, OrderItem, Banner, Wishlist
-from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm
+from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm
 
 
 # ================== UTILS ==================
@@ -32,6 +35,213 @@ def get_base_context(request):
         'order_count': len(orders),
         'user_display_name': user_display_name,
     }
+
+
+def _get_next_banner_id():
+    last_banner = Banner.objects.order_by('-banner_id').first()
+    return (last_banner.banner_id + 1) if last_banner else 1
+
+
+def _collect_homepage_banners():
+    """Collect homepage banner images from the admin-managed banner records."""
+    banners = []
+
+    for banner in Banner.objects.filter(is_active=True).order_by('banner_id'):
+        if not banner.image:
+            continue
+
+        if banner.is_video:
+            continue
+
+        banners.append({
+            'banner_id': banner.banner_id,
+            'media_url': banner.image.url,
+            'title': banner.title,
+            'description': banner.description,
+        })
+
+    return banners
+
+
+def _collect_homepage_videos():
+    """Collect all active video banners for carousel."""
+    videos = []
+
+    for banner in Banner.objects.filter(is_active=True).order_by('banner_id'):
+        if not banner.image:
+            continue
+
+        if not banner.is_video:
+            continue
+
+        videos.append({
+            'banner_id': banner.banner_id,
+            'media_url': banner.image.url,
+            'title': banner.title,
+            'description': banner.description,
+        })
+
+    return videos
+
+
+def _collect_homepage_video_url():
+    """Return the first active video banner URL, falling back to media/banner/videos."""
+    video_banner = Banner.objects.filter(is_active=True).order_by('banner_id').first()
+    if video_banner and video_banner.image and video_banner.is_video:
+        return video_banner.image.url
+
+    video_root = os.path.join(settings.MEDIA_ROOT, 'banner', 'videos')
+    preferred_order = ['applv1.mp4', 'sams.mp4', 'xiao.mp4', 'ooppv1.mp4']
+
+    for file_name in preferred_order:
+        if os.path.isfile(os.path.join(video_root, file_name)):
+            return f'{settings.MEDIA_URL}banner/videos/{file_name}'
+
+    if os.path.isdir(video_root):
+        for file_name in sorted(os.listdir(video_root)):
+            if os.path.splitext(file_name)[1].lower() == '.mp4':
+                return f'{settings.MEDIA_URL}banner/videos/{file_name}'
+
+    return ''
+
+
+def _is_video_upload(uploaded_file):
+    if not uploaded_file:
+        return False
+    allowed_video_formats = {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}
+    return os.path.splitext(uploaded_file.name)[1].lower() in allowed_video_formats
+
+
+def _is_image_upload(uploaded_file):
+    if not uploaded_file:
+        return False
+    allowed_image_formats = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    return os.path.splitext(uploaded_file.name)[1].lower() in allowed_image_formats
+
+
+def _banner_media_type_filter(media_type):
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+    video_extensions = ['.mp4', '.webm', '.ogg', '.mov', '.m4v']
+    query = Q()
+
+    extensions = image_extensions if media_type == 'image' else video_extensions
+    for extension in extensions:
+        query |= Q(image__iendswith=extension)
+
+    return query
+
+
+def _get_static_video_files():
+    video_root = os.path.join(settings.MEDIA_ROOT, 'banner', 'videos')
+    if not os.path.isdir(video_root):
+        return []
+
+    preferred_order = ['applv1.mp4', 'sams.mp4', 'xiao.mp4', 'ooppv1.mp4']
+    found_files = []
+    seen_files = set()
+
+    for file_name in preferred_order:
+        file_path = os.path.join(video_root, file_name)
+        if os.path.isfile(file_path):
+            found_files.append(file_name)
+            seen_files.add(file_name)
+
+    for file_name in sorted(os.listdir(video_root)):
+        if file_name in seen_files:
+            continue
+        if os.path.splitext(file_name)[1].lower() in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}:
+            found_files.append(file_name)
+
+    return found_files
+
+
+def _get_static_banner_image_files():
+    banner_root = os.path.join(settings.MEDIA_ROOT, 'banner', 'image')
+    if not os.path.isdir(banner_root):
+        return []
+
+    found_files = []
+    for root, _, files in os.walk(banner_root):
+        for file_name in sorted(files):
+            extension = os.path.splitext(file_name)[1].lower()
+            if extension in {'.jpg', '.jpeg', '.png', '.gif', '.webp'}:
+                relative_path = os.path.relpath(os.path.join(root, file_name), settings.MEDIA_ROOT).replace('\\', '/')
+                found_files.append(relative_path)
+
+    return found_files
+
+
+def _import_static_videos_to_banner():
+    video_root = os.path.join(settings.MEDIA_ROOT, 'banner', 'videos')
+    imported = 0
+    skipped = 0
+
+    for file_name in _get_static_video_files():
+        relative_name = f'banner/videos/{file_name}'
+        exists = Banner.objects.filter(image=relative_name).exists()
+        if exists:
+            skipped += 1
+            continue
+
+        file_path = os.path.join(video_root, file_name)
+        if not os.path.isfile(file_path):
+            continue
+
+        with open(file_path, 'rb') as source_file:
+            banner = Banner(
+                banner_id=_get_next_banner_id(),
+                title=os.path.splitext(file_name)[0].replace('_', ' ').replace('-', ' ').title(),
+                description='Imported from media/banner/videos',
+                is_active=True,
+            )
+            banner.image.save(f'videos/{file_name}', ContentFile(source_file.read()), save=False)
+            banner.save()
+            imported += 1
+
+        # Clean up source file after import
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass  # Ignore if file already removed or permission issue
+
+    return imported, skipped
+
+
+def _import_static_images_to_banner():
+    imported = 0
+    skipped = 0
+
+    for relative_name in _get_static_banner_image_files():
+        exists = Banner.objects.filter(image=relative_name).exists()
+        if exists:
+            skipped += 1
+            continue
+
+        file_path = os.path.join(settings.MEDIA_ROOT, relative_name.replace('/', os.sep))
+        if not os.path.isfile(file_path):
+            continue
+
+        file_name = os.path.basename(relative_name)
+        with open(file_path, 'rb') as source_file:
+            banner = Banner(
+                banner_id=_get_next_banner_id(),
+                title=os.path.splitext(file_name)[0].replace('_', ' ').replace('-', ' ').title(),
+                description='Imported from media/banner/image',
+                is_active=True,
+            )
+            # Save to image/ subfolder
+            sub_path = relative_name.split('/', 2)[-1]  # e.g., '2026/02/file.jpg'
+            banner.image.save(f'image/{sub_path}', ContentFile(source_file.read()), save=False)
+            banner.save()
+            imported += 1
+
+        # Clean up source file after import
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass  # Ignore if file already removed or permission issue
+
+    return imported, skipped
 
 
 # ================== LOGIN ==================
@@ -148,6 +358,10 @@ def home(request):
     wishlist_ids = request.session.get('wishlist', [])
     wishlist_products = Product.objects.filter(id__in=wishlist_ids)
 
+    # Home page media: top video banner carousel, bottom image banners
+    hero_banners = _collect_homepage_banners()
+    hero_videos = _collect_homepage_videos()
+
     # pull all categories (used as "brands"/manufacturers on the homepage)
     categories = Category.objects.all()
 
@@ -160,6 +374,8 @@ def home(request):
         'price_range': price_range,
         'sort_by': sort_by,
         'wishlist_products': wishlist_products,
+        'hero_banners': hero_banners,
+        'hero_videos': hero_videos,
     })
     return render(request, 'store/home.html', context)
 
@@ -993,13 +1209,52 @@ def category_delete(request, pk):
 # ================== USER MANAGEMENT ==================
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
-@login_required(login_url='store:login')
-@user_passes_test(is_admin, login_url='store:login')
 def user_list(request):
-    """List all users"""
+    """List all users and handle user create/edit"""
     users = User.objects.all().order_by('-date_joined')
     context = get_base_context(request)
     context['users'] = users
+    
+    # Check if we need to show form
+    show_form = request.GET.get('add') == 'true' or request.GET.get('edit')
+    edit_user = None
+    form = None
+    
+    if request.method == 'POST':
+        edit_user_id = request.POST.get('edit_user_id')
+        
+        if edit_user_id:
+            # Edit existing user
+            edit_user = get_object_or_404(User, pk=edit_user_id)
+            form = UserManagementForm(request.POST, instance=edit_user)
+        else:
+            # Create new user
+            form = UserManagementForm(request.POST)
+            # Validate password is not empty for new users
+            if not request.POST.get('password'):
+                form.add_error('password', '❌ Mật khẩu không được để trống khi tạo tài khoản mới')
+        
+        if form.is_valid():
+            form.save()
+            if edit_user_id:
+                messages.success(request, '✅ Cập nhật thành viên thành công')
+            else:
+                messages.success(request, '✅ Tạo thành viên thành công')
+            return redirect('store:user_list')
+        else:
+            show_form = True
+    
+    elif show_form and request.GET.get('edit'):
+        # Load user for edit
+        edit_user = get_object_or_404(User, pk=request.GET.get('edit'))
+        form = UserManagementForm(instance=edit_user)
+    elif show_form:
+        # Create new user form
+        form = UserManagementForm()
+    
+    context['show_form'] = show_form
+    context['form'] = form
+    context['edit_user'] = edit_user
     return render(request, 'admin/admin_users.html', context)
 
 
@@ -1067,6 +1322,7 @@ def banner_list(request):
             {
                 'banner_id': b.banner_id,
                 'image_url': b.image.url if b.image else '',
+                'media_type': 'video' if b.is_video else 'image',
                 'title': b.title,
                 'description': b.description,
             }
@@ -1080,9 +1336,27 @@ def banner_list(request):
 @user_passes_test(is_admin, login_url='store:login')
 def banner_admin_list(request):
     """Admin list all banners"""
-    banners = Banner.objects.all().order_by('banner_id')
+    banners = Banner.objects.filter(_banner_media_type_filter('image')).order_by('banner_id')
     context = get_base_context(request)
+    context['banner_mode'] = 'image'
+    context['page_title_text'] = 'Quản Lý Image Banner'
+    context['page_subtitle_text'] = 'Danh sách image banner'
     context['banners'] = banners
+    context['next_banner_id'] = _get_next_banner_id()
+    return render(request, 'store/banner_list.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def video_banner_admin_list(request):
+    """Admin list all video banners"""
+    banners = Banner.objects.filter(_banner_media_type_filter('video')).order_by('banner_id')
+    context = get_base_context(request)
+    context['banner_mode'] = 'video'
+    context['page_title_text'] = 'Quản Lý Videos Banner'
+    context['page_subtitle_text'] = 'Danh sách video banner'
+    context['banners'] = banners
+    context['next_banner_id'] = _get_next_banner_id()
     return render(request, 'store/banner_list.html', context)
 
 
@@ -1091,13 +1365,70 @@ def banner_admin_list(request):
 def banner_add(request):
     """Add a new banner"""
     if request.method == 'POST':
-        from .forms import BannerForm
-        form = BannerForm(request.POST, request.FILES)
+        post_data = request.POST.copy()
+        if not post_data.get('banner_id'):
+            post_data['banner_id'] = str(_get_next_banner_id())
+
+        form = BannerForm(post_data, request.FILES)
         if form.is_valid():
+            uploaded_file = form.cleaned_data.get('image')
+            if uploaded_file and not _is_image_upload(uploaded_file):
+                return JsonResponse({'success': False, 'errors': {'image': ['❌ Chỉ chấp nhận ảnh cho Banner']}})
+
             form.save()
             return JsonResponse({'success': True, 'message': '✅ Thêm banner thành công'})
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def banner_import(request):
+    """Import static banner images into the banner database"""
+    if request.method == 'POST':
+        imported, skipped = _import_static_images_to_banner()
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ Đã tải {imported} ảnh vào Banner, bỏ qua {skipped} file đã tồn tại.'
+        })
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def video_banner_add(request):
+    """Add a new video banner"""
+    if request.method == 'POST':
+        post_data = request.POST.copy()
+        if not post_data.get('banner_id'):
+            post_data['banner_id'] = str(_get_next_banner_id())
+
+        form = BannerForm(post_data, request.FILES)
+        if form.is_valid():
+            uploaded_file = form.cleaned_data.get('image')
+            if uploaded_file and not _is_video_upload(uploaded_file):
+                return JsonResponse({'success': False, 'errors': {'image': ['❌ Chỉ chấp nhận video cho Videos Banner']}})
+
+            form.save()
+            return JsonResponse({'success': True, 'message': '✅ Thêm video banner thành công'})
+
+        return JsonResponse({'success': False, 'errors': form.errors})
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def video_banner_import(request):
+    """Import static videos into the banner database for management"""
+    if request.method == 'POST':
+        imported, skipped = _import_static_videos_to_banner()
+        return JsonResponse({
+            'success': True,
+            'message': f'✅ Đã tải {imported} video vào Videos Banner, bỏ qua {skipped} file đã tồn tại.'
+        })
+
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 
@@ -1110,23 +1441,66 @@ def banner_replace(request):
         
         try:
             banner = Banner.objects.get(banner_id=banner_id)
-            
-            if 'image' in request.FILES:
-                # Delete old image
-                if banner.image:
-                    banner.image.delete()
-                banner.image = request.FILES['image']
-            
-            if 'title' in request.POST:
-                banner.title = request.POST.get('title', '')
-            if 'description' in request.POST:
-                banner.description = request.POST.get('description', '')
-            
-            banner.save()
-            return JsonResponse({'success': True, 'message': '✅ Cập nhật banner thành công'})
+
+            form = BannerForm(request.POST, request.FILES, instance=banner)
+            form.fields['image'].required = False
+
+            if form.is_valid():
+                new_media = form.cleaned_data.get('image')
+                if new_media and not _is_image_upload(new_media):
+                    return JsonResponse({'success': False, 'errors': {'image': ['❌ Chỉ chấp nhận ảnh cho Banner']}})
+
+                banner.banner_id = form.cleaned_data['banner_id']
+                banner.is_active = form.cleaned_data['is_active']
+
+                if new_media:
+                    if banner.image:
+                        banner.image.delete(save=False)
+                    banner.image = new_media
+
+                banner.save()
+                return JsonResponse({'success': True, 'message': '✅ Cập nhật banner thành công'})
+
+            return JsonResponse({'success': False, 'errors': form.errors})
         except Banner.DoesNotExist:
             return JsonResponse({'success': False, 'message': '❌ Không tìm thấy banner'}, status=404)
     
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def video_banner_replace(request):
+    """Replace/update existing video banner"""
+    if request.method == 'POST':
+        banner_id = request.POST.get('banner_id')
+
+        try:
+            banner = Banner.objects.get(banner_id=banner_id)
+
+            form = BannerForm(request.POST, request.FILES, instance=banner)
+            form.fields['image'].required = False
+
+            if form.is_valid():
+                new_media = form.cleaned_data.get('image')
+                if new_media and not _is_video_upload(new_media):
+                    return JsonResponse({'success': False, 'errors': {'image': ['❌ Chỉ chấp nhận video cho Videos Banner']}})
+
+                banner.banner_id = form.cleaned_data['banner_id']
+                banner.is_active = form.cleaned_data['is_active']
+
+                if new_media:
+                    if banner.image:
+                        banner.image.delete(save=False)
+                    banner.image = new_media
+
+                banner.save()
+                return JsonResponse({'success': True, 'message': '✅ Cập nhật video banner thành công'})
+
+            return JsonResponse({'success': False, 'errors': form.errors})
+        except Banner.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '❌ Không tìm thấy video banner'}, status=404)
+
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 
@@ -1140,12 +1514,31 @@ def banner_delete(request):
         try:
             banner = Banner.objects.get(banner_id=banner_id)
             if banner.image:
-                banner.image.delete()
+                banner.image.delete(save=False)
             banner.delete()
             return JsonResponse({'success': True, 'message': '✅ Xoá banner thành công'})
         except Banner.DoesNotExist:
             return JsonResponse({'success': False, 'message': '❌ Không tìm thấy banner'}, status=404)
     
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def video_banner_delete(request):
+    """Delete a video banner"""
+    if request.method == 'POST':
+        banner_id = request.POST.get('banner_id')
+
+        try:
+            banner = Banner.objects.get(banner_id=banner_id)
+            if banner.image:
+                banner.image.delete(save=False)
+            banner.delete()
+            return JsonResponse({'success': True, 'message': '✅ Xoá video banner thành công'})
+        except Banner.DoesNotExist:
+            return JsonResponse({'success': False, 'message': '❌ Không tìm thấy video banner'}, status=404)
+
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 

@@ -7,11 +7,24 @@ body.auth-page {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    margin: 0;
+}
+
+/* Override main wrapper on auth pages */
+body.auth-page .ldm-main {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
 }
 
 .auth-container {
     width: 100%;
-    max-width: 420px;
+    max-width: 520px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -20,14 +33,16 @@ body.auth-page {
 
 .auth-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
-.auth-header h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin: 0 0 8px;
+.auth-header-logo {
+    display: block;
+    width: auto;
+    max-width: 220px;
+    height: 48px;
+    object-fit: contain;
+    margin: 0 auto 8px;
 }
 
 .auth-header p {
@@ -199,8 +214,14 @@ body.auth-page {
         padding: 30px 20px;
     }
 
-    .auth-header h1 {
-        font-size: 24px;
+    .auth-header {
+        margin-bottom: 20px;
+    }
+
+    .auth-header-logo {
+        max-width: 180px;
+        height: 40px;
+        margin-bottom: 6px;
     }
 }
 /* ========== From forgot_password.css ========== */
