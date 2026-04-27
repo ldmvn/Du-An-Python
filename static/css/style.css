@@ -563,7 +563,7 @@ body {
 
 @media (max-width: 768px) {
     body {
-        padding-top: 70px;
+        padding-top: 140px;
     }
 
     .ldm-header-container {
@@ -571,8 +571,8 @@ body {
     }
 
     .ldm-header-inner {
-        height: 70px;
         flex-wrap: wrap;
+        height: auto;
     }
 
     .ldm-logo-img {
@@ -580,10 +580,11 @@ body {
     }
 
     .ldm-search {
-        order: 3;
+        order: -1;
         max-width: 100%;
         flex-basis: 100%;
-        margin-top: 12px;
+        margin-bottom: 12px;
+        padding: 8px 0;
     }
 
     .ldm-header-actions {
