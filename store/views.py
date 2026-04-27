@@ -10,7 +10,7 @@ from django.db.models import Q
 import os
 import requests
 
-from .models import Product, ProductColor, ProductMedia, ProductSpecification, Review, UserProfile, Category, Order, OrderItem, Banner, Wishlist
+from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Wishlist
 from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm
 
 
@@ -253,6 +253,131 @@ def _sync_product_colors(product, request):
             color_obj.image = image_file
 
         color_obj.save()
+
+
+def _sync_product_ram_options(product, request):
+    row_keys = request.POST.getlist('ram_row_keys')
+    if not row_keys:
+        return
+
+    ram_qs = product.ram_options.all()
+    ram_map = {str(r.id): r for r in ram_qs}
+    sort_order = 0
+
+    for row_key in row_keys:
+        ram_id = (request.POST.get(f'ram_id__{row_key}', '') or '').strip()
+        is_deleted = request.POST.get(f'ram_delete__{row_key}') == '1'
+        value = (request.POST.get(f'ram_value__{row_key}', '') or '').strip()
+        price_delta = _safe_int(request.POST.get(f'ram_price__{row_key}'), 0)
+
+        if ram_id and ram_id in ram_map:
+            ram_obj = ram_map[ram_id]
+        else:
+            ram_obj = None
+
+        if is_deleted:
+            if ram_obj:
+                ram_obj.delete()
+            continue
+
+        if not ram_obj and not value:
+            continue
+
+        if not ram_obj:
+            ram_obj = ProductRamOption(product=product)
+
+        ram_obj.value = value or ram_obj.value
+        ram_obj.price_delta = price_delta
+        ram_obj.sort_order = sort_order
+        sort_order += 1
+        ram_obj.save()
+
+
+def _sync_product_storage_options(product, request):
+    row_keys = request.POST.getlist('storage_row_keys')
+    if not row_keys:
+        return
+
+    storage_qs = product.storage_options.all()
+    storage_map = {str(s.id): s for s in storage_qs}
+    sort_order = 0
+
+    for row_key in row_keys:
+        storage_id = (request.POST.get(f'storage_id__{row_key}', '') or '').strip()
+        is_deleted = request.POST.get(f'storage_delete__{row_key}') == '1'
+        capacity = (request.POST.get(f'storage_capacity__{row_key}', '') or '').strip()
+        price_delta = _safe_int(request.POST.get(f'storage_price__{row_key}'), 0)
+
+        if storage_id and storage_id in storage_map:
+            storage_obj = storage_map[storage_id]
+        else:
+            storage_obj = None
+
+        if is_deleted:
+            if storage_obj:
+                storage_obj.delete()
+            continue
+
+        if not storage_obj and not capacity:
+            continue
+
+        if not storage_obj:
+            storage_obj = ProductStorageOption(product=product)
+
+        storage_obj.capacity = capacity or storage_obj.capacity
+        storage_obj.price_delta = price_delta
+        storage_obj.sort_order = sort_order
+        sort_order += 1
+        storage_obj.save()
+
+
+def _sync_product_specifications(product, request):
+    row_keys = request.POST.getlist('spec_row_keys')
+    if not row_keys:
+        row_keys = []
+
+    spec_qs = product.specs.all()
+    spec_map = {str(s.id): s for s in spec_qs}
+
+    for row_key in row_keys:
+        spec_id = (request.POST.get(f'spec_id__{row_key}', '') or '').strip()
+        is_deleted = request.POST.get(f'spec_delete__{row_key}') == '1'
+        category = (request.POST.get(f'spec_category__{row_key}', '') or '').strip()
+        key = (request.POST.get(f'spec_key__{row_key}', '') or '').strip()
+        value = (request.POST.get(f'spec_value__{row_key}', '') or '').strip()
+        visible = request.POST.get(f'spec_visible__{row_key}') == '1'
+
+        if spec_id and spec_id in spec_map:
+            spec_obj = spec_map[spec_id]
+        else:
+            spec_obj = None
+
+        if is_deleted:
+            if spec_obj:
+                spec_obj.delete()
+            continue
+
+        # Skip empty new rows.
+        if not spec_obj and not key and not value:
+            continue
+
+        if not spec_obj:
+            spec_obj = ProductSpecification(product=product)
+
+        spec_obj.category = category
+        spec_obj.key = key or spec_obj.key
+        spec_obj.value = value or spec_obj.value
+        spec_obj.visible = visible
+        spec_obj.save()
+
+    raw_order = request.POST.get('spec_category_order', '') or ''
+    ordered_categories = []
+    for category in raw_order.split(','):
+        category = category.strip()
+        if category and category not in ordered_categories:
+            ordered_categories.append(category)
+    product.spec_category_order = ','.join(ordered_categories)
+    product.save(update_fields=['spec_category_order'])
 
 
 def _build_product_media_gallery(product):
@@ -590,11 +715,58 @@ def product_detail(request, id):
     ).exclude(id=product.id)[:8]
 
     base_price = product.get_discounted_price()
-    storage_options = [
-        {'capacity': product.rom or '128GB', 'price': base_price, 'label': 'Tiêu chuẩn'},
-        {'capacity': '256GB', 'price': base_price + 1500000, 'label': 'Phổ biến'},
-        {'capacity': '512GB', 'price': base_price + 4000000, 'label': 'Cao cấp'},
-    ]
+    db_storage_options = list(product.storage_options.all())
+    if db_storage_options:
+        storage_options = []
+        for index, option in enumerate(db_storage_options):
+            if index == 0:
+                label = 'Tiêu chuẩn'
+            elif index == 1:
+                label = 'Phổ biến'
+            else:
+                label = 'Tùy chọn'
+            storage_options.append({
+                'capacity': option.capacity,
+                'price': base_price + (option.price_delta or 0),
+                'price_delta': option.price_delta or 0,
+                'label': label,
+            })
+    else:
+        storage_options = [
+            {'capacity': product.rom or '128GB', 'price': base_price, 'price_delta': 0, 'label': 'Tiêu chuẩn'},
+            {'capacity': '256GB', 'price': base_price + 1500000, 'price_delta': 1500000, 'label': 'Phổ biến'},
+            {'capacity': '512GB', 'price': base_price + 4000000, 'price_delta': 4000000, 'label': 'Cao cấp'},
+        ]
+
+    db_ram_options = list(product.ram_options.all())
+    if db_ram_options:
+        ram_options = []
+        for index, option in enumerate(db_ram_options):
+            if index == 0:
+                label = 'Tiêu chuẩn'
+            elif index == 1:
+                label = 'Phổ biến'
+            else:
+                label = 'Tùy chọn'
+            ram_options.append({
+                'value': option.value,
+                'price_delta': option.price_delta or 0,
+                'label': label,
+            })
+        default_ram = ram_options[0]['value'] if ram_options else (product.ram or '8GB')
+    else:
+        ram_options = [
+            {'value': '8G', 'price_delta': 0, 'label': 'Tiêu chuẩn'},
+            {'value': '12G', 'price_delta': 1000000, 'label': 'Phổ biến'},
+            {'value': '16G', 'price_delta': 2000000, 'label': 'Hiệu năng cao'},
+        ]
+        product_ram_text = (product.ram or '').upper()
+        if '16' in product_ram_text:
+            default_ram = '16G'
+        elif '12' in product_ram_text:
+            default_ram = '12G'
+        else:
+            default_ram = '8G'
     db_colors = list(product.colors.all())
     if db_colors:
         color_options = [
@@ -619,18 +791,19 @@ def product_detail(request, id):
         {'icon': 'truck', 'text': 'Giao nhanh 2 giờ nội thành cho đơn đủ điều kiện.'},
         {'icon': 'credit-card', 'text': 'Trả góp 0% qua thẻ tín dụng hoặc công ty tài chính.'},
     ]
-    specs = list(product.specs.all())
-    spec_items = [
-        {'key': 'Màn hình', 'value': '6.9 inch OLED Super Retina XDR'},
-        {'key': 'Chip', 'value': 'Apple A19 Pro'},
-        {'key': 'Camera sau', 'value': '48MP + 12MP + 48MP'},
-        {'key': 'Camera trước', 'value': '12MP TrueDepth'},
-        {'key': 'Pin', 'value': '4.800 mAh, sạc nhanh 35W'},
-        {'key': 'RAM', 'value': product.ram},
-        {'key': 'Bộ nhớ', 'value': product.rom},
-    ]
-    for spec in specs:
-        spec_items.append({'key': spec.key, 'value': spec.value})
+    visible_specs = list(product.specs.filter(visible=True).all())
+    all_specs = list(product.specs.all())
+    spec_items = []
+    for spec in visible_specs:
+        spec_items.append({'category': spec.category, 'key': spec.key, 'value': spec.value})
+
+    all_spec_items = []
+    for spec in all_specs:
+        all_spec_items.append({'category': spec.category, 'key': spec.key, 'value': spec.value})
+
+    spec_category_order = []
+    if product.spec_category_order:
+        spec_category_order = [c.strip() for c in product.spec_category_order.split(',') if c.strip()]
 
     description_blocks = [
         {
@@ -658,10 +831,14 @@ def product_detail(request, id):
         'feature_image_url': feature_image_url,
         'feature_points': feature_points,
         'storage_options': storage_options,
+        'ram_options': ram_options,
+        'default_ram': default_ram,
         'color_options': color_options,
         'promotions': promotions,
         'base_price': base_price,
         'specifications': spec_items,
+        'all_specifications': all_spec_items,
+        'spec_category_order': spec_category_order,
         'description_blocks': description_blocks,
         'reviews': reviews,
         'review_summary': review_summary,
@@ -1345,6 +1522,9 @@ def product_create(request):
             product = form.save()
             _sync_product_media(product, request)
             _sync_product_colors(product, request)
+            _sync_product_ram_options(product, request)
+            _sync_product_storage_options(product, request)
+            _sync_product_specifications(product, request)
             messages.success(request, '✅ Thêm sản phẩm thành công')
             return redirect('store:admin_products')
     else:
@@ -1355,6 +1535,10 @@ def product_create(request):
     context['title'] = 'Thêm sản phẩm mới'
     context['product_media'] = []
     context['product_colors'] = []
+    context['product_ram_options'] = []
+    context['product_storage_options'] = []
+    context['product_specs'] = []
+    context['spec_category_order'] = ''
     return render(request, 'store/product_form.html', context)
 
 
@@ -1370,6 +1554,9 @@ def dashboard_edit_product(request, pk):
             product = form.save()
             _sync_product_media(product, request)
             _sync_product_colors(product, request)
+            _sync_product_ram_options(product, request)
+            _sync_product_storage_options(product, request)
+            _sync_product_specifications(product, request)
             messages.success(request, '✅ Cập nhật sản phẩm thành công')
             return redirect('store:admin_products')
     else:
@@ -1381,10 +1568,51 @@ def dashboard_edit_product(request, pk):
         'product': product,
         'product_media': product.media_items.all(),
         'product_colors': product.colors.all(),
+        'product_ram_options': product.ram_options.all(),
+        'product_storage_options': product.storage_options.all(),
+        'product_specs': product.specs.all(),
         'specs': specs,
-        'title': f'Chỉnh sửa sản phẩm: {product.name}'
+        'title': f'Chỉnh sửa sản phẩm: {product.name}',
+        'spec_category_order': product.spec_category_order or ''
     })
     return render(request, 'store/product_form.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def dashboard_edit_product_media(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        _sync_product_media(product, request)
+        messages.success(request, '✅ Cập nhật Media sản phẩm thành công')
+        return redirect('store:dashboard_edit_product_media', pk=pk)
+
+    context = get_base_context(request)
+    context.update({
+        'product': product,
+        'product_media': product.media_items.all(),
+        'title': f'Thư viện Media: {product.name}',
+    })
+    return render(request, 'store/product_media_library.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def dashboard_edit_product_specs(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        _sync_product_specifications(product, request)
+        messages.success(request, '✅ Cập nhật Thông số kỹ thuật thành công')
+        return redirect('store:dashboard_edit_product_specs', pk=pk)
+
+    context = get_base_context(request)
+    context.update({
+        'product': product,
+        'product_specs': product.specs.all(),
+        'spec_category_order': product.spec_category_order or '',
+        'title': f'Thông số kỹ thuật: {product.name}',
+    })
+    return render(request, 'store/product_spec_library.html', context)
 
 
 @login_required(login_url='store:login')

@@ -81,6 +81,7 @@ class Product(models.Model):
     ram = models.CharField(max_length=10, choices=RAM_CHOICES, default='8GB', help_text="Bộ nhớ RAM")
     rom = models.CharField(max_length=10, choices=ROM_CHOICES, default='128GB', help_text="Bộ nhớ ROM")
     description = models.TextField(blank=True)
+    spec_category_order = models.TextField(blank=True, default='', help_text='Danh sách thứ tự cụm thông số, phân tách bằng dấu phẩy')
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     feature_image = models.ImageField(upload_to='Sanpham/features/', blank=True, null=True)
     feature_content = models.TextField(blank=True, default='')
@@ -133,6 +134,40 @@ class ProductColor(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.name}"
+
+
+class ProductRamOption(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='ram_options'
+    )
+    value = models.CharField(max_length=20)
+    price_delta = models.IntegerField(default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f"{self.product.name} - RAM {self.value}"
+
+
+class ProductStorageOption(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='storage_options'
+    )
+    capacity = models.CharField(max_length=20)
+    price_delta = models.IntegerField(default=0)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+
+    def __str__(self):
+        return f"{self.product.name} - ROM {self.capacity}"
 
 
 class Order(models.Model):
@@ -202,8 +237,10 @@ class ProductSpecification(models.Model):
         on_delete=models.CASCADE,
         related_name='specs'
     )
+    category = models.CharField(max_length=100, blank=True, default='')
     key = models.CharField(max_length=100)
     value = models.CharField(max_length=255)
+    visible = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.product.name} - {self.key}"

@@ -28,6 +28,350 @@
 .product-color-actions { display: flex; gap: 8px; align-items: center; }
 .product-color-preview { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6b7280; }
 .product-color-preview img { width: 34px; height: 34px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb; }
+.product-variant-section {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+.product-variant-list { display: flex; flex-direction: column; gap: 10px; }
+.product-variant-row {
+    display: grid;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+.product-variant-row.storage-row {
+    grid-template-columns: 1.4fr 140px auto;
+}
+.product-variant-row.ram-row {
+    grid-template-columns: 1.2fr 140px auto;
+}
+.product-form-media-section {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+.product-form-media-library-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.product-form-media-library-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    text-decoration: none;
+    border: 1px solid transparent;
+    font-weight: 600;
+}
+.product-form-media-library-button:hover {
+    background: #1d4ed8;
+    border-color: #1e40af;
+}
+.product-form-media-link-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+.product-form-media-link-row span {
+    font-size: 14px;
+    color: #1f2937;
+}
+.product-form-media-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #e0f2fe;
+    color: #0369a1;
+    text-decoration: none;
+    border: 1px solid #bae6fd;
+    font-weight: 600;
+}
+.product-form-media-link:hover {
+    background: #bae6fd;
+}
+.product-form-media-input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.product-form-media-input-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #111827;
+}
+.product-form-media-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.product-form-media-preview-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f9fafb;
+}
+.product-form-media-preview-item img,
+.product-form-media-preview-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.product-form-media-preview-item .preview-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(185, 28, 28, 0.8);
+    color: white;
+    border: none;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.product-form-media-preview-item .preview-badge {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    padding: 2px 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 3px;
+    font-size: 9px;
+}
+.product-form-media-library {
+    display: grid;
+    gap: 18px;
+}
+.product-form-media-subsection {
+    display: grid;
+    gap: 10px;
+}
+.product-form-media-subtitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+.product-form-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.product-form-media-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    overflow: hidden;
+}
+.product-form-media-frame {
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+}
+.product-form-media-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.product-form-media-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 11px;
+}
+.product-form-media-option {
+    display: block;
+    padding: 10px 14px;
+    border-top: 1px solid #eef2f7;
+    font-size: 13px;
+    color: #374151;
+}
+.product-form-media-option-delete {
+    color: #b91c1c;
+}
+.product-spec-section {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+.product-spec-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.product-spec-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1f2937;
+}
+.product-spec-panel {
+    display: none;
+}
+.product-spec-panel.is-open {
+    display: block;
+}
+.product-spec-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 0 10px;
+    margin-bottom: 10px;
+}
+.product-spec-tab {
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 14px;
+    padding: 12px 8px 11px;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+.product-spec-tab.is-active {
+    color: #dc2626;
+    border-bottom-color: #dc2626;
+    font-weight: 700;
+}
+.product-spec-cluster-tools {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.product-spec-cluster-input {
+    flex: 1;
+    min-width: 180px;
+}
+.product-spec-cluster-tools .ldm-button {
+    flex: 0 0 auto;
+}
+.product-spec-table-wrap {
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
+}
+.product-spec-table-ui {
+    width: 100%;
+    border-collapse: collapse;
+}
+.product-spec-table-ui thead th {
+    padding: 12px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1f2937;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+}
+.product-spec-table-ui tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+.product-spec-table-ui tbody tr:last-child td {
+    border-bottom: 0;
+}
+.product-spec-index {
+    width: 56px;
+    text-align: center;
+    color: #6b7280;
+    font-weight: 600;
+}
+.product-spec-cell-input input {
+    width: 100%;
+}
+.product-spec-mobile-label {
+    display: none;
+}
+@media (max-width: 900px) {
+    .product-variant-row.storage-row,
+    .product-variant-row.ram-row,
+    .product-spec-table-ui,
+    .product-spec-table-ui thead,
+    .product-spec-table-ui tbody,
+    .product-spec-table-ui tr,
+    .product-spec-table-ui td,
+    .product-spec-table-ui th {
+        display: block;
+        width: 100%;
+    }
+    .product-spec-table-ui thead {
+        display: none;
+    }
+    .product-spec-table-ui tbody td {
+        border-bottom: 0;
+        padding: 8px 10px;
+    }
+    .product-spec-table-ui tbody tr {
+        border-bottom: 1px solid #e5e7eb;
+        padding: 6px 0;
+    }
+    .product-spec-index {
+        text-align: left;
+    }
+    .product-spec-action {
+        padding-top: 4px;
+    }
+    .product-spec-mobile-label {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #6b7280;
+        min-width: 92px;
+        margin-right: 6px;
+    }
+    .product-variant-row.storage-row,
+    .product-variant-row.ram-row {
+        grid-template-columns: 1fr;
+    }
+}
 @media (max-width: 900px) { .product-color-row { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
@@ -39,6 +383,8 @@
 
         <form method="POST" enctype="multipart/form-data" class="product-form" novalidate>
             {% csrf_token %}
+            <input type="hidden" name="ram" value="{% if product and product.ram %}{{ product.ram }}{% else %}8GB{% endif %}">
+            <input type="hidden" name="rom" value="{% if product and product.rom %}{{ product.rom }}{% else %}128GB{% endif %}">
 
             {% if form.non_field_errors %}
             <div class="product-form-errors">
@@ -79,17 +425,6 @@
                     {% if form.discount.errors %}<div class="product-form-error">{{ form.discount.errors|join:", " }}</div>{% endif %}
                 </div>
 
-                <div class="product-form-field">
-                    <label class="product-form-label">RAM</label>
-                    {{ form.ram }}
-                    {% if form.ram.errors %}<div class="product-form-error">{{ form.ram.errors|join:", " }}</div>{% endif %}
-                </div>
-
-                <div class="product-form-field">
-                    <label class="product-form-label">ROM</label>
-                    {{ form.rom }}
-                    {% if form.rom.errors %}<div class="product-form-error">{{ form.rom.errors|join:", " }}</div>{% endif %}
-                </div>
             </div>
 
             <div class="product-form-description">
@@ -139,87 +474,17 @@
             </div>
 
             <div class="product-form-media-section">
-                <label class="product-form-label">Thêm Video</label>
-                <div class="product-form-media-input">
-                    <input type="file" name="video_files" class="form-control" accept="video/*" multiple>
-                    <p class="product-form-image-info">
-                        Hỗ trợ tải nhiều video cùng lúc.<br>
-                        Video: MP4, WEBM, OGG, MOV tối đa 50MB mỗi file.
-                    </p>
+                <label class="product-form-label">Thư viện Media</label>
+                <div class="product-form-media-link-row">
+                    <span>Thư viện Media</span>
+                    {% if product %}
+                    <a href="{% url 'store:dashboard_edit_product_media' product.pk %}" class="product-form-media-link">Xem chi tiết</a>
+                    {% endif %}
                 </div>
+                <p class="product-form-image-info">
+                    Nhấn vào xem chi tiết để mở trang quản lý Media riêng cho sản phẩm này.
+                </p>
             </div>
-
-            <div class="product-form-media-section">
-                <label class="product-form-label">Thêm Ảnh</label>
-                <div class="product-form-media-input">
-                    <input type="file" name="image_files" class="form-control" accept="image/*" multiple>
-                    <p class="product-form-image-info">
-                        Hỗ trợ tải nhiều ảnh cùng lúc.<br>
-                        Ảnh: JPG, PNG, GIF, WEBP tối đa 10MB mỗi file.
-                    </p>
-                </div>
-            </div>
-
-            {% if product_media %}
-            <div class="product-form-media-library">
-                <p class="product-form-image-preview-label product-form-media-title">Media hiện có</p>
-                
-                <!-- Videos Section -->
-                {% with videos=product_media|dictsort:"is_image" %}
-                    {% with video_items=videos|slice:":100" %}
-                        {% if video_items %}
-                        <div class="product-form-media-subsection">
-                            <h4 class="product-form-media-subtitle">Video</h4>
-                            <div class="product-form-media-grid">
-                                {% for media in product_media %}
-                                    {% if media.is_video %}
-                                    <div class="product-form-media-card">
-                                        <div class="product-form-media-frame">
-                                            <video src="{{ media.file.url }}" class="product-form-media-preview" muted></video>
-                                            <span class="product-form-media-badge">Video</span>
-                                        </div>
-                                        <label class="product-form-media-option">
-                                            <input type="radio" name="primary_media" value="{{ media.id }}" {% if media.is_primary %}checked{% endif %}>
-                                            Chính (làm video chính hiển thị)
-                                        </label>
-                                        <label class="product-form-media-option product-form-media-option-delete">
-                                            <input type="checkbox" name="delete_media" value="{{ media.id }}">
-                                            Xóa video này
-                                        </label>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% endwith %}
-                {% endwith %}
-
-                <!-- Images Section -->
-                <div class="product-form-media-subsection">
-                    <h4 class="product-form-media-subtitle">Ảnh</h4>
-                    <div class="product-form-media-grid">
-                        {% for media in product_media %}
-                            {% if media.is_image %}
-                            <div class="product-form-media-card">
-                                <div class="product-form-media-frame">
-                                    <img src="{{ media.file.url }}" alt="{{ product.name }}" class="product-form-media-preview">
-                                </div>
-                                <label class="product-form-media-option">
-                                    <input type="radio" name="primary_media" value="{{ media.id }}" {% if media.is_primary %}checked{% endif %}>
-                                    Chính
-                                </label>
-                                <label class="product-form-media-option product-form-media-option-delete">
-                                    <input type="checkbox" name="delete_media" value="{{ media.id }}">
-                                    Xóa ảnh này
-                                </label>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
 
             <div class="product-color-section">
                 <label class="product-form-label">Mau sac san pham (them / xoa mau va anh mau)</label>
@@ -252,6 +517,61 @@
                     <button type="button" class="ldm-button ldm-button-secondary" id="btnAddColor">+ Them mau</button>
                 </div>
             </div>
+
+            <div class="product-variant-section">
+                <label class="product-form-label">Dung luong (them / sua / xoa, khong can anh)</label>
+                <div id="productStorageList" class="product-variant-list">
+                    {% for option in product_storage_options %}
+                    <div class="product-variant-row storage-row" data-row-key="existing-storage-{{ option.id }}">
+                        <input type="hidden" name="storage_row_keys" value="existing-storage-{{ option.id }}">
+                        <input type="hidden" name="storage_id__existing-storage-{{ option.id }}" value="{{ option.id }}">
+                        <input type="hidden" name="storage_delete__existing-storage-{{ option.id }}" value="0" class="storage-delete-flag">
+
+                        <input type="text" name="storage_capacity__existing-storage-{{ option.id }}" value="{{ option.capacity }}" placeholder="Vi du: 128GB">
+                        <input type="number" name="storage_price__existing-storage-{{ option.id }}" value="{{ option.price_delta|default:0 }}" placeholder="Cong gia">
+                        <div class="product-color-actions">
+                            <button type="button" class="ldm-button ldm-button-secondary btn-remove-storage">Xoa</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="margin-top: 10px;">
+                    <button type="button" class="ldm-button ldm-button-secondary" id="btnAddStorage">+ Them dung luong</button>
+                </div>
+            </div>
+
+            <div class="product-variant-section">
+                <label class="product-form-label">RAM (them / sua / xoa, khong can anh)</label>
+                <div id="productRamList" class="product-variant-list">
+                    {% for option in product_ram_options %}
+                    <div class="product-variant-row ram-row" data-row-key="existing-ram-{{ option.id }}">
+                        <input type="hidden" name="ram_row_keys" value="existing-ram-{{ option.id }}">
+                        <input type="hidden" name="ram_id__existing-ram-{{ option.id }}" value="{{ option.id }}">
+                        <input type="hidden" name="ram_delete__existing-ram-{{ option.id }}" value="0" class="ram-delete-flag">
+
+                        <input type="text" name="ram_value__existing-ram-{{ option.id }}" value="{{ option.value }}" placeholder="Vi du: 8G, 12G, 16G">
+                        <input type="number" name="ram_price__existing-ram-{{ option.id }}" value="{{ option.price_delta|default:0 }}" placeholder="Cong gia">
+                        <div class="product-color-actions">
+                            <button type="button" class="ldm-button ldm-button-secondary btn-remove-ram">Xoa</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="margin-top: 10px;">
+                    <button type="button" class="ldm-button ldm-button-secondary" id="btnAddRam">+ Them RAM</button>
+                </div>
+            </div>
+
+            <div class="product-spec-section">
+                <div class="product-spec-toggle">
+                    <h3 class="product-spec-title">Thông số kỹ thuật</h3>
+                    {% if product %}
+                    <a href="{% url 'store:dashboard_edit_product_specs' product.pk %}" class="product-form-media-link">Xem chi tiết</a>
+                    {% endif %}
+                </div>
+                <p class="product-form-image-info">Trang riêng sẽ quản lý đầy đủ thông số kỹ thuật cho sản phẩm này.</p>
+                <input type="hidden" name="spec_category_order" value="{{ spec_category_order|default:'' }}">
+            </div>
             <div class="product-form-actions">
                 <button type="submit" class="ldm-button ldm-button-primary">
                     {% if product %}Cập nhật sản phẩm{% else %}Thêm sản phẩm{% endif %}
@@ -265,7 +585,164 @@
 document.addEventListener('DOMContentLoaded', function () {
     const colorList = document.getElementById('productColorList');
     const addBtn = document.getElementById('btnAddColor');
+    const storageList = document.getElementById('productStorageList');
+    const addStorageBtn = document.getElementById('btnAddStorage');
+    const ramList = document.getElementById('productRamList');
+    const addRamBtn = document.getElementById('btnAddRam');
+    const specPanel = document.getElementById('productSpecPanel');
+    const specTable = document.getElementById('productSpecTable');
+    const addSpecBtn = document.getElementById('btnAddSpec');
+    const toggleSpecBtn = document.getElementById('btnToggleSpecs');
+    const specTabs = document.getElementById('productSpecTabs');
+    const addSpecClusterBtn = document.getElementById('btnAddSpecCluster');
+    const deleteSpecClusterBtn = document.getElementById('btnDeleteSpecCluster');
+    const newSpecClusterInput = document.getElementById('newSpecClusterInput');
+    const specCategoryOrderInput = document.getElementById('specCategoryOrderInput');
+    let specCategoryOrder = [];
+    let activeSpecCategory = 'Thông số khác';
     if (!colorList || !addBtn) return;
+
+    function parseSpecCategoryOrder() {
+        if (!specCategoryOrderInput) return [];
+        const raw = String(specCategoryOrderInput.value || '').trim();
+        if (!raw) return [];
+        return raw.split(',').map(function (item) { return item.trim(); }).filter(Boolean);
+    }
+
+    function syncSpecCategoryOrderInput() {
+        if (!specCategoryOrderInput) return;
+        specCategoryOrderInput.value = specCategoryOrder.join(',');
+    }
+
+    function getSpecCategories() {
+        if (!specCategoryOrder.length) {
+            specCategoryOrder = ['Thông số khác'];
+            syncSpecCategoryOrderInput();
+        }
+        return specCategoryOrder.slice();
+    }
+
+    function addSpecCategory(name) {
+        const value = String(name || '').trim();
+        if (!value) return false;
+        if (!specCategoryOrder.includes(value)) {
+            specCategoryOrder.push(value);
+            syncSpecCategoryOrderInput();
+        }
+        return true;
+    }
+
+    function renderSpecTabs() {
+        if (!specTabs) return;
+        const categories = getSpecCategories();
+        if (!categories.includes(activeSpecCategory)) {
+            activeSpecCategory = categories[0];
+        }
+        specTabs.innerHTML = categories.map(function (category) {
+            const activeClass = category === activeSpecCategory ? 'is-active' : '';
+            return '<button type="button" class="product-spec-tab ' + activeClass + '" data-spec-category="' + category + '">' + category + '</button>';
+        }).join('');
+
+        specTabs.querySelectorAll('.product-spec-tab').forEach(function (button) {
+            button.addEventListener('click', function () {
+                activeSpecCategory = button.dataset.specCategory;
+                applySpecFilter();
+            });
+        });
+    }
+
+    function bindSpecKeyCategoryTracking(row) {
+        const categoryInput = row.querySelector('.spec-category-input');
+        if (!categoryInput) return;
+        categoryInput.addEventListener('change', function () {
+            addSpecCategory(categoryInput.value);
+            applySpecFilter();
+        });
+        const keyInput = row.querySelector('input[name^="spec_key__"]');
+        if (keyInput) {
+            keyInput.addEventListener('input', function () {
+                if (categoryInput && !categoryInput.value.trim()) {
+                    categoryInput.value = activeSpecCategory;
+                }
+                applySpecFilter();
+            });
+        }
+    }
+
+    function renderSpecCategoryOptions(select, selectedValue) {
+        if (!select) return;
+        const categories = getSpecCategories();
+        const safeValue = selectedValue && selectedValue.trim() ? selectedValue.trim() : activeSpecCategory;
+        if (safeValue && !categories.includes(safeValue)) {
+            categories.push(safeValue);
+            addSpecCategory(safeValue);
+        }
+        select.innerHTML = categories.map(function (category) {
+            const selected = category === safeValue ? ' selected' : '';
+            return '<option value="' + category + '"' + selected + '>' + category + '</option>';
+        }).join('');
+        select.value = safeValue;
+    }
+
+    function syncAllRowCategoryOptions() {
+        if (!specTable) return;
+        specTable.querySelectorAll('.spec-category-input').forEach(function (select) {
+            renderSpecCategoryOptions(select, select.value);
+        });
+    }
+
+    function getRowCategory(row) {
+        const categoryInput = row.querySelector('.spec-category-input');
+        const category = categoryInput ? String(categoryInput.value || '').trim() : '';
+        return category || 'Thông số khác';
+    }
+
+    function setRowCategory(row, category) {
+        const categoryInput = row.querySelector('.spec-category-input');
+        if (!categoryInput) return;
+        addSpecCategory(category);
+        renderSpecCategoryOptions(categoryInput, category);
+    }
+
+    function moveVisibleRowsToCategory(targetCategory) {
+        if (!specTable || !targetCategory) return;
+        specTable.querySelectorAll('.product-spec-row').forEach(function (row) {
+            if (row.style.display === 'none') return;
+            const deleted = row.querySelector('.spec-delete-flag');
+            if (deleted && deleted.value === '1') return;
+            setRowCategory(row, targetCategory);
+        });
+    }
+
+    function moveRowsByCategory(fromCategory, toCategory) {
+        if (!specTable || !fromCategory || !toCategory) return;
+        specTable.querySelectorAll('.product-spec-row').forEach(function (row) {
+            const deleted = row.querySelector('.spec-delete-flag');
+            if (deleted && deleted.value === '1') return;
+            if (getRowCategory(row) === fromCategory) {
+                setRowCategory(row, toCategory);
+            }
+        });
+    }
+
+    function applySpecFilter() {
+        if (!specTable) return;
+        specTable.querySelectorAll('.product-spec-row').forEach(function (row) {
+            if (row.style.display === 'none' && row.querySelector('.spec-delete-flag') && row.querySelector('.spec-delete-flag').value === '1') {
+                return;
+            }
+            const categoryInput = row.querySelector('.spec-category-input');
+            if (categoryInput) {
+                addSpecCategory(categoryInput.value);
+            }
+            const rowCategory = getRowCategory(row);
+            row.dataset.specCategory = rowCategory;
+            row.style.display = rowCategory === activeSpecCategory ? '' : 'none';
+        });
+        syncAllRowCategoryOptions();
+        updateSpecRowNumbers();
+        renderSpecTabs();
+    }
 
     function bindRemoveButton(row) {
         const btn = row.querySelector('.btn-remove-color');
@@ -303,12 +780,332 @@ document.addEventListener('DOMContentLoaded', function () {
         return row;
     }
 
+    function bindRemoveStorageButton(row) {
+        const btn = row.querySelector('.btn-remove-storage');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            const deleteFlag = row.querySelector('.storage-delete-flag');
+            const isExisting = String(row.dataset.rowKey || '').startsWith('existing-storage-');
+            if (isExisting && deleteFlag) {
+                deleteFlag.value = '1';
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        });
+    }
+
+    function buildStorageRow(key) {
+        const row = document.createElement('div');
+        row.className = 'product-variant-row storage-row';
+        row.dataset.rowKey = key;
+        row.innerHTML = `
+            <input type="hidden" name="storage_row_keys" value="${key}">
+            <input type="hidden" name="storage_id__${key}" value="">
+            <input type="hidden" name="storage_delete__${key}" value="0" class="storage-delete-flag">
+
+            <input type="text" name="storage_capacity__${key}" placeholder="Vi du: 128GB">
+            <input type="number" name="storage_price__${key}" value="0" placeholder="Cong gia">
+            <div class="product-color-actions">
+                <button type="button" class="ldm-button ldm-button-secondary btn-remove-storage">Xoa</button>
+            </div>
+        `;
+        bindRemoveStorageButton(row);
+        return row;
+    }
+
+    function bindRemoveRamButton(row) {
+        const btn = row.querySelector('.btn-remove-ram');
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            const deleteFlag = row.querySelector('.ram-delete-flag');
+            const isExisting = String(row.dataset.rowKey || '').startsWith('existing-ram-');
+            if (isExisting && deleteFlag) {
+                deleteFlag.value = '1';
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+        });
+    }
+
+    function buildRamRow(key) {
+        const row = document.createElement('div');
+        row.className = 'product-variant-row ram-row';
+        row.dataset.rowKey = key;
+        row.innerHTML = `
+            <input type="hidden" name="ram_row_keys" value="${key}">
+            <input type="hidden" name="ram_id__${key}" value="">
+            <input type="hidden" name="ram_delete__${key}" value="0" class="ram-delete-flag">
+
+            <input type="text" name="ram_value__${key}" placeholder="Vi du: 8G, 12G, 16G">
+            <input type="number" name="ram_price__${key}" value="0" placeholder="Cong gia">
+            <div class="product-color-actions">
+                <button type="button" class="ldm-button ldm-button-secondary btn-remove-ram">Xoa</button>
+            </div>
+        `;
+        bindRemoveRamButton(row);
+        return row;
+    }
+
+    function bindRemoveSpecButton(row) {
+        const btn = row.querySelector('.btn-remove-spec');
+        if (!btn) return;
+        bindSpecKeyCategoryTracking(row);
+        btn.addEventListener('click', function () {
+            const deleteFlag = row.querySelector('.spec-delete-flag');
+            const isExisting = String(row.dataset.rowKey || '').startsWith('existing-spec-');
+            if (isExisting && deleteFlag) {
+                deleteFlag.value = '1';
+                row.style.display = 'none';
+            } else {
+                row.remove();
+            }
+            updateSpecRowNumbers();
+        });
+    }
+
+    function buildSpecRow(key) {
+        const row = document.createElement('tr');
+        row.className = 'product-spec-row';
+        row.dataset.rowKey = key;
+        row.dataset.specCategory = activeSpecCategory;
+        row.innerHTML = `
+            <td class="product-spec-index"></td>
+            <td class="product-spec-cell-input">
+                <span class="product-spec-mobile-label">Thông số</span>
+                <input type="hidden" name="spec_row_keys" value="${key}">
+                <input type="hidden" name="spec_id__${key}" value="">
+                <input type="hidden" name="spec_delete__${key}" value="0" class="spec-delete-flag">
+                <select name="spec_category__${key}" class="spec-category-input"></select>
+                <input type="text" name="spec_key__${key}" placeholder="Tên thông số (vd: Màn hình)">
+            </td>
+            <td class="product-spec-cell-input">
+                <span class="product-spec-mobile-label">Giá trị</span>
+                <input type="text" name="spec_value__${key}" placeholder="Giá trị (vd: 6.7 inch OLED)">
+            </td>
+            <td class="product-spec-action">
+                <button type="button" class="ldm-button ldm-button-secondary btn-remove-spec">Xóa</button>
+            </td>
+        `;
+        setRowCategory(row, activeSpecCategory);
+        bindRemoveSpecButton(row);
+        return row;
+    }
+
+    function updateSpecRowNumbers() {
+        if (!specTable) return;
+        let counter = 1;
+        specTable.querySelectorAll('.product-spec-row').forEach(function (row) {
+            if (row.style.display === 'none') return;
+            const indexCell = row.querySelector('.product-spec-index');
+            if (indexCell) indexCell.textContent = counter;
+            counter += 1;
+        });
+    }
+
     colorList.querySelectorAll('.product-color-row').forEach(bindRemoveButton);
+    if (storageList) {
+        storageList.querySelectorAll('.product-variant-row').forEach(bindRemoveStorageButton);
+    }
+    if (ramList) {
+        ramList.querySelectorAll('.product-variant-row').forEach(bindRemoveRamButton);
+    }
+    if (specTable) {
+        specCategoryOrder = parseSpecCategoryOrder();
+        specTable.querySelectorAll('.product-spec-row').forEach(function (row) {
+            const categoryInput = row.querySelector('.spec-category-input');
+            const currentValue = categoryInput ? (categoryInput.getAttribute('data-current-value') || categoryInput.value || '') : '';
+            const rowCategory = currentValue.trim() || getRowCategory(row);
+            addSpecCategory(rowCategory);
+            if (categoryInput) {
+                renderSpecCategoryOptions(categoryInput, rowCategory);
+            }
+        });
+        specTable.querySelectorAll('.product-spec-row').forEach(bindRemoveSpecButton);
+        applySpecFilter();
+    }
 
     addBtn.addEventListener('click', function () {
         const key = 'new-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
         colorList.appendChild(buildRow(key));
     });
+
+    if (storageList && addStorageBtn) {
+        addStorageBtn.addEventListener('click', function () {
+            const key = 'new-storage-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            storageList.appendChild(buildStorageRow(key));
+        });
+    }
+
+    if (ramList && addRamBtn) {
+        addRamBtn.addEventListener('click', function () {
+            const key = 'new-ram-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            ramList.appendChild(buildRamRow(key));
+        });
+    }
+
+    if (toggleSpecBtn && specPanel) {
+        toggleSpecBtn.textContent = specPanel.classList.contains('is-open')
+            ? 'Ẩn bảng thông số'
+            : 'Xem tất cả thông số';
+        toggleSpecBtn.addEventListener('click', function () {
+            specPanel.classList.toggle('is-open');
+            toggleSpecBtn.textContent = specPanel.classList.contains('is-open')
+                ? 'Ẩn bảng thông số'
+                : 'Xem tất cả thông số';
+        });
+    }
+
+    if (specTable && addSpecBtn) {
+        addSpecBtn.addEventListener('click', function () {
+            const key = 'new-spec-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            specTable.appendChild(buildSpecRow(key));
+            applySpecFilter();
+            if (specPanel && !specPanel.classList.contains('is-open')) {
+                specPanel.classList.add('is-open');
+                if (toggleSpecBtn) toggleSpecBtn.textContent = 'Ẩn bảng thông số';
+            }
+        });
+    }
+
+    if (addSpecClusterBtn && newSpecClusterInput) {
+        addSpecClusterBtn.addEventListener('click', function () {
+            const clusterName = (newSpecClusterInput.value || '').trim();
+            if (!clusterName) return;
+            addSpecCategory(clusterName);
+            activeSpecCategory = clusterName;
+            moveVisibleRowsToCategory(clusterName);
+            applySpecFilter();
+            newSpecClusterInput.value = '';
+        });
+
+        newSpecClusterInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addSpecClusterBtn.click();
+            }
+        });
+    }
+
+    const moveSpecClusterLeftBtn = document.getElementById('btnMoveSpecClusterLeft');
+    const moveSpecClusterRightBtn = document.getElementById('btnMoveSpecClusterRight');
+
+    function moveActiveSpecCategory(direction) {
+        const index = specCategoryOrder.indexOf(activeSpecCategory);
+        if (index === -1) return;
+        const targetIndex = direction === 'left' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= specCategoryOrder.length) return;
+        const temp = specCategoryOrder[targetIndex];
+        specCategoryOrder[targetIndex] = specCategoryOrder[index];
+        specCategoryOrder[index] = temp;
+        syncSpecCategoryOrderInput();
+        renderSpecTabs();
+    }
+
+    if (moveSpecClusterLeftBtn) {
+        moveSpecClusterLeftBtn.addEventListener('click', function () {
+            moveActiveSpecCategory('left');
+        });
+    }
+    if (moveSpecClusterRightBtn) {
+        moveSpecClusterRightBtn.addEventListener('click', function () {
+            moveActiveSpecCategory('right');
+        });
+    }
+
+    if (deleteSpecClusterBtn) {
+        deleteSpecClusterBtn.addEventListener('click', function () {
+            const current = String(activeSpecCategory || '').trim();
+            if (!current) return;
+
+            const categories = getSpecCategories();
+            if (categories.length === 1 && categories[0] === 'Thông số khác') {
+                return;
+            }
+
+            if (current === 'Thông số khác') {
+                return;
+            }
+
+            const fallback = 'Thông số khác';
+            addSpecCategory(fallback);
+            moveRowsByCategory(current, fallback);
+            const index = specCategoryOrder.indexOf(current);
+            if (index !== -1) {
+                specCategoryOrder.splice(index, 1);
+                syncSpecCategoryOrderInput();
+            }
+            activeSpecCategory = fallback;
+            applySpecFilter();
+        });
+    }
+
+    // Media preview functionality
+    function createMediaPreview(container, files, type) {
+        container.innerHTML = '';
+        Array.from(files).forEach(function (file, index) {
+            const item = document.createElement('div');
+            item.className = 'product-form-media-preview-item';
+            item.dataset.index = index;
+
+            const mediaElement = type === 'video' ?
+                document.createElement('video') :
+                document.createElement('img');
+
+            mediaElement.src = URL.createObjectURL(file);
+            mediaElement.onload = function () {
+                URL.revokeObjectURL(mediaElement.src);
+            };
+
+            if (type === 'video') {
+                mediaElement.muted = true;
+                mediaElement.preload = 'metadata';
+            }
+
+            const badge = document.createElement('div');
+            badge.className = 'preview-badge';
+            badge.textContent = type === 'video' ? 'VIDEO' : 'IMG';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'preview-remove';
+            removeBtn.textContent = '×';
+            removeBtn.type = 'button';
+            removeBtn.onclick = function () {
+                item.remove();
+            };
+
+            item.appendChild(mediaElement);
+            item.appendChild(badge);
+            item.appendChild(removeBtn);
+            container.appendChild(item);
+        });
+    }
+
+    const videoInput = document.querySelector('input[name="video_files"]');
+    const imageInput = document.querySelector('input[name="image_files"]');
+    const videoPreview = document.getElementById('videoPreview');
+    const imagePreview = document.getElementById('imagePreview');
+
+    if (videoInput && videoPreview) {
+        videoInput.addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                createMediaPreview(videoPreview, this.files, 'video');
+            } else {
+                videoPreview.innerHTML = '';
+            }
+        });
+    }
+
+    if (imageInput && imagePreview) {
+        imageInput.addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                createMediaPreview(imagePreview, this.files, 'image');
+            } else {
+                imagePreview.innerHTML = '';
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

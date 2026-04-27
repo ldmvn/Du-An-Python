@@ -46,6 +46,36 @@
     font-size: 12px;
 }
 
+.pd-info-col .pd-option-block {
+    overflow: hidden;
+}
+
+#storage-options,
+#ram-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+#storage-options .pd-option-card,
+#ram-options .pd-option-card {
+    min-height: 56px;
+    padding: 8px 10px;
+    max-width: 100%;
+}
+
+#storage-options .pd-option-main,
+#ram-options .pd-option-main {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+#storage-options .pd-option-card small,
+#ram-options .pd-option-card small {
+    font-size: 11px;
+    line-height: 1.2;
+}
+
 @media (max-width: 1024px) {
     .pd-info-col {
         max-width: 100%;
@@ -186,23 +216,83 @@
     font-weight: 600;
 }
 
-.pd-spec-empty {
-    margin: 0;
-    padding: 28px 0;
-    text-align: center;
-    color: #6b7280;
-    font-size: 24px;
-}
+    .pd-desc-card {
+        margin-top: 20px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 18px 20px;
+    }
 
-.pd-color-thumb {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #d1d5db;
-    flex-shrink: 0;
-    display: inline-flex;
-}
+    .pd-desc-header {
+        margin-bottom: 14px;
+    }
+
+    .pd-desc-header h2 {
+        margin: 0;
+        font-size: 22px;
+        color: #111827;
+    }
+
+    .pd-desc-body {
+        color: #374151;
+        line-height: 1.8;
+        font-size: 15px;
+        white-space: pre-line;
+        max-height: 190px;
+        overflow: hidden;
+        position: relative;
+        transition: max-height 0.28s ease;
+    }
+
+    .pd-desc-body.is-expanded {
+        max-height: 2000px;
+    }
+
+    .pd-desc-body::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 90px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100%);
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    .pd-desc-body.is-expanded::after {
+        opacity: 0;
+    }
+
+    .pd-desc-toggle {
+        display: none;
+        margin-top: 16px;
+        background: transparent;
+        border: none;
+        color: #2563eb;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0;
+        font-size: 15px;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pd-desc-card.has-long-text .pd-desc-toggle {
+        display: inline-flex;
+    }
+
+    .pd-desc-toggle svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.2s ease;
+        display: inline-block;
+    }
+
+    .pd-desc-toggle.is-expanded svg {
+        transform: rotate(180deg);
+    }
 
 .pd-color-thumb img {
     width: 100%;
@@ -220,7 +310,17 @@
 }
 
 #color-options .pd-color-card {
-    flex: 0 0 190px !important;
+    flex: 0 0 154px !important;
+    max-width: 154px;
+    padding: 8px;
+}
+
+#color-options .pd-color-copy strong {
+    font-size: 13px;
+}
+
+#color-options .pd-color-copy small {
+    font-size: 11px;
 }
 
 @media (max-width: 768px) {
@@ -258,8 +358,14 @@
         font-size: 16px;
     }
 
+    #storage-options,
+    #ram-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     #color-options .pd-color-card {
-        flex-basis: 160px;
+        flex-basis: 138px;
+        max-width: 138px;
     }
 }
 </style>
@@ -448,14 +554,35 @@
                             <button type="button" class="pd-spec-more" id="specToggleBtn">Xem tất cả</button>
                         </div>
                         <div class="pd-spec-list pd-spec-list-collapsed" id="specList">
-                            {% for spec in specifications %}
-                            <div class="pd-spec-row {% if forloop.counter > 6 %}pd-spec-extra{% endif %}">
-                                <span>{{ spec.key }}</span>
-                                <strong>{{ spec.value }}</strong>
-                            </div>
-                            {% endfor %}
+                            {% if specifications %}
+                                {% for spec in specifications %}
+                                <div class="pd-spec-row {% if forloop.counter > 6 %}pd-spec-extra{% endif %}">
+                                    <span>{{ spec.key }}</span>
+                                    <strong>{{ spec.value }}</strong>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="pd-spec-empty">Chưa có thông số kỹ thuật.</div>
+                            {% endif %}
                         </div>
                     </aside>
+
+                    <section class="pd-desc-card" id="pdDescCard">
+                        <div class="pd-desc-header">
+                            <h2>Mô tả sản phẩm</h2>
+                        </div>
+                        <div class="pd-desc-body" id="pdDescBody">
+                            {% if product.description %}
+                                <p>{{ product.description }}</p>
+                            {% else %}
+                                <p>Chưa có mô tả cho sản phẩm này.</p>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="pd-desc-toggle" id="pdDescToggle" aria-expanded="false">
+                            Xem thêm
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                    </section>
                 </div>
             </div>
 
@@ -490,7 +617,35 @@
                                     data-capacity="{{ option.capacity }}"
                                 >
                                     <span class="pd-option-main">{{ option.capacity }}</span>
-                                    <small>{{ option.label }}</small>
+                                    {% if option.price_delta %}
+                                    <small>{{ option.label }} | +{{ option.price_delta|intcomma }}đ</small>
+                                    {% else %}
+                                    <small>{{ option.label }} | Giá chuẩn</small>
+                                    {% endif %}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="pd-option-block">
+                            <div class="pd-option-head">
+                                <h3>RAM</h3>
+                                <div class="pd-selected-copy" id="selectedRamLabel">{{ default_ram }}</div>
+                            </div>
+                            <div class="pd-variant-grid" id="ram-options">
+                                {% for option in ram_options %}
+                                <button
+                                    type="button"
+                                    class="pd-option-card {% if option.value == default_ram %}is-active{% endif %}"
+                                    data-ram="{{ option.value }}"
+                                    data-ram-price="{{ option.price_delta|default:0 }}"
+                                >
+                                    <span class="pd-option-main">{{ option.value }}</span>
+                                    {% if option.price_delta %}
+                                    <small>{{ option.label }} | +{{ option.price_delta|intcomma }}đ</small>
+                                    {% else %}
+                                    <small>{{ option.label }} | Giá chuẩn</small>
+                                    {% endif %}
                                 </button>
                                 {% endfor %}
                             </div>
@@ -645,6 +800,8 @@
 {{ storage_options|json_script:"product-storage-data" }}
 {{ color_options|json_script:"product-color-data" }}
 {{ specifications|json_script:"product-spec-data" }}
+{{ all_specifications|json_script:"product-all-spec-data" }}
+{{ spec_category_order|json_script:"product-spec-category-order" }}
 
 <div class="pd-spec-modal-overlay" id="pdSpecModal" aria-hidden="true">
     <div class="pd-spec-modal" role="dialog" aria-modal="true" aria-labelledby="pdSpecModalTitle">
@@ -661,7 +818,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const storageData = JSON.parse(document.getElementById('product-storage-data').textContent);
     const colorData = JSON.parse(document.getElementById('product-color-data').textContent);
-    const specData = JSON.parse(document.getElementById('product-spec-data').textContent);
+    const specData = JSON.parse(document.getElementById('product-all-spec-data').textContent);
     
     // Handle both old and new gallery selectors
     const thumbButtons = document.querySelectorAll('.pd-video-thumb, .pd-image-thumb, .pd-media-selector-btn, .pd-feature-selector-btn, #pdThumbStrip .pd-thumb');
@@ -671,7 +828,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const stage = document.getElementById('pdStage');
     const currentPrice = document.getElementById('current-price');
     const selectedColorLabel = document.getElementById('selectedColorLabel');
+    const selectedRamLabel = document.getElementById('selectedRamLabel');
     const storageButtons = document.querySelectorAll('#storage-options .pd-option-card');
+    const ramButtons = document.querySelectorAll('#ram-options .pd-option-card');
     const colorButtons = document.querySelectorAll('#color-options .pd-color-card');
     const specToggleBtn = document.getElementById('specToggleBtn');
     const specModal = document.getElementById('pdSpecModal');
@@ -684,7 +843,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = {
         basePrice: storageData[0] ? Number(storageData[0].price) : 0,
-        colorDelta: colorData[0] ? Number(colorData[0].price_delta) : 0
+        colorDelta: colorData[0] ? Number(colorData[0].price_delta) : 0,
+        ramDelta: 0
     };
 
     function formatPrice(value) {
@@ -692,33 +852,47 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function renderPrice() {
-        const total = state.basePrice + state.colorDelta;
+        const total = state.basePrice + state.colorDelta + state.ramDelta;
         if (currentPrice) currentPrice.textContent = formatPrice(total);
     }
 
-    const specCategories = [
-        'Màn hình',
-        'Camera sau',
-        'Camera trước',
-        'Vi xử lý & đồ họa',
-        'Giao tiếp & kết nối',
-        'RAM & lưu trữ',
-        'Tính năng khác',
-        'Bộ xử lý & Đồ họa',
-        'Kích thước & Trọng lượng',
-        'Thông số khác',
-        'Pin & công nghệ sạc',
-        'Tiện ích khác',
-        'Cổng kết nối',
-        'Thông tin chung'
-    ];
+    const specCategoryOrderData = JSON.parse(document.getElementById('product-spec-category-order').textContent || '[]');
     const groupedSpecs = {};
-    let activeSpecCategory = specCategories[0];
+    const specCategories = [];
+    let activeSpecCategory = '';
     let isProgrammaticSpecScroll = false;
 
-    specCategories.forEach(function (category) {
-        groupedSpecs[category] = [];
+    function applySpecCategoryOrder(categories) {
+        const ordered = [];
+        (specCategoryOrderData || []).forEach(function (category) {
+            if (categories.includes(category) && !ordered.includes(category)) {
+                ordered.push(category);
+            }
+        });
+        categories.forEach(function (category) {
+            if (!ordered.includes(category)) {
+                ordered.push(category);
+            }
+        });
+        return ordered;
+    }
+
+    (specData || []).forEach(function (spec) {
+        const rawCategory = (spec.category || '').trim();
+        const category = rawCategory || resolveCategoryByKey(spec.key);
+        if (!groupedSpecs[category]) {
+            groupedSpecs[category] = [];
+            specCategories.push(category);
+        }
+        groupedSpecs[category].push(spec);
     });
+
+    if (specCategories.length > 0) {
+        const orderedCategories = applySpecCategoryOrder(specCategories);
+        specCategories.length = 0;
+        orderedCategories.forEach(function (category) { specCategories.push(category); });
+        activeSpecCategory = specCategories[0];
+    }
 
     function normalizeSpecText(input) {
         return String(input || '')
@@ -756,7 +930,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     (specData || []).forEach(function (spec) {
-        const category = resolveCategoryByKey(spec.key);
+        const category = (spec.category && groupedSpecs[spec.category] !== undefined)
+            ? spec.category
+            : resolveCategoryByKey(spec.key);
         groupedSpecs[category].push(spec);
     });
 
@@ -770,13 +946,18 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderSpecModalContent() {
         if (!specModalContent) return;
 
+        if (!specCategories.length) {
+            specModalContent.innerHTML = '<section class="pd-spec-modal-section"><p class="pd-spec-empty">Chưa có thông số kỹ thuật.</p></section>';
+            return;
+        }
+
         const sectionsHtml = specCategories.map(function (category, index) {
             const categorySpecs = groupedSpecs[category] || [];
             const safeCategory = escapeHtml(category);
             const sectionId = 'pd-spec-section-' + index;
 
             if (categorySpecs.length === 0) {
-                return '<section class="pd-spec-modal-section" id="' + sectionId + '" data-spec-section="' + safeCategory + '"><h4 class="pd-spec-modal-section-title">' + safeCategory + '</h4><p class="pd-spec-empty">Chua co thong tin cho muc nay.</p></section>';
+                return '';
             }
 
             const rows = categorySpecs.map(function (spec) {
@@ -790,6 +971,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderSpecModalTabs() {
         if (!specModalTabs) return;
+        if (!specCategories.length) {
+            specModalTabs.innerHTML = '';
+            return;
+        }
+
         const tabsHtml = specCategories.map(function (category, index) {
             const activeClass = category === activeSpecCategory ? 'is-active' : '';
             const safeCategory = escapeHtml(category);
@@ -929,6 +1115,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    ramButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            ramButtons.forEach(function (item) { item.classList.remove('is-active'); });
+            button.classList.add('is-active');
+            state.ramDelta = Number(button.dataset.ramPrice || 0);
+            if (selectedRamLabel) selectedRamLabel.textContent = button.dataset.ram || '';
+            renderPrice();
+        });
+    });
+
     colorButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             colorButtons.forEach(function (item) { item.classList.remove('is-active'); });
@@ -950,6 +1146,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (stage && mainImage) {
         // Image zoom disabled - display fixed size
+    }
+
+    const activeRamButton = document.querySelector('#ram-options .pd-option-card.is-active');
+    if (activeRamButton) {
+        state.ramDelta = Number(activeRamButton.dataset.ramPrice || 0);
     }
 
     if (specToggleBtn && specModal) {
@@ -975,6 +1176,24 @@ document.addEventListener('DOMContentLoaded', function () {
             closeSpecModal();
         }
     });
+
+    const descCard = document.getElementById('pdDescCard');
+    const descBody = document.getElementById('pdDescBody');
+    const descToggle = document.getElementById('pdDescToggle');
+    if (descCard && descBody && descToggle) {
+        const maxHeight = 190;
+        if (descBody.scrollHeight > maxHeight + 20) {
+            descCard.classList.add('has-long-text');
+            descToggle.addEventListener('click', function () {
+                const isExpanded = descBody.classList.toggle('is-expanded');
+                descToggle.classList.toggle('is-expanded', isExpanded);
+                descToggle.setAttribute('aria-expanded', String(isExpanded));
+                descToggle.innerHTML = isExpanded
+                    ? 'Thu gọn <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"></polyline></svg>'
+                    : 'Xem thêm <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+            });
+        }
+    }
 
     if (relatedTrack && relatedPrevBtn && relatedNextBtn) {
         relatedPrevBtn.addEventListener('click', function () {
