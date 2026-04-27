@@ -545,11 +545,12 @@ body {
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 1024px) {
     .ldm-header-inner {
-        gap: 16px;
+        gap: 12px;
     }
 
     .ldm-search {
-        max-width: 400px;
+        max-width: 300px;
+        flex: 0 1 auto;
     }
 
     .ldm-icon-text {
@@ -557,38 +558,78 @@ body {
     }
 
     .ldm-header-icon {
-        padding: 10px;
+        padding: 8px;
     }
 }
 
 @media (max-width: 768px) {
     body {
-        padding-top: 140px;
+        padding-top: 80px;
     }
 
     .ldm-header-container {
-        padding: 0 16px;
+        padding: 0 12px;
     }
 
     .ldm-header-inner {
-        flex-wrap: wrap;
-        height: auto;
+        height: 70px;
+        gap: 8px;
     }
 
     .ldm-logo-img {
         height: 40px;
+        width: 40px;
+        margin-right: 4px;
     }
 
     .ldm-search {
-        order: -1;
-        max-width: 100%;
-        flex-basis: 100%;
-        margin-bottom: 12px;
-        padding: 8px 0;
+        flex: 1;
+        max-width: none;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ldm-search-input {
+        height: 40px;
+        padding: 0 12px;
+        font-size: 13px;
+        border-radius: 6px 0 0 6px;
+    }
+
+    .ldm-search-btn {
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 0 6px 6px 0;
+        flex-shrink: 0;
+    }
+
+    .ldm-search-btn svg {
+        width: 16px;
+        height: 16px;
     }
 
     .ldm-header-actions {
-        gap: 4px;
+        gap: 2px;
+        flex-shrink: 0;
+    }
+
+    .ldm-header-icon {
+        padding: 6px 8px;
+    }
+
+    .ldm-icon-circle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .ldm-icon-svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .ldm-icon-text {
+        display: none;
     }
 }
 
