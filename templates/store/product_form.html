@@ -17,7 +17,7 @@
 .product-color-list { display: flex; flex-direction: column; gap: 12px; }
 .product-color-row {
     display: grid;
-    grid-template-columns: 1.4fr 110px 120px 1fr auto;
+    grid-template-columns: 1.2fr 110px auto;
     gap: 10px;
     align-items: center;
     padding: 10px;
@@ -46,10 +46,10 @@
     background: #fff;
 }
 .product-variant-row.storage-row {
-    grid-template-columns: 1.4fr 140px auto;
+    grid-template-columns: 1.2fr 110px 90px auto;
 }
 .product-variant-row.ram-row {
-    grid-template-columns: 1.2fr 140px auto;
+    grid-template-columns: 1.2fr 110px 90px auto;
 }
 .product-form-media-section {
     margin-top: 16px;
@@ -495,21 +495,23 @@
                         <input type="hidden" name="color_id__existing-{{ color.id }}" value="{{ color.id }}">
                         <input type="hidden" name="color_delete__existing-{{ color.id }}" value="0" class="color-delete-flag">
 
-                        <input type="text" name="color_name__existing-{{ color.id }}" value="{{ color.name }}" placeholder="Ten mau">
-                        <input type="text" name="color_hex__existing-{{ color.id }}" value="{{ color.hex|default:'#d1d5db' }}" placeholder="#d1d5db">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <input type="text" name="color_name__existing-{{ color.id }}" value="{{ color.name }}" placeholder="Ten mau">
+                            <input type="text" name="color_hex__existing-{{ color.id }}" value="{{ color.hex|default:'#d1d5db' }}" placeholder="#d1d5db" style="font-size: 12px;">
+                        </div>
                         <input type="number" name="color_price__existing-{{ color.id }}" value="{{ color.price_delta|default:0 }}" placeholder="Cong gia">
-                        <div>
-                            <input type="file" name="color_image__existing-{{ color.id }}" accept="image/*">
-                            {% if color.image %}
-                            <div class="product-color-preview">
-                                <img src="{{ color.image.url }}" alt="{{ color.name }}">
-                                <label><input type="checkbox" name="color_clear_image__existing-{{ color.id }}" value="1"> Xoa anh hien tai</label>
-                            </div>
-                            {% endif %}
-                        </div>
                         <div class="product-color-actions">
-                            <button type="button" class="ldm-button ldm-button-secondary btn-remove-color">Xoa mau</button>
+                            <button type="button" class="ldm-button ldm-button-secondary btn-remove-color">Xoa</button>
                         </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-left: 10px; margin-right: 10px; margin-bottom: 10px;">
+                        <input type="file" name="color_image__existing-{{ color.id }}" accept="image/*" style="flex: 1; font-size: 12px;">
+                        {% if color.image %}
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                            <img src="{{ color.image.url }}" alt="{{ color.name }}" style="width: 34px; height: 34px; object-fit: cover; border-radius: 6px; border: 1px solid #e5e7eb;">
+                            <label style="cursor: pointer;"><input type="checkbox" name="color_clear_image__existing-{{ color.id }}" value="1"> Xoa</label>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>

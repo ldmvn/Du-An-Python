@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     <link rel="stylesheet" href="{% static 'css/banner.css' %}">
-    <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +32,6 @@
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'js/cart.js' %}"></script>
     <script src="{% static 'js/wishlist.js' %}"></script>
-    <script src="{% static 'js/chatbot.js' %}"></script>
     <script src="{% static 'js/compare.js' %}"></script>
     <script src="{% static 'js/ajax_cart.js' %}"></script>
     <script src="{% static 'js/ajax_wishlist.js' %}"></script>
@@ -151,24 +149,6 @@
         <i class="ri-arrow-left-right-line" style="font-size:22px;"></i>
         <span id="ldm-compare-fab-count" class="ldm-compare-fab-badge">0</span>
     </button>
-
-    <!-- Chatbot Widget -->
-    <div id="ldm-chat-window" class="ldm-chat-window">
-        <div class="ldm-chat-header">
-            <div class="ldm-chat-avatar"><i class="ri-robot-2-line"></i></div>
-            <div class="ldm-chat-header-info">
-                <h6>CHATBOT</h6>
-                <small>Trợ lý mua sắm thông minh</small>
-            </div>
-        </div>
-        <div class="ldm-chat-messages" id="ldmChatMessages"></div>
-        <div class="ldm-chat-input-area">
-            <input type="text" id="ldmChatInput" placeholder="Say something..." class="ldm-chat-input">
-            <button class="ldm-chat-send" onclick="sendChatMessage()">
-                <i class="ri-send-plane-2-line"></i>
-            </button>
-        </div>
-    </div>
 
     <!-- Page-specific Scripts -->
     {% block extra_js %}{% endblock %}
