@@ -1,138 +1,11 @@
-{% extends "admin/admin_base.html" %}
-{% load static %}
-
-{% block title %}Thông số kỹ thuật - {{ product.name }}{% endblock %}
-{% block page_title %}Thư viện Thông số kỹ thuật{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/product-form.css' %}">
-<style>
-.product-spec-library-page {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 20px 0;
-}
-.product-spec-library-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.product-spec-library-note {
-    color: #475569;
-    font-size: 14px;
-    margin-top: 6px;
-}
-.product-spec-library-back {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #f8fafc;
-    color: #111827;
-    text-decoration: none;
-    font-weight: 600;
-}
-.product-spec-library-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="product-spec-library-page">
-    <div class="product-spec-library-header">
-        <div>
-            <h2>Thông số kỹ thuật: {{ product.name }}</h2>
-            <p class="product-spec-library-note">Trang riêng chỉ quản lý thông số kỹ thuật, gồm thêm/xóa/sửa cụm và chi tiết specs.</p>
-        </div>
-        <a href="{% url 'store:dashboard_edit_product' product.pk %}" class="product-spec-library-back">Quay lại chỉnh sửa sản phẩm</a>
-    </div>
-
-    <form method="post" enctype="multipart/form-data" class="product-spec-library-form">
-        {% csrf_token %}
-
-        <div class="product-spec-section">
-            <div class="product-spec-toggle">
-                <h3 class="product-spec-title">Thông số kỹ thuật</h3>
-            </div>
-            <div id="productSpecPanel" class="product-spec-panel is-open">
-                <div class="product-spec-cluster-tools">
-                    <input type="text" id="newSpecClusterInput" class="product-spec-cluster-input" placeholder="Nhập tên cụm thông số mới (vd: Âm thanh)">
-                    <button type="button" class="ldm-button ldm-button-secondary" id="btnAddSpecCluster">+ Thêm cụm</button>
-                    <button type="button" class="ldm-button ldm-button-secondary" id="btnDeleteSpecCluster">Xóa cụm đang chọn</button>
-                    <button type="button" class="ldm-button ldm-button-secondary" id="btnMoveSpecClusterLeft">← Trước</button>
-                    <button type="button" class="ldm-button ldm-button-secondary" id="btnMoveSpecClusterRight">Sau →</button>
-                    <input type="hidden" name="spec_category_order" id="specCategoryOrderInput" value="{{ spec_category_order|default:'' }}">
-                </div>
-                <div class="product-spec-tabs" id="productSpecTabs"></div>
-                <div class="product-spec-table-wrap">
-                    <table class="product-spec-table-ui">
-                        <thead>
-                            <tr>
-                                <th style="width:70px;">STT</th>
-                                <th style="width:34%;">Tên thông số</th>
-                                <th>Giá trị</th>
-                                <th style="width:130px;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productSpecTable">
-                            {% for spec in product_specs %}
-                            <tr class="product-spec-row" data-row-key="existing-spec-{{ spec.id }}">
-                                <td class="product-spec-index">{{ forloop.counter }}</td>
-                                <td class="product-spec-cell-input">
-                                    <span class="product-spec-mobile-label">Thông số</span>
-                                    <input type="hidden" name="spec_row_keys" value="existing-spec-{{ spec.id }}">
-                                    <input type="hidden" name="spec_id__existing-spec-{{ spec.id }}" value="{{ spec.id }}">
-                                    <input type="hidden" name="spec_delete__existing-spec-{{ spec.id }}" value="0" class="spec-delete-flag">
-                                    <select name="spec_category__existing-spec-{{ spec.id }}" class="spec-category-input" data-current-value="{{ spec.category }}"></select>
-                                    <input type="text" name="spec_key__existing-spec-{{ spec.id }}" value="{{ spec.key }}" placeholder="Tên thông số (vd: Màn hình)">
-                                </td>
-                                <td class="product-spec-cell-input">
-                                    <span class="product-spec-mobile-label">Giá trị</span>
-                                    <input type="text" name="spec_value__existing-spec-{{ spec.id }}" value="{{ spec.value }}" placeholder="Giá trị (vd: 6.7 inch OLED)">
-                                </td>
-                                <td class="product-spec-cell-input product-spec-visible">
-                                    <span class="product-spec-mobile-label">Hiển thị</span>
-                                    <input type="hidden" name="spec_visible__existing-spec-{{ spec.id }}" value="0">
-                                    <label><input type="checkbox" name="spec_visible__existing-spec-{{ spec.id }}" value="1" {% if spec.visible %}checked{% endif %}> Hiển thị</label>
-                                </td>
-                                <td class="product-spec-action">
-                                    <button type="button" class="ldm-button ldm-button-secondary btn-remove-spec">Xóa</button>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 10px;">
-                    <button type="button" class="ldm-button ldm-button-secondary" id="btnAddSpec">+ Thêm thông số</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="product-form-actions">
-            <button type="submit" class="ldm-button ldm-button-primary">Lưu thông số</button>
-        </div>
-    </form>
-</div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
 document.addEventListener('DOMContentLoaded', function () {
     const specTable = document.getElementById('productSpecTable');
     const addSpecBtn = document.getElementById('btnAddSpec');
-    const toggleSpecBtn = document.getElementById('btnToggleSpecs');
     const specTabs = document.getElementById('productSpecTabs');
     const addSpecClusterBtn = document.getElementById('btnAddSpecCluster');
     const deleteSpecClusterBtn = document.getElementById('btnDeleteSpecCluster');
     const newSpecClusterInput = document.getElementById('newSpecClusterInput');
     const specCategoryOrderInput = document.getElementById('specCategoryOrderInput');
-    const specPanel = document.getElementById('productSpecPanel');
     let specCategoryOrder = [];
     let activeSpecCategory = 'Thông số khác';
 
@@ -431,5 +304,3 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-</script>
-{% endblock %}

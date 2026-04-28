@@ -8,14 +8,6 @@
 {% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 40px auto; padding: 20px;">
-    <a href="{% url 'store:home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
-        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        ← Quay lại
-    </a>
-</div>
 <div class="wishlist-container">
     <!-- Header -->
     <div class="wishlist-header">
@@ -41,8 +33,7 @@
                 {% endif %}
                 
                 <!-- Remove Button -->
-                <button class="wishlist-item-remove" 
-                   onclick="removeFromWishlist(event, {{ product.id }});" title="Bỏ khỏi danh sách yêu thích">
+                <button class="wishlist-item-remove" data-product-id="{{ product.id }}" title="Bỏ khỏi danh sách yêu thích">
                     ❌
                 </button>
             </div>
@@ -57,7 +48,7 @@
                     <a href="{% url 'store:product_detail' product.id %}" class="btn-view-detail">
                         👁️ Xem chi tiết
                     </a>
-                    <button class="btn-add-cart" onclick="addToCart({{ product.id }})">
+                    <button type="button" class="btn-add-cart" data-product-id="{{ product.id }}">
                         🛒 Thêm giỏ hàng
                     </button>
                 </div>
@@ -80,9 +71,24 @@
 </div>
 
 <script>
-function addToCart(productId) {
-    window.location.href = `{% url 'store:add_to_cart' 0 %}`.replace('0', productId);
-}
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.btn-add-cart').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var productId = button.dataset.productId;
+                if (!productId) return;
+                window.location.href = "{% url 'store:add_to_cart' 0 %}".replace('0', productId);
+            });
+        });
+
+        document.querySelectorAll('.wishlist-item-remove').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                var productId = button.dataset.productId;
+                if (!productId) return;
+                window.location.href = "/wishlist/toggle/?product_id=" + productId;
+            });
+        });
+    });
 </script>
 
 {% endblock %}

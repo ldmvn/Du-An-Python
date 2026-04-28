@@ -3,6 +3,49 @@
  * Professional admin functionality including charts, tables, and modals
  */
 
+// ====== SIDEBAR MENU TOGGLE ======
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('.ldm-sidebar-toggle');
+    
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const menuId = this.getAttribute('data-toggle');
+            const menu = document.getElementById(menuId);
+            
+            if (menu) {
+                menu.classList.toggle('show');
+                this.classList.toggle('active');
+                
+                // Save state to localStorage
+                const isOpen = menu.classList.contains('show');
+                localStorage.setItem(`menu-${menuId}`, isOpen ? 'open' : 'closed');
+            }
+        });
+        
+        // Restore state from localStorage
+        const menuId = btn.getAttribute('data-toggle');
+        const savedState = localStorage.getItem(`menu-${menuId}`);
+        if (savedState === 'open') {
+            btn.classList.add('active');
+            const menu = document.getElementById(menuId);
+            if (menu) menu.classList.add('show');
+        }
+    });
+    
+    // Keep submenu open if any subitem is active
+    const activeSubitems = document.querySelectorAll('.ldm-sidebar-subitem.active');
+    activeSubitems.forEach(item => {
+        const submenu = item.closest('.ldm-sidebar-submenu');
+        if (submenu) {
+            submenu.classList.add('show');
+            const toggle = submenu.previousElementSibling;
+            if (toggle && toggle.classList.contains('ldm-sidebar-toggle')) {
+                toggle.classList.add('active');
+            }
+        }
+    });
+});
+
 // ====== CHART.JS INITIALIZATION ======
 const LDMCharts = {
     initRevenueChart: function(canvasId, data = {}) {

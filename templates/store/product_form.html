@@ -433,28 +433,6 @@
                 {% if form.description.errors %}<div class="product-form-error">{{ form.description.errors|join:", " }}</div>{% endif %}
             </div>
 
-            <div class="product-form-feature">
-                <label class="product-form-label">Tính năng nổi bật (ảnh + nội dung)</label>
-                <div class="product-form-feature-grid">
-                    <div class="product-form-feature-image">
-                        {% if product and product.feature_image %}
-                        <div class="product-form-image-preview">
-                            <p class="product-form-image-preview-label">Ảnh tính năng hiện tại</p>
-                            <img src="{{ product.feature_image.url }}" alt="{{ product.name }}">
-                        </div>
-                        {% endif %}
-                        {{ form.feature_image }}
-                        {% if form.feature_image.errors %}<div class="product-form-error">{{ form.feature_image.errors|join:", " }}</div>{% endif %}
-                        <p class="product-form-image-info">Ảnh này sẽ hiển thị ở khối "Tính năng" trên trang chi tiết sản phẩm.</p>
-                    </div>
-                    <div class="product-form-feature-content">
-                        {{ form.feature_content }}
-                        {% if form.feature_content.errors %}<div class="product-form-error">{{ form.feature_content.errors|join:", " }}</div>{% endif %}
-                        <p class="product-form-image-info">Nhập mỗi dòng một ý nổi bật để hiển thị dạng bullet.</p>
-                    </div>
-                </div>
-            </div>
-
             <div class="product-form-image">
                 <label class="product-form-label">Ảnh đại diện</label>
                 <div class="product-form-image-container">
@@ -471,19 +449,6 @@
                         <p class="product-form-image-info">Ảnh đại diện vẫn dùng cho danh sách sản phẩm. Gallery/video bên dưới sẽ lưu trong `media/Sanpham`.</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="product-form-media-section">
-                <label class="product-form-label">Thư viện Media</label>
-                <div class="product-form-media-link-row">
-                    <span>Thư viện Media</span>
-                    {% if product %}
-                    <a href="{% url 'store:dashboard_edit_product_media' product.pk %}" class="product-form-media-link">Xem chi tiết</a>
-                    {% endif %}
-                </div>
-                <p class="product-form-image-info">
-                    Nhấn vào xem chi tiết để mở trang quản lý Media riêng cho sản phẩm này.
-                </p>
             </div>
 
             <div class="product-color-section">
@@ -564,17 +529,11 @@
                 </div>
             </div>
 
-            <div class="product-spec-section">
-                <div class="product-spec-toggle">
-                    <h3 class="product-spec-title">Thông số kỹ thuật</h3>
-                    {% if product %}
-                    <a href="{% url 'store:dashboard_edit_product_specs' product.pk %}" class="product-form-media-link">Xem chi tiết</a>
-                    {% endif %}
-                </div>
-                <p class="product-form-image-info">Trang riêng sẽ quản lý đầy đủ thông số kỹ thuật cho sản phẩm này.</p>
-                <input type="hidden" name="spec_category_order" value="{{ spec_category_order|default:'' }}">
-            </div>
             <div class="product-form-actions">
+                {% if product %}
+                <a href="{% url 'store:dashboard_edit_product_media' product.pk %}?return_to=edit" class="ldm-button ldm-button-secondary">Quản lý media</a>
+                <a href="{% url 'store:dashboard_edit_product_specs' product.pk %}?return_to=edit" class="ldm-button ldm-button-secondary">Quản lý thông số</a>
+                {% endif %}
                 <button type="submit" class="ldm-button ldm-button-primary">
                     {% if product %}Cập nhật sản phẩm{% else %}Thêm sản phẩm{% endif %}
                 </button>

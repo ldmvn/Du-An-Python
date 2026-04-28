@@ -105,7 +105,13 @@
     function showBanner(index) {
         const nextIndex = (index + cards.length) % cards.length;
         currentBannerIndex = nextIndex;
-        cards[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+        const targetCard = cards[nextIndex];
+        if (targetCard) {
+            scrollArea.scrollTo({
+                left: targetCard.offsetLeft,
+                behavior: 'smooth'
+            });
+        }
     }
 
     function scrollPrev() {

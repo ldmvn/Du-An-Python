@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, resolve_url
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.urls import reverse
 import os
 import requests
 
@@ -180,6 +181,29 @@ def _sync_product_media(product, request):
             if media.is_primary:
                 has_primary = True
             current_max_sort += 1
+
+    feature_content = request.POST.get('feature_content', '').strip()
+    delete_feature_image = request.POST.get('delete_feature_image')
+    feature_image = request.FILES.get('feature_image')
+    feature_fields = []
+
+    if delete_feature_image == '1' and product.feature_image:
+        product.feature_image.delete(save=False)
+        product.feature_image = None
+        feature_fields.append('feature_image')
+
+    if feature_image:
+        if product.feature_image:
+            product.feature_image.delete(save=False)
+        product.feature_image = feature_image
+        feature_fields.append('feature_image')
+
+    if feature_content != (product.feature_content or ''):
+        product.feature_content = feature_content
+        feature_fields.append('feature_content')
+
+    if feature_fields:
+        product.save(update_fields=list(dict.fromkeys(feature_fields)))
 
     if product.media_items.exists() and not product.media_items.filter(is_primary=True).exists():
         first_media = product.media_items.order_by('sort_order', 'id').first()
@@ -1582,28 +1606,38 @@ def dashboard_edit_product(request, pk):
 @user_passes_test(is_admin, login_url='store:login')
 def dashboard_edit_product_media(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next') or reverse('store:admin_media_library')
+
     if request.method == 'POST':
         _sync_product_media(product, request)
         messages.success(request, '✅ Cập nhật Media sản phẩm thành công')
-        return redirect('store:dashboard_edit_product_media', pk=pk)
+
+        if product.media_items.exists() and product.pending_media:
+            product.pending_media = False
+            product.save(update_fields=['pending_media'])
+
+        return redirect(resolve_url(next_url))
 
     context = get_base_context(request)
     context.update({
         'product': product,
         'product_media': product.media_items.all(),
         'title': f'Thư viện Media: {product.name}',
+        'back_url': resolve_url(next_url),
     })
-    return render(request, 'store/product_media_library.html', context)
+    return render(request, 'admin/admin_media.html', context)
 
 
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
 def dashboard_edit_product_specs(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    next_url = request.POST.get('next') or request.GET.get('next') or reverse('store:admin_specifications')
+
     if request.method == 'POST':
         _sync_product_specifications(product, request)
         messages.success(request, '✅ Cập nhật Thông số kỹ thuật thành công')
-        return redirect('store:dashboard_edit_product_specs', pk=pk)
+        return redirect(resolve_url(next_url))
 
     context = get_base_context(request)
     context.update({
@@ -1611,8 +1645,9 @@ def dashboard_edit_product_specs(request, pk):
         'product_specs': product.specs.all(),
         'spec_category_order': product.spec_category_order or '',
         'title': f'Thông số kỹ thuật: {product.name}',
+        'back_url': resolve_url(next_url),
     })
-    return render(request, 'store/product_spec_library.html', context)
+    return render(request, 'admin/admin_specification.html', context)
 
 
 @login_required(login_url='store:login')
@@ -1760,10 +1795,15 @@ def user_edit(request, pk):
     else:
         form = UserManagementForm(instance=user)
 
+    users = User.objects.all().order_by('-date_joined')
     context = get_base_context(request)
-    context['form'] = form
-    context['edit_user'] = user
-    return render(request, 'admin/admin_user_form.html', context)
+    context.update({
+        'users': users,
+        'show_form': True,
+        'form': form,
+        'edit_user': user,
+    })
+    return render(request, 'admin/admin_users.html', context)
 
 
 @login_required(login_url='store:login')
@@ -2333,8 +2373,68 @@ def admin_orders(request):
     context = get_base_context(request)
     context.update({
         'orders': orders_page,
+        'is_paginated': orders_page.has_other_pages(),
+        'page_obj': orders_page,
     })
     return render(request, 'admin/admin_orders.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_media_library(request):
+    products = Product.objects.annotate(
+        media_count=Count('media_items'),
+        image_count=Count('media_items', filter=Q(media_items__media_type='image')),
+        video_count=Count('media_items', filter=Q(media_items__media_type='video'))
+    ).order_by('-created_at')
+
+    context = get_base_context(request)
+    context.update({
+        'products': products,
+    })
+    return render(request, 'admin/admin_media.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_media_add(request):
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        if product_id and product_id.isdigit():
+            product = get_object_or_404(Product, pk=int(product_id))
+            if not product.pending_media and not product.media_items.exists():
+                product.pending_media = True
+                product.save(update_fields=['pending_media'])
+        return redirect('store:admin_media_library')
+
+    products_without_media = Product.objects.annotate(media_count=Count('media_items')).filter(media_count=0).order_by('created_at')
+
+    context = get_base_context(request)
+    context.update({
+        'products_without_media': products_without_media,
+        'back_url': reverse('store:admin_media_library'),
+    })
+    return render(request, 'admin/admin_media.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_specifications(request):
+    products = Product.objects.annotate(spec_count=Count('specs')).order_by('-created_at')
+
+    context = get_base_context(request)
+    context.update({
+        'products': products,
+    })
+    return render(request, 'admin/admin_specification.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_spec_add(request):
+    if request.method == 'POST':
+        messages.info(request, 'Chức năng thêm Thông số kỹ thuật sẽ sớm có.')
+    return redirect('store:admin_specifications')
 
 
 @login_required(login_url='store:login')

@@ -57,6 +57,87 @@ body {
     --ldm-radius-lg: 16px;
 }
 
+/* ==================== BREADCRUMB NAVIGATION ==================== */
+.ldm-breadcrumb {
+    background: transparent;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ldm-border);
+    font-size: 14px;
+    position: relative;
+    z-index: 100;
+    margin-top: -8px;
+}
+
+.ldm-breadcrumb-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.ldm-breadcrumb-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ldm-breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ldm-breadcrumb-link {
+    color: var(--ldm-primary-dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.ldm-breadcrumb-link:hover {
+    color: var(--ldm-primary);
+    border-bottom-color: var(--ldm-primary);
+}
+
+.ldm-breadcrumb-text {
+    color: var(--ldm-text);
+    font-weight: 500;
+}
+
+.ldm-breadcrumb-separator {
+    color: var(--ldm-text-light);
+    margin: 0 4px;
+}
+
+/* Breadcrumb Responsive */
+@media (max-width: 768px) {
+    .ldm-breadcrumb {
+        padding: 8px 0;
+        font-size: 12px;
+    }
+    
+    .ldm-breadcrumb-container {
+        padding: 0 12px;
+    }
+    
+    .ldm-breadcrumb-list {
+        gap: 4px;
+    }
+    
+    .ldm-breadcrumb-link {
+        padding: 2px 0;
+    }
+    
+    .ldm-breadcrumb-separator {
+        margin: 0 2px;
+    }
+}
+
 /* Base Styles */
 * {
     margin: 0;

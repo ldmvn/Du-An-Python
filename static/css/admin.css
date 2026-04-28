@@ -1773,6 +1773,78 @@ body {
     margin-top: 20px;
 }
 
+/* ========== SIDEBAR COLLAPSIBLE MENU ========== */
+.ldm-sidebar-toggle {
+    width: 100%;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    color: var(--ldm-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Signika', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    text-align: left;
+    border-left: 3px solid transparent;
+}
+
+.ldm-sidebar-toggle:hover {
+    background: var(--ldm-light);
+    color: var(--ldm-primary);
+    border-left-color: var(--ldm-primary);
+}
+
+.ldm-sidebar-toggle.active {
+    background: var(--ldm-light);
+    color: var(--ldm-primary);
+    border-left-color: var(--ldm-primary);
+}
+
+.ldm-toggle-icon {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+    font-size: 16px;
+}
+
+.ldm-sidebar-toggle.active .ldm-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.ldm-sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.ldm-sidebar-submenu.show {
+    max-height: 500px;
+}
+
+.ldm-sidebar-subitem {
+    padding: 10px 20px 10px 48px;
+    color: var(--ldm-text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.ldm-sidebar-subitem:hover,
+.ldm-sidebar-subitem.active {
+    background: rgba(165, 204, 240, 0.15);
+    color: var(--ldm-primary);
+    border-left-color: var(--ldm-primary);
+}
+
 .ldm-main {
     margin-left: 200px;
     margin-top: 60px;

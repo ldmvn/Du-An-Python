@@ -232,28 +232,36 @@
 }
 
 .wishlist-btn-inline {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 4px 8px;
+    background: transparent;
+    border: none;
+    padding: 4px 0;
     cursor: pointer;
     color: #667eea;
     transition: all 0.2s;
-    border-radius: 4px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 12px;
     font-weight: 500;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .wishlist-btn-inline:hover {
-    border-color: #667eea;
-    background: #f0f0ff;
+    color: #667eea;
+    background: transparent;
+    opacity: 0.8;
+}
+
+.wishlist-btn-inline.active {
+    color: #ef4444;
 }
 
 .wishlist-btn-inline svg {
     width: 16px;
     height: 16px;
+    transition: all 0.2s;
 }
 
 /* USP Section */

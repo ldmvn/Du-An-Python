@@ -40,9 +40,7 @@ function updateWishlistUI(productId, isAdded, button, wishlistCount) {
         if (isAdded) {
             // Added to wishlist - change to RED
             button.classList.add('active');
-            button.style.background = 'rgba(239, 68, 68, 0.1)';
             button.style.color = '#ef4444';
-            button.style.borderColor = '#ef4444';
             
             // Fill SVG with red
             if (svg) {
@@ -52,9 +50,7 @@ function updateWishlistUI(productId, isAdded, button, wishlistCount) {
         } else {
             // Removed from wishlist - change back to BLUE
             button.classList.remove('active');
-            button.style.background = 'white';
             button.style.color = '#667eea';
-            button.style.borderColor = '#ddd';
             
             // Outline SVG in blue
             if (svg) {
@@ -99,7 +95,16 @@ function showToast(message, type = 'info') {
 
 // Initialize event listeners on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Wishlist buttons
+    // Wishlist buttons - home page style
+    document.querySelectorAll('.wishlist-btn-inline').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.dataset.productId;
+            toggleWishlistAjax(productId, this);
+        });
+    });
+    
+    // Wishlist buttons - other pages style
     document.querySelectorAll('.btn-wishlist').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();

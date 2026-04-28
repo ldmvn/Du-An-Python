@@ -34,12 +34,24 @@
         </a>
 
         <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">QUẢN LÝ SẢN PHẨM</div>
-        <a href="{% url 'store:admin_products' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_products' %}active{% endif %}">
-            <i class="ri-product-hunt-line"></i> Sản phẩm
-        </a>
-        <a href="{% url 'store:category_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
-            <i class="ri-price-tag-3-line"></i> Danh mục
-        </a>
+        <button class="ldm-sidebar-toggle" data-toggle="product-menu" id="productMenuToggle">
+            <i class="ri-folder-2-line"></i> Quản lý sản phẩm
+            <i class="ri-arrow-down-s-line ldm-toggle-icon"></i>
+        </button>
+        <div class="ldm-sidebar-submenu" id="product-menu">
+            <a href="{% url 'store:admin_products' %}" class="ldm-sidebar-subitem {% if request.resolver_match.url_name == 'admin_products' %}active{% endif %}">
+                <i class="ri-product-hunt-line"></i> Sản phẩm
+            </a>
+            <a href="{% url 'store:category_list' %}" class="ldm-sidebar-subitem {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}">
+                <i class="ri-price-tag-3-line"></i> Danh mục
+            </a>
+            <a href="{% url 'store:admin_media_library' %}" class="ldm-sidebar-subitem {% if request.resolver_match.url_name == 'admin_media_library' %}active{% endif %}">
+                <i class="ri-image-gallery-line"></i> Thư viện Media
+            </a>
+            <a href="{% url 'store:admin_specifications' %}" class="ldm-sidebar-subitem {% if request.resolver_match.url_name == 'admin_specifications' %}active{% endif %}">
+                <i class="ri-list-check-line"></i> Thông số kỹ thuật
+            </a>
+        </div>
 
         <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">BÁN HÀNG</div>
         <a href="{% url 'store:admin_orders' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}">

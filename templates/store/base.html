@@ -116,6 +116,11 @@
         {% include "components/navbar.html" %}
     {% endif %}
 
+    <!-- Breadcrumb Navigation -->
+    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' %}
+        {% include "components/breadcrumb.html" %}
+    {% endif %}
+
     <!-- Main Content -->
     <main class="ldm-main">
         {% block content %}{% endblock %}

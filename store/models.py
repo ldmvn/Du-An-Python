@@ -86,6 +86,7 @@ class Product(models.Model):
     feature_image = models.ImageField(upload_to='Sanpham/features/', blank=True, null=True)
     feature_content = models.TextField(blank=True, default='')
     stock = models.IntegerField(default=0, help_text="Số lượng sản phẩm trong kho")
+    pending_media = models.BooleanField(default=False, help_text="Đánh dấu sản phẩm đã chọn để thêm media")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -1,0 +1,25 @@
+{% load static %}
+
+<!-- Breadcrumb Navigation -->
+{% if breadcrumbs %}
+<nav class="ldm-breadcrumb" aria-label="Breadcrumb">
+    <div class="ldm-breadcrumb-container">
+        <ol class="ldm-breadcrumb-list">
+            {% for item in breadcrumbs %}
+                <li class="ldm-breadcrumb-item">
+                    {% if item.url %}
+                        <a href="{{ item.url }}" class="ldm-breadcrumb-link">
+                            {{ item.label }}
+                        </a>
+                    {% else %}
+                        <span class="ldm-breadcrumb-text">{{ item.label }}</span>
+                    {% endif %}
+                    {% if not forloop.last %}
+                        <span class="ldm-breadcrumb-separator">/</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </div>
+</nav>
+{% endif %}
