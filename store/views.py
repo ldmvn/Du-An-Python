@@ -638,6 +638,19 @@ def home(request):
     price_range = request.GET.get('price_range', '')
     sort_by = request.GET.get('sort_by', '')
     
+    # Advanced filters
+    price_min = request.GET.get('price_min', '0')
+    price_max = request.GET.get('price_max', '64000000')
+    rams = request.GET.getlist('ram')
+    storages = request.GET.getlist('storage')
+    
+    try:
+        price_min = int(price_min) if price_min else 0
+        price_max = int(price_max) if price_max else 64000000
+    except (ValueError, TypeError):
+        price_min = 0
+        price_max = 64000000
+    
     products = Product.objects.all()
 
     if q:
@@ -647,7 +660,7 @@ def home(request):
     if brand:
         products = products.filter(category__name__iexact=brand)
 
-    # Filter by price range
+    # Filter by price range (legacy)
     if price_range:
         if price_range == 'under_5m':
             products = products.filter(price__lt=5000000)
@@ -657,6 +670,29 @@ def home(request):
             products = products.filter(price__gte=10000000, price__lt=20000000)
         elif price_range == 'over_20m':
             products = products.filter(price__gte=20000000)
+    
+    # Filter by price min/max (new)
+    if price_min or price_max:
+        if price_min:
+            products = products.filter(price__gte=price_min)
+        if price_max:
+            products = products.filter(price__lte=price_max)
+    
+    # Filter by RAM
+    if rams:
+        ram_filter = Q()
+        for ram in rams:
+            ram_filter |= Q(ram=ram) | Q(ram_options__value=ram)
+        if ram_filter:
+            products = products.filter(ram_filter).distinct()
+    
+    # Filter by storage
+    if storages:
+        storage_filter = Q()
+        for storage in storages:
+            storage_filter |= Q(rom=storage) | Q(storage_options__capacity=storage)
+        if storage_filter:
+            products = products.filter(storage_filter).distinct()
     
     # Sort products
     if sort_by:
@@ -680,6 +716,10 @@ def home(request):
     # pull all categories (used as "brands"/manufacturers on the homepage)
     categories = Category.objects.all()
 
+    # Prepare filter options
+    ram_options = sorted(list(set([p.ram for p in Product.objects.all() if p.ram] + list(ProductRamOption.objects.values_list('value', flat=True)))))
+    storage_options = sorted(list(set([p.rom for p in Product.objects.all() if p.rom] + list(ProductStorageOption.objects.values_list('capacity', flat=True)))))
+
     context = get_base_context(request)
     context.update({
         'products': products,
@@ -687,10 +727,16 @@ def home(request):
         'selected_brand': brand,
         'search_query': q,
         'price_range': price_range,
+        'price_min': price_min,
+        'price_max': price_max,
         'sort_by': sort_by,
         'wishlist_products': wishlist_products,
         'hero_banners': hero_banners,
         'hero_videos': hero_videos,
+        'selected_rams': rams,
+        'selected_storages': storages,
+        'ram_options': ram_options,
+        'storages': storage_options,
     })
     return render(request, 'store/home.html', context)
 

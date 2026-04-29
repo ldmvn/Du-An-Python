@@ -10969,3 +10969,342 @@
         grid-auto-columns: 82%;
     }
 }
+
+/* ========== Filter Modal Styling ========== */
+.ldm-filter-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    font-family: inherit;
+}
+
+.ldm-filter-modal.active {
+    display: block;
+}
+
+.ldm-filter-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    cursor: pointer;
+    z-index: 999;
+}
+
+.ldm-filter-container {
+    position: fixed;
+    background: white;
+    width: 420px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    animation: slideDown 0.3s ease-out;
+    top: 80px;
+    right: 20px;
+    z-index: 1001;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ldm-filter-container::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 16px;
+    height: 16px;
+    background: white;
+    transform: rotate(45deg);
+    box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.ldm-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.ldm-filter-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.ldm-filter-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.ldm-filter-close:hover {
+    color: #1f2937;
+}
+
+.ldm-filter-form {
+    padding: 16px;
+    max-height: calc(80vh - 80px);
+    overflow-y: auto;
+}
+
+.ldm-filter-group {
+    margin-bottom: 18px;
+}
+
+.ldm-filter-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ldm-filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ldm-filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.ldm-filter-checkbox input[type="checkbox"],
+.ldm-filter-checkbox input[type="radio"] {
+    display: none;
+}
+
+.ldm-checkbox-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    background: white;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.ldm-filter-checkbox input[type="checkbox"]:checked ~ .ldm-checkbox-custom,
+.ldm-filter-checkbox input[type="radio"]:checked ~ .ldm-checkbox-custom {
+    background: #667eea;
+    border-color: #667eea;
+}
+
+.ldm-filter-checkbox input[type="checkbox"]:checked ~ .ldm-checkbox-custom::after,
+.ldm-filter-checkbox input[type="radio"]:checked ~ .ldm-checkbox-custom::after {
+    content: "✓";
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.ldm-filter-label {
+    font-size: 13px;
+    color: #4b5563;
+    transition: color 0.2s;
+}
+
+.ldm-filter-checkbox:hover .ldm-filter-label {
+    color: #1f2937;
+}
+
+/* Price Range Slider */
+.ldm-filter-price-range {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ldm-price-inputs {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.ldm-price-inputs input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #374151;
+}
+
+.ldm-price-inputs input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.ldm-price-separator {
+    color: #d1d5db;
+    font-weight: 600;
+}
+
+.ldm-slider-container {
+    position: relative;
+    height: 5px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    margin: 6px 0;
+}
+
+.ldm-slider {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    top: 0;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 3px;
+}
+
+.ldm-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #667eea;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ldm-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #667eea;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ldm-slider-track {
+    position: absolute;
+    height: 5px;
+    background: #667eea;
+    border-radius: 3px;
+    top: 0;
+}
+
+.ldm-price-display {
+    text-align: center;
+    font-size: 12px;
+    color: #667eea;
+    font-weight: 600;
+}
+
+/* Filter Actions */
+.ldm-filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.ldm-filter-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ldm-filter-btn-reset {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.ldm-filter-btn-reset:hover {
+    background: #e5e7eb;
+}
+
+.ldm-filter-btn-submit {
+    background: #667eea;
+    color: white;
+}
+
+.ldm-filter-btn-submit:hover {
+    background: #5568d3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ldm-filter-container {
+        width: calc(100% - 40px);
+        right: 20px;
+        left: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ldm-filter-container {
+        width: calc(100% - 20px);
+        right: 10px;
+        left: 10px;
+        top: 60px;
+    }
+
+    .ldm-filter-header h2 {
+        font-size: 14px;
+    }
+
+    .ldm-filter-form {
+        padding: 12px;
+    }
+
+    .ldm-filter-group {
+        margin-bottom: 14px;
+    }
+
+    .ldm-filter-actions {
+        flex-direction: column;
+    }
+}

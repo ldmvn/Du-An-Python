@@ -1,0 +1,96 @@
+<!-- Filter Modal/Sidebar -->
+<div class="ldm-filter-modal" id="filterModal">
+    <div class="ldm-filter-overlay" id="filterOverlay"></div>
+    <div class="ldm-filter-container">
+        <div class="ldm-filter-header">
+            <h2>Tất cả lọc</h2>
+            <button type="button" class="ldm-filter-close" id="filterClose">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+
+        <form method="get" class="ldm-filter-form" id="filterForm">
+            <!-- Search query if exists -->
+            {% if search_query %}
+                <input type="hidden" name="q" value="{{ search_query }}">
+            {% endif %}
+
+            <!-- Hãng (Brand/Category) -->
+            <div class="ldm-filter-group">
+                <h3 class="ldm-filter-group-title">Hãng</h3>
+                <div class="ldm-filter-options">
+                    {% for cat in categories %}
+                    <label class="ldm-filter-checkbox">
+                        <input type="radio" name="brand" value="{{ cat.name }}" {% if selected_brand == cat.name %}checked{% endif %}>
+                        <span class="ldm-checkbox-custom"></span>
+                        <span class="ldm-filter-label">{{ cat.name }}</span>
+                    </label>
+                    {% endfor %}
+                    <label class="ldm-filter-checkbox">
+                        <input type="radio" name="brand" value="" {% if not selected_brand %}checked{% endif %}>
+                        <span class="ldm-checkbox-custom"></span>
+                        <span class="ldm-filter-label">Tất cả</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Giá (Price Range) -->
+            <div class="ldm-filter-group">
+                <h3 class="ldm-filter-group-title">Giá</h3>
+                <div class="ldm-filter-price-range">
+                    <div class="ldm-price-inputs">
+                        <input type="number" name="price_min" id="priceMin" placeholder="Từ 0" value="{{ price_min|default:'' }}">
+                        <span class="ldm-price-separator">-</span>
+                        <input type="number" name="price_max" id="priceMax" placeholder="Đến 64.000" value="{{ price_max|default:'' }}">
+                    </div>
+                    <div class="ldm-slider-container">
+                        <input type="range" name="price_slider_min" id="priceSliderMin" class="ldm-slider" min="0" max="64000000" value="{{ price_min|default:'0' }}">
+                        <input type="range" name="price_slider_max" id="priceSliderMax" class="ldm-slider" min="0" max="64000000" value="{{ price_max|default:'64000000' }}">
+                        <div class="ldm-slider-track"></div>
+                    </div>
+                    <div class="ldm-price-display">
+                        <span id="priceDisplay">0 đ - 64.000 đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAM -->
+            <div class="ldm-filter-group">
+                <h3 class="ldm-filter-group-title">RAM</h3>
+                <div class="ldm-filter-options">
+                    {% for ram_option in ram_options %}
+                    <label class="ldm-filter-checkbox">
+                        <input type="checkbox" name="ram" value="{{ ram_option }}" {% if ram_option in selected_rams %}checked{% endif %}>
+                        <span class="ldm-checkbox-custom"></span>
+                        <span class="ldm-filter-label">{{ ram_option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Dung lượng lưu trữ (Storage) -->
+            <div class="ldm-filter-group">
+                <h3 class="ldm-filter-group-title">Dung lượng lưu trữ</h3>
+                <div class="ldm-filter-options">
+                    {% for storage in storages %}
+                    <label class="ldm-filter-checkbox">
+                        <input type="checkbox" name="storage" value="{{ storage }}" {% if storage in selected_storages %}checked{% endif %}>
+                        <span class="ldm-checkbox-custom"></span>
+                        <span class="ldm-filter-label">{{ storage }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="ldm-filter-actions">
+                <button type="button" class="ldm-filter-btn ldm-filter-btn-reset" id="filterReset">
+                    Bỏ chọn
+                </button>
+                <button type="submit" class="ldm-filter-btn ldm-filter-btn-submit">
+                    Xem {{ products|length }} kết quả
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

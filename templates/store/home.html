@@ -71,10 +71,10 @@
         <div class="ldm-container">
             <div class="ldm-product-filters-panel">
                 <div class="ldm-product-chip-row ldm-product-chip-row-main">
-                    <a href="?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if price_range %}price_range={{ price_range|urlencode }}&{% endif %}" class="ldm-filter-chip ldm-filter-chip-outline {% if not selected_brand %}active{% endif %}">
+                    <button type="button" class="ldm-filter-chip ldm-filter-chip-outline" id="openFilterBtn">
                         <i class="ri-filter-3-line"></i>
                         Lọc
-                    </a>
+                    </button>
                     {% for cat in categories %}
                     <a href="?brand={{ cat.name|urlencode }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if price_range %}&price_range={{ price_range|urlencode }}{% endif %}" class="ldm-filter-chip {% if selected_brand == cat.name %}active{% endif %}">
                         {{ cat.name }}
@@ -193,10 +193,13 @@
 
 </div>
 
+{% include 'components/filter-modal.html' %}
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/home-slider.js' %}"></script>
+<script src="{% static 'js/filter-modal.js' %}"></script>
 {% endblock %}
 `
 
