@@ -17,8 +17,8 @@
     <div class="ldm-order-filters">
         <button class="ldm-button ldm-filter-btn is-active" data-status="all">Tất cả</button>
         <button class="ldm-button ldm-filter-btn" data-status="pending">Chờ xác nhận</button>
-        <button class="ldm-button ldm-filter-btn" data-status="processing">Xử lý</button>
-        <button class="ldm-button ldm-filter-btn" data-status="shipped">Đã gửi</button>
+        <button class="ldm-button ldm-filter-btn" data-status="processing">Đang xử lý</button>
+        <button class="ldm-button ldm-filter-btn" data-status="shipped">Đang giao hàng</button>
         <button class="ldm-button ldm-filter-btn" data-status="delivered">Hoàn thành</button>
         <button class="ldm-button ldm-filter-btn" data-status="cancelled">Hủy</button>
     </div>
@@ -65,8 +65,8 @@
                     <td class="ldm-text-center">
                         <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}">
                             <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Chờ xác nhận</option>
-                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Xử lý</option>
-                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Đã gửi</option>
+                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Đang xử lý</option>
+                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Đang giao hàng</option>
                             <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✓ Hoàn thành</option>
                             <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy</option>
                         </select>

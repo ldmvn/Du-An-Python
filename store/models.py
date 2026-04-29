@@ -173,10 +173,10 @@ class ProductStorageOption(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Chờ xử lý'),
-        ('processing', 'Xử lý'),
-        ('shipped', 'Đang giao'),
-        ('delivered', 'Hoàn tất'),
+        ('pending', 'Chờ xác nhận'),
+        ('processing', 'Đang xử lý'),
+        ('shipped', 'Đang giao hàng'),
+        ('delivered', 'Hoàn thành'),
         ('cancelled', 'Đã huỷ'),
     ]
     
@@ -199,7 +199,11 @@ class Order(models.Model):
         choices=PAYMENT_METHOD_CHOICES,
         default='cash'
     )
+    customer_address = models.TextField(blank=True, default='')
+    customer_name = models.CharField(max_length=255, blank=True, default='')
+    customer_phone = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Order #{self.id}"

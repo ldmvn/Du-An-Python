@@ -12,7 +12,7 @@ import os
 import requests
 
 from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Wishlist
-from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm
+from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm, OrderShippingForm
 
 
 # ================== UTILS ==================
@@ -20,11 +20,37 @@ def is_admin(user):
     return user.is_staff
 
 
+def get_user_wishlist(request):
+    """Return the authenticated user's Wishlist instance, creating one if necessary."""
+    if not request.user.is_authenticated:
+        return None
+    wishlist, _ = Wishlist.objects.get_or_create(user=request.user)
+    return wishlist
+
+
+def get_wishlist_ids(request):
+    """Return the wishlist product IDs for authenticated or session-based users."""
+    if request.user.is_authenticated:
+        wishlist = get_user_wishlist(request)
+        session_wishlist = request.session.pop('wishlist', []) if request.session.get('wishlist') else []
+        if session_wishlist and wishlist:
+            products = Product.objects.filter(id__in=session_wishlist)
+            if products.exists():
+                wishlist.products.add(*products)
+        return list(wishlist.products.values_list('id', flat=True))
+    return request.session.get('wishlist', [])
+
+
 def get_base_context(request):
     """Return common context vars needed by base.html"""
     cart = request.session.get('cart', {})
-    wishlist = request.session.get('wishlist', [])
-    orders = request.session.get('orders', [])
+    wishlist_ids = get_wishlist_ids(request)
+    order_count = 0
+    
+    if request.user.is_authenticated:
+        order_count = Order.objects.filter(
+            user=request.user
+        ).exclude(status__in=['delivered', 'cancelled']).count()
     
     user_display_name = 'Khách'
     if request.user.is_authenticated:
@@ -32,8 +58,9 @@ def get_base_context(request):
     
     return {
         'cart_count': len(cart),
-        'wishlist_count': len(wishlist),
-        'order_count': len(orders),
+        'wishlist_count': len(wishlist_ids),
+        'wishlist_ids': wishlist_ids,
+        'order_count': order_count,
         'user_display_name': user_display_name,
     }
 
@@ -706,7 +733,7 @@ def home(request):
             products = products.order_by('-id')  # Placeholder - you might want actual rating sorting
 
     # Get wishlist products
-    wishlist_ids = request.session.get('wishlist', [])
+    wishlist_ids = get_wishlist_ids(request)
     wishlist_products = Product.objects.filter(id__in=wishlist_ids)
 
     # Home page media: top video banner carousel, bottom image banners
@@ -1121,7 +1148,10 @@ def checkout(request):
                     order_number=order_number,
                     total_amount=total_amount,
                     status='pending',
-                    payment_method=payment_method
+                    payment_method=payment_method,
+                    customer_name=fullname,
+                    customer_phone=phone,
+                    customer_address=full_address
                 )
                 
                 # Create OrderItem
@@ -1152,21 +1182,29 @@ def checkout(request):
             
             except Exception as e:
                 messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
+                total_price = product.get_discounted_price() * quantity
                 context = get_base_context(request)
                 context.update({
                     'product': product,
                     'quantity': quantity,
-                    'total_price': product.get_discounted_price() * quantity,
+                    'total_price': total_price,
+                    'total_amount': total_price,
+                    'total': total_price,
+                    'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
                     'form': form,
                 })
                 return render(request, 'store/checkout.html', context)
         else:
             # Form validation failed - display errors
+            total_price = product.get_discounted_price() * quantity
             context = get_base_context(request)
             context.update({
                 'product': product,
                 'quantity': quantity,
-                'total_price': product.get_discounted_price() * quantity,
+                'total_price': total_price,
+                'total_amount': total_price,
+                'total': total_price,
+                'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
                 'form': form,
             })
             return render(request, 'store/checkout.html', context)
@@ -1178,10 +1216,14 @@ def checkout(request):
         form = CheckoutForm(initial=initial_data)
     
     context = get_base_context(request)
+    total_price = product.get_discounted_price() * quantity
     context.update({
         'product': product,
         'quantity': quantity,
-        'total_price': product.get_discounted_price() * quantity,
+        'total_price': total_price,
+        'total_amount': total_price,
+        'total': total_price,
+        'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
         'form': form,
     })
     return render(request, 'store/checkout.html', context)
@@ -1197,11 +1239,20 @@ def checkout_from_cart(request):
         messages.error(request, '❌ Giỏ hàng của bạn trống')
         return redirect('store:cart_detail')
     
-    # Get cart items
+    # Get list of selected product IDs from query parameter or POST payload
+    selected_items_str = request.POST.get('items', '') if request.method == 'POST' else request.GET.get('items', '')
+    selected_ids = set()
+    if selected_items_str:
+        selected_ids = set(int(id_str.strip()) for id_str in selected_items_str.split(',') if id_str.strip())
+    
+    # Get cart items - only selected ones
     cart_items = []
     total_amount = 0
     
     for product_id, cart_item in cart.items():
+        # If items were specified, only include selected ones
+        if selected_ids and int(product_id) not in selected_ids:
+            continue
         try:
             product = Product.objects.get(id=int(product_id))
             
@@ -1260,7 +1311,10 @@ def checkout_from_cart(request):
                     order_number=order_number,
                     total_amount=total_amount,
                     status='pending',
-                    payment_method=payment_method
+                    payment_method=payment_method,
+                    customer_name=fullname,
+                    customer_phone=phone,
+                    customer_address=full_address
                 )
                 
                 # Create OrderItems for all cart items
@@ -1300,6 +1354,7 @@ def checkout_from_cart(request):
                     'cart_items': cart_items,
                     'total_amount': total_amount,
                     'form': form,
+                    'selected_items': selected_items_str,
                 })
                 return render(request, 'store/checkout.html', context)
         else:
@@ -1309,6 +1364,7 @@ def checkout_from_cart(request):
                 'cart_items': cart_items,
                 'total_amount': total_amount,
                 'form': form,
+                'selected_items': selected_items_str,
             })
             return render(request, 'store/checkout.html', context)
     else:
@@ -1323,6 +1379,7 @@ def checkout_from_cart(request):
         'cart_items': cart_items,
         'total_amount': total_amount,
         'form': form,
+        'selected_items': selected_items_str,
     })
     return render(request, 'store/checkout.html', context)
 
@@ -1330,8 +1387,8 @@ def checkout_from_cart(request):
 # ================== WISHLIST ==================
 @login_required(login_url='store:login')
 def wishlist(request):
-    wishlist = request.session.get('wishlist', [])
-    products = Product.objects.filter(id__in=wishlist)
+    wishlist_obj, _ = Wishlist.objects.get_or_create(user=request.user)
+    products = wishlist_obj.products.all()
     
     context = get_base_context(request)
     context['products'] = products
@@ -1341,19 +1398,20 @@ def wishlist(request):
 @login_required(login_url='store:login')
 def wishlist_toggle(request):
     product_id = request.GET.get('product_id')
-    wishlist = request.session.get('wishlist', [])
-    
     if product_id:
-        product_id = int(product_id)
-        if product_id in wishlist:
-            wishlist.remove(product_id)
+        product = get_object_or_404(Product, id=product_id)
+        wishlist_obj, _ = Wishlist.objects.get_or_create(user=request.user)
+        if wishlist_obj.products.filter(id=product.id).exists():
+            wishlist_obj.products.remove(product)
             status = 'removed'
         else:
-            wishlist.append(product_id)
+            wishlist_obj.products.add(product)
             status = 'added'
         
-        request.session['wishlist'] = wishlist
-        return JsonResponse({'status': status, 'wishlist_count': len(wishlist)})
+        return JsonResponse({
+            'status': status,
+            'wishlist_count': wishlist_obj.products.count()
+        })
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -1439,7 +1497,11 @@ def order_tracking(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     
     context = get_base_context(request)
-    context['orders'] = orders
+    context.update({
+        'orders': orders,
+        'page_type': 'list',
+        'page_title': 'Tra cứu đơn hàng',
+    })
     return render(request, 'store/orders.html', context)
 
 
@@ -1456,6 +1518,47 @@ def cancel_order(request, order_id):
         messages.error(request, f'❌ Không thể hủy đơn hàng với trạng thái: {order.get_status_display()}')
     
     return redirect('store:order_tracking')
+
+
+@login_required(login_url='store:login')
+def confirm_received_order(request, order_id):
+    """Xác nhận đã nhận hàng khi đơn đang ở trạng thái shipped."""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    if order.status == 'shipped':
+        order.status = 'delivered'
+        order.save()
+        messages.success(request, '✅ Cảm ơn bạn đã xác nhận đã nhận hàng.')
+    else:
+        messages.error(request, f'❌ Không thể xác nhận đơn với trạng thái: {order.get_status_display()}')
+    
+    return redirect('store:order_tracking')
+
+
+@login_required(login_url='store:login')
+def buy_again_order(request, order_id):
+    """Thêm lại sản phẩm của đơn vào giỏ hàng để mua lại."""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    if order.status not in ['delivered', 'cancelled']:
+        messages.error(request, '❌ Chỉ có thể mua lại đơn đã hoàn thành hoặc đã hủy.')
+        return redirect('store:order_tracking')
+
+    cart = request.session.get('cart', {})
+    for item in order.items.all():
+        product_id = str(item.product.id)
+        if product_id in cart and isinstance(cart[product_id], dict):
+            cart[product_id]['quantity'] += item.quantity
+        else:
+            cart[product_id] = {
+                'name': item.product.name,
+                'price': item.price,
+                'quantity': item.quantity,
+                'image': item.product.image.url if item.product.image else ''
+            }
+    request.session['cart'] = cart
+    messages.success(request, '🛒 Đã thêm sản phẩm của đơn vào giỏ hàng.')
+    return redirect('store:cart_detail')
 
 
 @login_required(login_url='store:login')
@@ -1487,10 +1590,30 @@ def order_detail(request, order_id):
     else:
         order = get_object_or_404(Order, id=order_id, user=request.user)
     
+    # Check if shipping info can be edited
+    can_edit_shipping = order.status in ['pending', 'processing']
+    
+    show_edit_form = can_edit_shipping and request.GET.get('edit') == '1'
+    
+    shipping_form = None
+    if show_edit_form:
+        if request.method == 'POST' and 'update_shipping' in request.POST:
+            shipping_form = OrderShippingForm(request.POST, instance=order)
+            if shipping_form.is_valid():
+                shipping_form.save()
+                messages.success(request, 'Thông tin giao hàng đã được cập nhật thành công!')
+                return redirect(reverse('store:order_detail', args=[order.id]))
+        else:
+            shipping_form = OrderShippingForm(instance=order)
+    
     context = get_base_context(request)
     context['order'] = order
     context['order_items'] = order.items.all()
-    return render(request, 'store/order_detail.html', context)
+    context['can_edit_shipping'] = can_edit_shipping
+    context['show_edit_form'] = show_edit_form
+    context['shipping_form'] = shipping_form
+    context['page_type'] = 'detail'
+    return render(request, 'store/orders.html', context)
 
 
 # ================== ADMIN DASHBOARD ==================
@@ -1518,15 +1641,21 @@ def dashboard(request):
     month_orders = orders.filter(created_at__date__gte=month_start)
     year_orders = orders.filter(created_at__year=today.year)
     
+    # Delivered orders are considered completed sales for revenue reporting
+    delivered_orders = orders.filter(status='delivered')
+    delivered_today = delivered_orders.filter(created_at__date=today)
+    delivered_month = delivered_orders.filter(created_at__date__gte=month_start)
+    delivered_year = delivered_orders.filter(created_at__year=today.year)
+
     # Calculate statistics
     total_products = all_products.count()
     total_users = users.count()
     total_categories = categories.count()
     total_orders = orders.count()
-    total_revenue = sum(order.total_amount for order in orders) if orders else 0
+    total_revenue = sum(order.total_amount for order in delivered_orders) if delivered_orders else 0
     
     # Today revenue
-    today_revenue = sum(order.total_amount for order in today_orders) if today_orders else 0
+    today_revenue = sum(order.total_amount for order in delivered_today) if delivered_today else 0
     
     # Average Order Value (AOV)
     if orders.exists():
@@ -1538,7 +1667,7 @@ def dashboard(request):
     # This would need visitor data from analytics
     conversion_rate = 1.67
     
-    # Monthly revenue calculation
+    # Monthly revenue calculation (only confirmed delivered orders)
     monthly_revenue = []
     for month in range(1, 13):
         month_start_date = today.replace(month=month, day=1)
@@ -1548,9 +1677,9 @@ def dashboard(request):
             month_end_date = today.replace(month=month + 1, day=1)
         
         month_rev = sum(
-            order.total_amount for order in orders 
+            order.total_amount for order in delivered_orders 
             if month_start_date <= order.created_at.date() < month_end_date
-        ) if orders else 0
+        ) if delivered_orders else 0
         monthly_revenue.append(int(month_rev))
     
     # Pagination for products

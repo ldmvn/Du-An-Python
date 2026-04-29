@@ -13,80 +13,100 @@
 {% block content %}
 
 {% if page_type == 'list' %}
-<div class="orders-container">
-    <h1 class="orders-title">📦 Tra cứu đơn hàng</h1>
+<div class="ldm-orders-container">
+    <h1 class="ldm-orders-title">📦 Tra cứu đơn hàng</h1>
 
     {% if orders %}
         {% for order in orders %}
-            <div class="order-card">
+            <div class="ldm-order-card">
                 <!-- Order Header -->
-                <div class="order-header">
+                <div class="ldm-order-header">
                     <div>
-                        <div class="order-number">Đơn hàng #{{ order.id }}</div>
+                        <div class="ldm-order-number">Đơn hàng #{{ order.id }}</div>
                     </div>
-                    <span class="order-status status-{{ order.status|lower }}">
+                    <span class="ldm-order-status status-{{ order.status|lower }}">
                         {{ order.get_status_display }}
                     </span>
                 </div>
 
-                <!-- Order Details -->
-                <div class="order-details">
-                    <div class="detail-item">
-                        <div class="detail-label">Ngày đặt</div>
-                        <div class="detail-value">{{ order.created_at|date:"d/m/Y" }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Tổng tiền</div>
-                        <div class="detail-value" style="color: #667eea; font-weight: 700;">
-                            {{ order.total_amount|default:0|floatformat:0|add:0 }}₫
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Người nhận</div>
-                        <div class="detail-value">{{ order.customer_name|default:"N/A" }}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Số điện thoại</div>
-                        <div class="detail-value">{{ order.customer_phone|default:"N/A" }}</div>
-                    </div>
-                </div>
-
-                <!-- Order Items -->
-                {% if order.items.all %}
-                    <div class="order-items">
-                        {% for item in order.items.all %}
-                            <div class="order-item">
-                                <span>{{ item.product.name|truncatewords:5 }} x{{ item.quantity }}</span>
-                                <span>{{ item.price|floatformat:0|add:0 }}₫</span>
+                <a href="{% url 'store:order_detail' order.id %}" class="ldm-order-product-preview">
+                    {% for item in order.items.all %}
+                        <div class="ldm-order-product-item">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="ldm-order-product-image">
+                            {% else %}
+                                <div class="ldm-order-product-placeholder">
+                                    📦
+                                </div>
+                            {% endif %}
+                            <div class="ldm-order-product-info">
+                                <div class="ldm-order-product-name">{{ item.product.name|truncatechars:40 }}</div>
+                                <div class="ldm-order-product-meta">
+                                    <span>{{ item.product.rom }}</span>
+                                    <span>{{ item.product.ram }}</span>
+                                    {% with color=item.product.colors.first %}
+                                        {% if color %}
+                                            <span>{{ color.name }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
                             </div>
-                        {% endfor %}
+                            <div class="ldm-order-product-right">
+                                <div class="ldm-order-product-quantity">Số lượng: {{ item.quantity }}</div>
+                                <div class="ldm-order-product-total">Giá: {{ item.get_total|intcomma }}₫</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    <div class="ldm-order-product-summary">
+                        <div class="ldm-order-product-total-summary">Tổng đơn: {{ order.total_amount|intcomma }}₫</div>
                     </div>
-                {% endif %}
+                </a>
 
                 <!-- Order Actions -->
-                <div class="order-actions">
-                    <a href="{% url 'store:order_detail' order.id %}" class="btn btn-primary">
+                <div class="ldm-order-actions">
+                    <a href="{% url 'store:order_detail' order.id %}" class="ldm-order-btn ldm-order-btn-primary">
                         Xem chi tiết
                     </a>
-                    {% if order.status == 'pending' %}
+
+                    {% if order.status == 'pending' or order.status == 'processing' %}
                         <form method="POST" action="{% url 'store:cancel_order' order.id %}" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-secondary" onclick="return confirm('Bạn có chắc muốn hủy đơn?')">
                                 Hủy đơn
                             </button>
                         </form>
+                    {% elif order.status == 'shipped' %}
+                        <form method="POST" action="{% url 'store:confirm_received_order' order.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary">
+                                Đã nhận được hàng
+                            </button>
+                        </form>
+                    {% elif order.status == 'delivered' or order.status == 'cancelled' %}
+                        <a href="{% url 'store:buy_again_order' order.id %}" class="btn btn-secondary">
+                            Mua lại
+                        </a>
+                        {% if order.status == 'delivered' %}
+                            {% with first_item=order.items.first %}
+                                {% if first_item %}
+                                    <a href="{% url 'store:product_detail' first_item.product.id %}#pd-reviews" class="btn btn-secondary">
+                                        Đánh giá
+                                    </a>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
     {% else %}
-        <div class="empty-state">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="ldm-orders-empty">
+            <svg class="ldm-orders-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
             </svg>
             <h3>Chưa có đơn hàng</h3>
             <p>Bạn chưa có đơn hàng nào. Bắt đầu mua sắm ngay!</p>
-            <a href="{% url 'store:home' %}" class="btn btn-primary" style="display: inline-block;">
+            <a href="{% url 'store:home' %}" class="ldm-order-btn ldm-order-btn-primary">
                 Xem sản phẩm
             </a>
         </div>
@@ -149,22 +169,58 @@
 
         <div>
             <div class="ldm-od-section">
-                <h3 class="ldm-od-section-title">📍 Thông tin giao hàng</h3>
-                <div class="ldm-od-info-group">
-                    <div class="ldm-od-info-label">Người nhận</div>
-                    <div class="ldm-od-info-value">{{ order.customer_name|default:"N/A" }}</div>
+                <div class="ldm-od-section-header">
+                    <h3 class="ldm-od-section-title">📍 Thông tin giao hàng</h3>
+                    {% if can_edit_shipping and not show_edit_form %}
+                        <a href="?edit=1" class="ldm-order-btn ldm-order-btn-secondary ldm-order-btn-sm">Sửa</a>
+                    {% endif %}
                 </div>
-                <div class="ldm-od-info-group">
-                    <div class="ldm-od-info-label">Số điện thoại</div>
-                    <div class="ldm-od-info-value">{{ order.customer_phone|default:"N/A" }}</div>
-                </div>
-                <div class="ldm-od-info-group">
-                    <div class="ldm-od-info-label">Địa chỉ giao hàng</div>
-                    <div class="ldm-od-info-value">{{ order.customer_address|default:"N/A" }}</div>
-                </div>
+                {% if show_edit_form and shipping_form %}
+                    <form method="post" class="ldm-shipping-form">
+                        {% csrf_token %}
+                        <div class="ldm-form-group">
+                            <label for="{{ shipping_form.customer_name.id_for_label }}">Người nhận</label>
+                            {{ shipping_form.customer_name }}
+                            {% if shipping_form.customer_name.errors %}
+                                <div class="ldm-form-error">{{ shipping_form.customer_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="ldm-form-group">
+                            <label for="{{ shipping_form.customer_phone.id_for_label }}">Số điện thoại</label>
+                            {{ shipping_form.customer_phone }}
+                            {% if shipping_form.customer_phone.errors %}
+                                <div class="ldm-form-error">{{ shipping_form.customer_phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="ldm-form-group">
+                            <label for="{{ shipping_form.customer_address.id_for_label }}">Địa chỉ giao hàng</label>
+                            {{ shipping_form.customer_address }}
+                            {% if shipping_form.customer_address.errors %}
+                                <div class="ldm-form-error">{{ shipping_form.customer_address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="ldm-form-actions">
+                            <button type="submit" name="update_shipping" class="ldm-order-btn ldm-order-btn-primary">Cập nhật</button>
+                            <a href="{% url 'store:order_detail' order.id %}" class="ldm-order-btn ldm-order-btn-secondary">Hủy</a>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="ldm-od-info-group">
+                        <div class="ldm-od-info-label">Người nhận</div>
+                        <div class="ldm-od-info-value">{{ order.customer_name|default:"N/A" }}</div>
+                    </div>
+                    <div class="ldm-od-info-group">
+                        <div class="ldm-od-info-label">Số điện thoại</div>
+                        <div class="ldm-od-info-value">{{ order.customer_phone|default:"N/A" }}</div>
+                    </div>
+                    <div class="ldm-od-info-group">
+                        <div class="ldm-od-info-label">Địa chỉ giao hàng</div>
+                        <div class="ldm-od-info-value">{{ order.customer_address|default:"N/A" }}</div>
+                    </div>
+                {% endif %}
             </div>
 
-            <div class="ldm-od-section" style="margin-top: 16px;">
+            <div class="ldm-od-section">
                 <h3 class="ldm-od-section-title">💳 Thông tin thanh toán</h3>
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Phương thức</div>
@@ -182,13 +238,13 @@
                 </div>
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Trạng thái thanh toán</div>
-                    <div class="ldm-od-info-value" style="color: #f59e0b;">
+                    <div class="ldm-od-info-value pending">
                         ⏳ Chưa thanh toán
                     </div>
                 </div>
             </div>
 
-            <div class="ldm-od-section" style="margin-top: 16px;">
+            <div class="ldm-od-section">
                 <h3 class="ldm-od-section-title">📊 Trạng thái đơn hàng</h3>
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Hiện tại</div>
@@ -221,7 +277,7 @@
     <div class="ldm-os-wrapper" id="successCard">
         <div class="ldm-os-hero">
             <div class="ldm-os-icon">
-                <svg class="ldmc" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+                <svg class="qhc" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
             </div>
             <h2>✅ ĐƠN HÀNG ĐÃ ĐƯỢC TẠO THÀNH CÔNG</h2>
         </div>
@@ -232,7 +288,7 @@
                 {% if order %}
                     <div class="ldm-os-row">
                         <span class="label">Mã đơn hàng</span>
-                        <span class="value" style="font-weight: bold; color: #2563eb;">{{ order.order_number }}</span>
+                        <span class="value bold">{{ order.order_number }}</span>
                     </div>
                     <div class="ldm-os-row">
                         <span class="label">Trạng thái</span>
@@ -247,7 +303,7 @@
                     </div>
                     <div class="ldm-os-row">
                         <span class="label">Tổng tiền</span>
-                        <span class="value" style="font-weight: bold; color: #dc2626;">{{ order.total_amount|floatformat:0|add:0 }}₫</span>
+                        <span class="value accent">{{ order.total_amount|floatformat:0|add:0 }}₫</span>
                     </div>
                     <div class="ldm-os-row">
                         <span class="label">Phương thức thanh toán</span>

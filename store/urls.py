@@ -62,6 +62,8 @@ urlpatterns = [
     path('order-tracking/', views.order_tracking, name='order_tracking'),
     path('order/<int:order_id>/', views.order_detail, name='order_detail'),
     path('order-tracking/cancel/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('order-tracking/received/<int:order_id>/', views.confirm_received_order, name='confirm_received_order'),
+    path('order-tracking/buy-again/<int:order_id>/', views.buy_again_order, name='buy_again_order'),
     path('order/delete/<int:order_id>/', views.delete_order, name='delete_order'),
     path('order-success/', views.order_success, name='order_success'),
 

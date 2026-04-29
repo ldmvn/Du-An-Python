@@ -115,6 +115,7 @@
 {% block extra_js %}
 <!-- Configuration from Django template stored in data attributes -->
 <div id="vietqr-config" 
+     class="hidden"
      data-bank-id="{{ bank_id }}"
      data-account-no="{{ bank_account_no }}"
      data-account-name="{{ bank_account_name }}"
@@ -126,7 +127,7 @@
      data-success-url="{% url 'store:order_success' order_code=order.order_code %}"
      data-csrf-token="{{ csrf_token }}"
      data-total-amount="{{ order.total_amount }}"
-     style="display:none;"></div>
+></div>
 
 <!-- JavaScript thanh toán VietQR -->
 <script>

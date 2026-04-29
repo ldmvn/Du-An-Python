@@ -7,6 +7,27 @@
     padding: 0 20px;
 }
 
+.profile-backbar {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.profile-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.profile-back-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 /* Header Section */
 .profile-header {
     margin-bottom: 40px;
@@ -178,6 +199,8 @@
 /* Form Inputs */
 .profile-form-input,
 .profile-form-textarea {
+    width: 100%;
+    box-sizing: border-box;
     padding: 12px 16px;
     border: 2px solid #e5e7eb;
     border-radius: 8px;

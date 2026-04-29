@@ -85,7 +85,17 @@
                 event.preventDefault();
                 var productId = button.dataset.productId;
                 if (!productId) return;
-                window.location.href = "/wishlist/toggle/?product_id=" + productId;
+                fetch(`/wishlist/toggle/?product_id=${productId}`)
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function () {
+                        window.location.reload();
+                    })
+                    .catch(function (error) {
+                        console.error('Error:', error);
+                        window.location.reload();
+                    });
             });
         });
     });

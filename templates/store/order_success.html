@@ -1,0 +1,47 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Đặt hàng thành công - MOBILE STORE{% endblock %}
+
+{% block content %}
+<div class="order-success-container" style="max-width: 760px; margin: 40px auto; padding: 24px; background: white; border-radius: 14px; box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 48px; line-height: 1;">🎉</div>
+        <h1 style="margin: 16px 0 8px; font-size: 32px;">Đặt hàng thành công</h1>
+        <p style="color: #4b5563; font-size: 16px;">Cảm ơn bạn đã mua hàng. Chúng tôi đã nhận được đơn đặt hàng của bạn và đang xử lý.</p>
+    </div>
+
+    {% if order %}
+    <div style="display: grid; gap: 16px;">
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f8fafc;">
+            <h2 style="margin: 0 0 12px; font-size: 18px;">Thông tin đơn hàng</h2>
+            <div style="display: grid; gap: 8px; font-size: 14px; color: #374151;">
+                <div><strong>Mã đơn hàng:</strong> {{ order.order_number }}</div>
+                <div><strong>Ngày đặt:</strong> {{ order.created_at|date:'d/m/Y H:i' }}</div>
+                <div><strong>Trạng thái:</strong> {{ order.get_status_display }}</div>
+                <div><strong>Tổng thanh toán:</strong> {{ order.total_amount|floatformat:0|add:0 }}₫</div>
+                <div><strong>Phương thức thanh toán:</strong> {{ order.payment_method|upper }}</div>
+            </div>
+        </div>
+
+        <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+            <h2 style="margin: 0 0 12px; font-size: 18px;">Tiếp theo</h2>
+            <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.7;">
+                <li>Chúng tôi sẽ liên hệ lại bạn trong thời gian sớm nhất.</li>
+                <li>Kiểm tra lại email để xem chi tiết đơn hàng.</li>
+                <li>Bạn có thể xem lịch sử đơn hàng trong trang cá nhân.</li>
+            </ul>
+        </div>
+    </div>
+    {% else %}
+    <div style="padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f8fafc; text-align: center; color: #374151;">
+        <p>Không tìm thấy đơn hàng của bạn. Vui lòng thử lại hoặc liên hệ hỗ trợ.</p>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+        <a href="{% url 'store:home' %}" class="btn btn-primary" style="padding: 12px 24px; border-radius: 8px; text-decoration: none;">Về trang chủ</a>
+        <a href="{% url 'store:order_tracking' %}" class="btn btn-secondary" style="padding: 12px 24px; border-radius: 8px; text-decoration: none; background: #eef2ff; color: #4338ca;">Xem đơn hàng</a>
+    </div>
+</div>
+{% endblock %}

@@ -11,10 +11,17 @@
 <div class="checkout-container">
     <h1 class="checkout-title">🛒 THANH TOÁN</h1>
     
-    <form method="POST" class="checkout-grid" novalidate>
+    <form method="POST" action="{% if cart_items or selected_items %}{% url 'store:checkout_from_cart' %}{% else %}{% url 'store:checkout' %}{% endif %}" id="checkout-form" class="checkout-grid" novalidate>
         {% csrf_token %}
+        {% if product %}
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" name="quantity" value="{{ quantity }}">
+        {% endif %}
+        {% if selected_items %}
+            <input type="hidden" name="items" value="{{ selected_items }}">
+        {% endif %}
         
-        <!-- Left Column: Shipping & Payment Info -->
+        <!-- Left Column: Product & Shipping Info -->
         <div>
             <!-- Product Summary -->
             <div class="checkout-section">
@@ -22,27 +29,27 @@
                 
                 {% if product %}
                 <!-- Single Product Checkout -->
-                <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; display: flex; gap: 16px;">
+                <div class="checkout-product-summary">
                     {% if product.image %}
-                        <div style="width: 80px; height: 80px; background: white; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="checkout-product-image">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
                         </div>
                     {% else %}
-                        <div style="width: 80px; height: 80px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg style="width: 40px; height: 40px; color: #ccc;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="checkout-product-placeholder">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
                     {% endif %}
                     
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #1a1a1a;">{{ product.name }}</h4>
-                        <p style="margin: 0 0 8px; font-size: 13px; color: #666;">Số lượng: <strong>{{ quantity }}</strong></p>
-                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #667eea;">
+                    <div class="checkout-product-info">
+                        <h4 class="checkout-product-name">{{ product.name }}</h4>
+                        <p class="checkout-product-quantity">Số lượng: <strong>{{ quantity }}</strong></p>
+                        <p class="checkout-product-price">
                             {{ product.get_discounted_price|floatformat:0|add:0 }}₫
                         </p>
                         {% if product.discount > 0 %}
-                            <p style="margin: 4px 0 0; font-size: 12px; color: #999; text-decoration: line-through;">
+                            <p class="checkout-product-original-price">
                                 {{ product.price|floatformat:0|add:0 }}₫
                             </p>
                         {% endif %}
@@ -50,25 +57,25 @@
                 </div>
                 {% elif cart_items %}
                 <!-- Cart Checkout - Multiple Items -->
-                <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="checkout-cart-items">
                     {% for item in cart_items %}
-                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; display: flex; gap: 12px;">
+                    <div class="checkout-cart-item">
                         {% if item.product.image %}
-                            <div style="width: 60px; height: 60px; background: white; border-radius: 6px; overflow: hidden; flex-shrink: 0;">
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="checkout-cart-item-image">
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
                             </div>
                         {% else %}
-                            <div style="width: 60px; height: 60px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <svg style="width: 30px; height: 30px; color: #ccc;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="checkout-cart-item-placeholder">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                             </div>
                         {% endif %}
                         
-                        <div style="flex: 1;">
-                            <h4 style="margin: 0 0 4px; font-size: 13px; font-weight: 600; color: #1a1a1a;">{{ item.product.name }}</h4>
-                            <p style="margin: 0 0 4px; font-size: 12px; color: #666;">Số lượng: <strong>{{ item.quantity }}</strong></p>
-                            <p style="margin: 0; font-size: 12px; font-weight: 600; color: #667eea;">{{ item.total|floatformat:0|add:0 }}₫</p>
+                        <div class="checkout-cart-item-info">
+                            <h4 class="checkout-cart-item-name">{{ item.product.name }}</h4>
+                            <p class="checkout-cart-item-quantity">Số lượng: <strong>{{ item.quantity }}</strong></p>
+                            <p class="checkout-cart-item-price">{{ item.total|floatformat:0|add:0 }}₫</p>
                         </div>
                     </div>
                     {% endfor %}
@@ -80,11 +87,16 @@
             <div class="checkout-section">
                 <div class="section-title">📍 Thông tin giao hàng</div>
                 
-                {% if form.non_field_errors %}
-                <div class="error-message" style="margin-bottom: 20px;">
-                    {% for error in form.non_field_errors %}
-                        <p style="margin: 0;">{{ error }}</p>
-                    {% endfor %}
+                        {% if form.non_field_errors or form.errors %}
+                <div class="error-message" style="margin-bottom: 20px; padding: 12px 16px; border: 1px solid #f87171; background: #fef2f2; color: #991b1b; border-radius: 8px;">
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            <p style="margin: 0 0 8px 0;">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    {% if form.errors %}
+                        <p style="margin: 0; font-weight: 700;">Vui lòng kiểm tra lại thông tin thanh toán.</p>
+                    {% endif %}
                 </div>
                 {% endif %}
                 
@@ -117,22 +129,37 @@
                     <select name="city" id="id_city" required>
                         <option value="">-- Chọn Tỉnh/Thành phố --</option>
                     </select>
+                    {% if form.city.errors %}
+                        {% for error in form.city.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 
                 <!-- District & Ward -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>Quận/Huyện <span class="required">*</span></label>
-                        <select name="district" id="id_district" required disabled>
+                        <select name="district" id="id_district" required>
                             <option value="">-- Chọn Quận/Huyện --</option>
                         </select>
+                        {% if form.district.errors %}
+                            {% for error in form.district.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                     
                     <div class="form-group">
                         <label>Phường/Xã <span class="required">*</span></label>
-                        <select name="ward" id="id_ward" required disabled>
+                        <select name="ward" id="id_ward" required>
                             <option value="">-- Chọn Phường/Xã --</option>
                         </select>
+                        {% if form.ward.errors %}
+                            {% for error in form.ward.errors %}
+                                <div class="error-message">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -140,23 +167,36 @@
                 <div class="form-group">
                     <label>Địa chỉ chi tiết <span class="required">*</span></label>
                     {{ form.address }}
+                    {% if form.address.errors %}
+                        {% for error in form.address.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 
                 <!-- Email -->
                 <div class="form-group">
                     <label>Email <span class="required">*</span></label>
                     {{ form.email }}
+                    {% if form.email.errors %}
+                        {% for error in form.email.errors %}
+                            <div class="error-message">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
                 
                 <!-- Default Address -->
-                <div style="margin-top: 16px;">
-                    <label style="display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" name="set_default" id="id_set_default" style="width: 16px; height: 16px; cursor: pointer; margin-right: 10px;">
-                        <span style="font-size: 14px;">Đặt làm địa chỉ mặc định</span>
+                <div class="checkout-default-address">
+                    <label>
+                        <input type="checkbox" name="set_default" id="id_set_default">
+                        <span>Đặt làm địa chỉ mặc định</span>
                     </label>
                 </div>
             </div>
-            
+        </div>
+        
+        <!-- Right Column: Payment Methods & Order Summary -->
+        <div>
             <!-- Payment Method -->
             <div class="checkout-section">
                 <div class="section-title">💳 Phương thức thanh toán</div>
@@ -189,111 +229,100 @@
                         </div>
                     </label>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Right Column: Order Summary -->
-        <div class="checkout-summary">
-            <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 20px; color: #1a1a1a;">Tóm tắt đơn hàng</h3>
-            
-            {% if product %}
-            <!-- Single Product Summary -->
-            <div class="summary-row">
-                <span>Giá sản phẩm:</span>
-                <span>{{ product.price|floatformat:0|add:0 }}₫</span>
+                {% if form.payment_method.errors %}
+                    {% for error in form.payment_method.errors %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
             
-            {% if product.discount > 0 %}
-            <div class="summary-row" style="color: #4caf50;">
-                <span>Giảm giá ({{ product.discount }}%):</span>
-                <span>-{{ discount_amount|floatformat:0|add:0 }}₫</span>
+            <!-- Order Summary -->
+            <div class="checkout-section">
+                <div class="section-title">🧾 Tóm tắt đơn hàng</div>
+                
+                {% if product %}
+                <!-- Single Product Summary -->
+                <div class="summary-row">
+                    <span>Giá sản phẩm:</span>
+                    <span>{{ product.price|floatformat:0|add:0 }}₫</span>
+                </div>
+                
+                {% if product.discount > 0 %}
+                <div class="summary-row" style="color: #4caf50;">
+                    <span>Giảm giá ({{ product.discount }}%):</span>
+                    <span>-{{ discount_amount|floatformat:0|add:0 }}₫</span>
+                </div>
+                {% endif %}
+                
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="shipping-fee">30,000₫</span>
+                </div>
+                
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span id="total-price">{{ total_price|default:total_amount|default:total|floatformat:0|add:0 }}₫</span>
+                </div>
+                {% elif cart_items %}
+                <!-- Cart Summary -->
+                <div class="summary-row">
+                    <span>Tổng tiền hàng:</span>
+                    <span>{{ total_amount|floatformat:0|add:0 }}₫</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="shipping-fee">30,000₫</span>
+                </div>
+                
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span id="total-price">{{ total_amount|floatformat:0|add:0 }}₫</span>
+                </div>
+                {% endif %}
+                
+                <button type="submit" id="checkout-submit-btn" class="btn-checkout">
+                    <i class="ri-check-line"></i> Xác nhận thanh toán
+                </button>
+                
+                {% if product %}
+                <a href="{% url 'store:product_detail' product.id %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
+                    ← Quay lại sản phẩm
+                </a>
+                {% elif cart_items %}
+                <a href="{% url 'store:cart_detail' %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
+                    ← Quay lại giỏ hàng
+                </a>
+                {% endif %}
             </div>
-            {% endif %}
-            
-            <div class="summary-row">
-                <span>Phí vận chuyển:</span>
-                <span id="shipping-fee">30,000₫</span>
-            </div>
-            
-            <div class="summary-row total">
-                <span>Tổng cộng:</span>
-                <span id="total-price">{{ total|floatformat:0|add:0 }}₫</span>
-            </div>
-            {% elif cart_items %}
-            <!-- Cart Summary -->
-            <div class="summary-row">
-                <span>Tổng tiền hàng:</span>
-                <span>{{ total_amount|floatformat:0|add:0 }}₫</span>
-            </div>
-            
-            <div class="summary-row">
-                <span>Phí vận chuyển:</span>
-                <span id="shipping-fee">30,000₫</span>
-            </div>
-            
-            <div class="summary-row total">
-                <span>Tổng cộng:</span>
-                <span id="total-price">{{ total_amount|floatformat:0|add:0 }}₫</span>
-            </div>
-            {% endif %}
-            
-            <button type="submit" class="btn-checkout">
-                <i class="ri-check-line"></i> Xác nhận thanh toán
-            </button>
-            
-            {% if product %}
-            <a href="{% url 'store:product_detail' product.id %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
-                ← Quay lại sản phẩm
-            </a>
-            {% elif cart_items %}
-            <a href="{% url 'store:cart_detail' %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
-                ← Quay lại giỏ hàng
-            </a>
-            {% endif %}
         </div>
     </form>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Checkout JavaScript loaded');
     const citySelect = document.getElementById('id_city');
     const districtSelect = document.getElementById('id_district');
     const wardSelect = document.getElementById('id_ward');
+    console.log('Select elements found:', !!citySelect, !!districtSelect, !!wardSelect);
 
-    // Load provinces on page load
-    loadProvinces();
+    const initialCity = "{{ form.data.city|default:''|escapejs }}";
+    const initialDistrict = "{{ form.data.district|default:''|escapejs }}";
+    const initialWard = "{{ form.data.ward|default:''|escapejs }}";
 
-    // Listen for province change
-    citySelect.addEventListener('change', function() {
-        if (this.value) {
-            loadDistricts(this.value);
-            // Reset district and ward
-            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            districtSelect.disabled = false;
-            wardSelect.disabled = true;
+    // Safe toast function
+    function showToast(message, type) {
+        var toast = window.LDMToast || window.ldmToast;
+        if (toast && typeof toast.show === 'function') {
+            toast.show(message, type);
         } else {
-            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            districtSelect.disabled = true;
-            wardSelect.disabled = true;
+            console.warn(message);
         }
-    });
+    }
 
-    // Listen for district change
-    districtSelect.addEventListener('change', function() {
-        if (this.value) {
-            loadWards(this.value);
-            wardSelect.disabled = false;
-        } else {
-            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-            wardSelect.disabled = true;
-        }
-    });
-
-    // Load provinces
     function loadProvinces() {
-        fetch('{% url "store:get_provinces" %}')
+        return fetch('{% url "store:get_provinces" %}')
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.provinces) {
@@ -304,18 +333,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     citySelect.innerHTML = html;
                 } else {
                     console.error('Error loading provinces:', data.error);
-                    showToast('Lỗi khi tải danh sách tỉnh/thành phố', 'error');
+                    if (window.LDMToast) window.LDMToast.show('Lỗi khi tải danh sách tỉnh/thành phố', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Lỗi kết nối khi tải tỉnh/thành phố', 'error');
+                if (window.LDMToast) window.LDMToast.show('Lỗi kết nối khi tải tỉnh/thành phố', 'error');
             });
     }
 
-    // Load districts
     function loadDistricts(provinceCode) {
-        fetch(`{% url "store:get_districts" "PROVINCE_CODE" %}`.replace('PROVINCE_CODE', provinceCode))
+        return fetch(`{% url "store:get_districts" "PROVINCE_CODE" %}`.replace('PROVINCE_CODE', provinceCode))
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.districts) {
@@ -326,18 +354,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     districtSelect.innerHTML = html;
                 } else {
                     console.error('Error loading districts:', data.error);
-                    showToast('Lỗi khi tải danh sách quận/huyện', 'error');
+                    if (window.LDMToast) window.LDMToast.show('Lỗi khi tải danh sách quận/huyện', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Lỗi kết nối khi tải quận/huyện', 'error');
+                if (window.LDMToast) window.LDMToast.show('Lỗi kết nối khi tải quận/huyện', 'error');
             });
     }
 
-    // Load wards
     function loadWards(districtCode) {
-        fetch(`{% url "store:get_wards" "DISTRICT_CODE" %}`.replace('DISTRICT_CODE', districtCode))
+        return fetch(`{% url "store:get_wards" "DISTRICT_CODE" %}`.replace('DISTRICT_CODE', districtCode))
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.wards) {
@@ -348,13 +375,90 @@ document.addEventListener('DOMContentLoaded', function() {
                     wardSelect.innerHTML = html;
                 } else {
                     console.error('Error loading wards:', data.error);
-                    showToast('Lỗi khi tải danh sách phường/xã', 'error');
+                    if (window.LDMToast) window.LDMToast.show('Lỗi khi tải danh sách phường/xã', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Lỗi kết nối khi tải phường/xã', 'error');
+                if (window.LDMToast) window.LDMToast.show('Lỗi kết nối khi tải phường/xã', 'error');
             });
+    }
+
+    citySelect.addEventListener('change', function() {
+        if (this.value) {
+            loadDistricts(this.value);
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        } else {
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        }
+    });
+
+    districtSelect.addEventListener('change', function() {
+        if (this.value) {
+            loadWards(this.value);
+        } else {
+            wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+        }
+    });
+
+    loadProvinces().then(function() {
+        if (initialCity) {
+            citySelect.value = initialCity;
+            return loadDistricts(initialCity);
+        }
+    }).then(function() {
+        if (initialDistrict) {
+            districtSelect.value = initialDistrict;
+            return loadWards(initialDistrict);
+        }
+    }).then(function() {
+        if (initialWard) {
+            wardSelect.value = initialWard;
+        }
+    }).catch(function() {
+        // Ignore restore if any step fails
+    });
+
+    // Validate form before submit
+    const checkoutForm = document.getElementById('checkout-form');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
+            console.log('City value:', citySelect.value);
+            console.log('District value:', districtSelect.value);
+            console.log('Ward value:', wardSelect.value);
+            
+            // Temporarily disable validation to test if form submits
+            /*
+            if (!citySelect.value) {
+                console.log('Preventing submit: no city selected');
+                e.preventDefault();
+                if (window.LDMToast) {
+                    window.LDMToast.show('❌ Vui lòng chọn Tỉnh/Thành phố', 'error');
+                }
+                return false;
+            }
+            if (!districtSelect.value) {
+                console.log('Preventing submit: no district selected');
+                e.preventDefault();
+                if (window.LDMToast) {
+                    window.LDMToast.show('❌ Vui lòng chọn Quận/Huyện', 'error');
+                }
+                return false;
+            }
+            if (!wardSelect.value) {
+                console.log('Preventing submit: no ward selected');
+                e.preventDefault();
+                if (window.LDMToast) {
+                    window.LDMToast.show('❌ Vui lòng chọn Phường/Xã', 'error');
+                }
+                return false;
+            }
+            */
+            console.log('Form validation passed, allowing submit');
+        });
     }
 });
 </script>

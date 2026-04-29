@@ -46,6 +46,7 @@ const LDMToast = {
 };
 
 window.LDMToast = LDMToast;
+window.ldmToast = LDMToast;
 
 // ====== CONFIRMATION DIALOGS ======
 const LDMConfirm = {

@@ -13,7 +13,7 @@
   
   <!-- Header -->
   <div class="cart-header">
-    <div style="font-size: 32px; margin-bottom: 8px;">🛒</div>
+    <div class="cart-emoji">🛒</div>
     <h1>Giỏ hàng của bạn</h1>
     <p>Quản lý sản phẩm bạn đã thêm vào giỏ</p>
   </div>
@@ -27,9 +27,10 @@
         <div class="cart-table-header">
           <div></div>
           <div>Sản phẩm</div>
-          <div style="text-align: right;">Đơn giá</div>
-          <div style="text-align: center;">Số lượng</div>
-          <div style="text-align: right;">Thành tiền</div>
+          <div>Đơn giá</div>
+          <div>Số lượng</div>
+          <div>Thành tiền</div>
+          <div>Xóa</div>
         </div>
 
         {% for product in products %}
@@ -48,7 +49,7 @@
             </div>
             <div class="item-product-info">
               <div class="item-product-name">
-                <a href="{% url 'store:product_detail' product.id %}" style="color: inherit; text-decoration: none;">
+                <a href="{% url 'store:product_detail' product.id %}">
                   {{ product.name }}
                 </a>
               </div>
@@ -64,7 +65,7 @@
           </div>
 
           <!-- Quantity -->
-          <div class="item-quantity" style="justify-content: center;">
+          <div class="item-quantity">
             <button class="qty-btn qty-decrease" data-product-id="{{ product.id }}">−</button>
             <input type="number" class="qty-input" value="{{ product.quantity }}" min="1" max="99">
             <button class="qty-btn qty-increase" data-product-id="{{ product.id }}">+</button>
@@ -74,6 +75,9 @@
           <div class="item-subtotal" data-subtotal="{{ product.subtotal|floatformat:0|add:0 }}">
             {{ product.subtotal|floatformat:0|add:0 }}₫
           </div>
+          <div class="item-remove">
+            <a href="{% url 'store:remove_from_cart' product.id %}" class="remove-item-link" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?');">Xóa</a>
+          </div>
         </div>
         {% endfor %}
       </div>
@@ -81,18 +85,6 @@
 
     <!-- Right: Sidebar -->
     <div class="cart-sidebar">
-      <!-- Discount Code Section -->
-      <div class="sidebar-section">
-        <h3>❤️ Mã giảm giá</h3>
-        <div class="discount-form">
-          <input type="text" id="voucherCode" placeholder="Nhập mã voucher">
-          <button onclick="applyVoucher()">Áp dụng</button>
-        </div>
-        <div class="discount-info">
-          Mã giảm giá bạn có thể tim thấy trong Trang cá nhân. Chọn sản phẩm hợp và sử dụng mã để được giá cao ưu nhất!
-        </div>
-      </div>
-
       <!-- Total Section -->
       <div class="sidebar-section">
         <h3>💳 Tổng giỏ hàng</h3>
@@ -146,6 +138,29 @@ document.addEventListener('DOMContentLoaded', function() {
   checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', updateTotals);
   });
+
+  document.querySelectorAll('.qty-increase').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      const productId = event.currentTarget.dataset.productId;
+      updateQuantity(productId, 1);
+    });
+  });
+
+  document.querySelectorAll('.qty-decrease').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      const productId = event.currentTarget.dataset.productId;
+      updateQuantity(productId, -1);
+    });
+  });
+
+  document.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('change', event => {
+      const productId = event.currentTarget.closest('.cart-item-row').dataset.productId;
+      updateQuantity(productId, event.currentTarget.value);
+    });
+  });
   
   // Initial update
   updateTotals();
@@ -158,7 +173,7 @@ function updateTotals() {
 
   checkboxes.forEach(checkbox => {
     const row = checkbox.closest('.cart-item-row');
-    const subtotal = parseInt(row.querySelector('.item-subtotal').dataset.subtotal);
+    const subtotal = parseInt(row.querySelector('.item-subtotal').dataset.subtotal) || 0;
     total += subtotal;
     count++;
   });
@@ -220,22 +235,22 @@ async function updateQuantity(productId, change) {
   }
 }
 
-function applyVoucher() {
-  const code = document.getElementById('voucherCode').value;
-  if (!code) {
-    alert('Vui lòng nhập mã voucher');
-    return;
-  }
-  alert('Mã voucher "' + code + '" sẽ được xử lý');
-}
-
 function checkout() {
-  const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
-  if (checkedCount === 0) {
+  const checkedProducts = document.querySelectorAll('.product-checkbox:checked');
+  if (checkedProducts.length === 0) {
     alert('Vui lòng chọn ít nhất một sản phẩm');
     return;
   }
-  window.location.href = '{% url "store:checkout_from_cart" %}';
+  
+  // Collect selected product IDs
+  const selectedIds = [];
+  checkedProducts.forEach(checkbox => {
+    selectedIds.push(checkbox.value);
+  });
+  
+  // Redirect with selected product IDs as query parameter
+  const itemsParam = selectedIds.join(',');
+  window.location.href = '{% url "store:checkout_from_cart" %}?items=' + itemsParam;
 }
 
 function getCookie(name) {

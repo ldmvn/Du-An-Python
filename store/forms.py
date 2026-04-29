@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Product, ProductSpecification, UserProfile, Category, Banner
+from .models import Product, ProductSpecification, UserProfile, Category, Banner, Order
 import re
 
 
@@ -406,4 +406,56 @@ class BannerForm(forms.ModelForm):
                 raise forms.ValidationError('❌ Kích thước video quá lớn! Tối đa 50MB')
         
         return image
+
+
+class OrderShippingForm(forms.ModelForm):
+    """Form for editing order shipping information"""
+    class Meta:
+        model = Order
+        fields = ['customer_name', 'customer_phone', 'customer_address']
+        widgets = {
+            'customer_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Họ tên người nhận'
+            }),
+            'customer_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Số điện thoại',
+                'type': 'tel'
+            }),
+            'customer_address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Địa chỉ giao hàng',
+                'rows': 3
+            })
+        }
+    
+    def clean_customer_name(self):
+        name = self.cleaned_data.get('customer_name', '').strip()
+        if not name:
+            raise forms.ValidationError('Họ tên không được để trống')
+        return name
+    
+    def clean_customer_phone(self):
+        phone = self.cleaned_data.get('customer_phone', '').strip()
+        if not phone:
+            raise forms.ValidationError('Số điện thoại không được để trống')
+        
+        # Remove all non-digit characters except +
+        phone_digits = re.sub(r'[^\d+]', '', phone)
+        
+        # Check if it's a valid Vietnamese phone number
+        if phone_digits.startswith('+84') and len(phone_digits) != 13:
+            raise forms.ValidationError('Số điện thoại Việt Nam định dạng +84 phải có 13 chữ số')
+        
+        if phone_digits.startswith('0') and len(phone_digits) != 10:
+            raise forms.ValidationError('Số điện thoại Việt Nam phải có 10 chữ số (0X XXXX XXXX)')
+        
+        return phone
+    
+    def clean_customer_address(self):
+        address = self.cleaned_data.get('customer_address', '').strip()
+        if not address or len(address) < 5:
+            raise forms.ValidationError('Địa chỉ phải có ít nhất 5 ký tự')
+        return address
 

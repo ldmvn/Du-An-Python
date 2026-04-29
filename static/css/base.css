@@ -1,5 +1,10 @@
 /* ==================== BASE STYLES - Compare Bar ==================== */
 
+/* Utility classes */
+.hidden {
+    display: none !important;
+}
+
 /* Compare Bar */
 .ldm-compare-bar {
     position: fixed;

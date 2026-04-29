@@ -475,35 +475,31 @@ function checkout() {
 document.addEventListener('DOMContentLoaded', function() {
     // Quantity decrease buttons
     document.querySelectorAll('.qty-decrease').forEach(function(btn) {
+        var itemRow = btn.closest('[data-item-id]');
+        if (!itemRow) return;
+
         btn.addEventListener('click', function() {
-            var productId = this.getAttribute('data-product-id');
             var input = this.parentElement.querySelector('.qty-input');
             var currentQty = parseInt(input.value) || 1;
             var newQty = Math.max(1, currentQty - 1);
             input.value = newQty;
-            // Find item-id from the input or cart item
-            var itemRow = this.closest('[data-item-id]');
-            if (itemRow) {
-                var itemId = itemRow.getAttribute('data-item-id');
-                updateCartQuantity(itemId, newQty);
-            }
+            var itemId = itemRow.getAttribute('data-item-id');
+            updateCartQuantity(itemId, newQty);
         });
     });
 
     // Quantity increase buttons
     document.querySelectorAll('.qty-increase').forEach(function(btn) {
+        var itemRow = btn.closest('[data-item-id]');
+        if (!itemRow) return;
+
         btn.addEventListener('click', function() {
-            var productId = this.getAttribute('data-product-id');
             var input = this.parentElement.querySelector('.qty-input');
             var currentQty = parseInt(input.value) || 1;
             var newQty = currentQty + 1;
             input.value = newQty;
-            // Find item-id from the input or cart item
-            var itemRow = this.closest('[data-item-id]');
-            if (itemRow) {
-                var itemId = itemRow.getAttribute('data-item-id');
-                updateCartQuantity(itemId, newQty);
-            }
+            var itemId = itemRow.getAttribute('data-item-id');
+            updateCartQuantity(itemId, newQty);
         });
     });
 });

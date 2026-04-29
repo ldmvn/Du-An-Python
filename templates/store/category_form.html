@@ -5,56 +5,7 @@
 {% block page_title %}🏷️ {{ title }}{% endblock %}
 
 {% block extra_css %}
-<style>
-    .ldm-form-card {
-        padding: 24px;
-    }
-
-    .ldm-form-card p {
-        margin: 0 0 18px;
-        color: #64748b;
-        font-size: 14px;
-    }
-
-    .ldm-form-group {
-        margin-bottom: 18px;
-    }
-
-    .ldm-form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .ldm-form-group .form-control {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: 'Signika', sans-serif;
-        color: #1e293b;
-        outline: none;
-    }
-
-    .ldm-form-group .form-control:focus {
-        border-color: #3b82f6;
-        background: #f0f7ff;
-    }
-
-    .ldm-form-error {
-        color: #dc2626;
-        font-size: 13px;
-        margin-top: 6px;
-    }
-
-    .ldm-form-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 24px;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -78,7 +29,7 @@
             </div>
 
             {% if form.non_field_errors %}
-                <div class="ldm-form-error" style="margin-bottom: 10px;">{{ form.non_field_errors.0 }}</div>
+                <div class="ldm-form-error">{{ form.non_field_errors.0 }}</div>
             {% endif %}
 
             <div class="ldm-form-actions">
