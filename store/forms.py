@@ -288,7 +288,6 @@ class CheckoutForm(forms.Form):
         choices=[
             ('cash', 'Thanh toán khi nhận hàng'),
             ('bank', 'Chuyển khoản ngân hàng'),
-            ('vnpay', 'VNPAY')
         ],
         required=True,
         widget=forms.RadioSelect()

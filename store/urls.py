@@ -6,6 +6,7 @@ app_name = 'store'
 urlpatterns = [
     # ========== HOME & PRODUCTS ==========
     path('', views.home, name='home'),
+    path('home/', views.home, name='home_alias'),
     path('product/<int:id>/', views.product_detail, name='product_detail'),
     path('product/search/', views.product_search, name='product_search'),
 
@@ -13,6 +14,8 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('register/', views.register_view, name='register'),
     path('logout/', views.logout_view, name='logout'),
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('reset-password/<str:token>/', views.reset_password_view, name='reset_password'),
 
     # ========== DASHBOARD (ADMIN) ==========
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -48,6 +51,9 @@ urlpatterns = [
     path('ajax/cart/remove/', views.remove_from_cart_ajax, name='remove_from_cart_ajax'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/cart/', views.checkout_from_cart, name='checkout_from_cart'),
+    path('checkout/bank/select/', views.bank_select, name='bank_select'),
+    path('checkout/bank/pay/', views.bank_pay, name='bank_pay'),
+    path('checkout/bank/otp/', views.bank_otp, name='bank_otp'),
     path('ajax/order/update-status/', views.update_order_status, name='update_order_status'),
 
     # ========== WISHLIST & COMPARE ==========

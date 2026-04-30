@@ -179,7 +179,13 @@ class Order(models.Model):
         ('delivered', 'Hoàn thành'),
         ('cancelled', 'Đã huỷ'),
     ]
-    
+
+    LEGACY_STATUS_MAP = {
+        'paid': 'pending',
+        'approved': 'processing',
+        'completed': 'delivered',
+    }
+
     PAYMENT_METHOD_CHOICES = [
         ('cash', 'Thanh toán khi nhận hàng'),
         ('bank', 'Chuyển khoản ngân hàng'),
@@ -204,6 +210,14 @@ class Order(models.Model):
     customer_phone = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def normalized_status(self):
+        return self.LEGACY_STATUS_MAP.get(self.status, self.status)
+
+    def get_status_display(self):
+        status_labels = dict(self.STATUS_CHOICES)
+        return status_labels.get(self.normalized_status, self.normalized_status)
 
     def __str__(self):
         return f"Order #{self.id}"
@@ -361,3 +375,27 @@ class Wishlist(models.Model):
             self.add_product(product)
             return True
     
+
+class PasswordResetToken(models.Model):
+    """Model to store password reset tokens with 2-step verification"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=10, blank=True, default='')  # Verification code
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False)  # Track if email was verified with code
+    
+    def __str__(self):
+        return f"Reset token for {self.user.username}"
+    
+    def is_valid(self):
+        """Check if token is still valid"""
+        from django.utils import timezone
+        return not self.is_used and self.expires_at > timezone.now()
+    
+    def is_code_valid(self, provided_code):
+        """Check if provided code matches and is not expired"""
+        return self.code == provided_code and self.is_valid()
+
+

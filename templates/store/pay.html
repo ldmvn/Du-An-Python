@@ -1,0 +1,478 @@
+{% extends "store/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Thanh toán - MOBILE STORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/store-pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pay-container">
+    {% if pay_section == 'bank_select' %}
+        <h1 class="checkout-title">Chuyển khoản ngân hàng - Chọn ngân hàng</h1>
+        <form method="POST" action="{% url 'store:bank_select' %}">
+            {% csrf_token %}
+            <div class="checkout-section">
+                <!-- Search box -->
+                <div style="margin-bottom:16px;">
+                    <input type="text" id="bankSearch" placeholder="🔍 Tìm kiếm ngân hàng..." 
+                           style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:14px;">
+                </div>
+
+                <!-- Bank dropdown toggle -->
+                <div style="margin-bottom:12px;">
+                    <button type="button" id="bankToggle" 
+                            style="width:100%; padding:12px; background:#f5f5f5; border:1px solid #ddd; border-radius:6px; cursor:pointer; text-align:left; font-weight:500; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Chọn ngân hàng <span id="selectedBankName" style="color:#666; font-weight:normal; margin-left:8px;"></span></span>
+                        <i class="ri-arrow-down-s-line" style="font-size:20px; transition:transform 0.3s;"></i>
+                    </button>
+                </div>
+
+                <!-- Bank list (collapsible) -->
+                <div id="bankList" style="display:none; border:1px solid #ddd; border-radius:6px; max-height:400px; overflow-y:auto; padding:12px; background:#fafafa;">
+                    {% for bank in banks %}
+                    <label class="bank-option" data-bank-name="{{ bank.name }}" style="display:flex; align-items:center; padding:10px; margin:4px 0; cursor:pointer; border-radius:4px; transition:background 0.2s;">
+                        <input type="radio" name="bank_id" value="{{ bank.id }}" {% if forloop.first %}checked{% endif %} 
+                               style="cursor:pointer;">
+                        <span style="margin-left:12px; flex:1;">{{ bank.name }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Hidden input for selected bank info -->
+                <input type="hidden" id="selectedBankId" name="bank_id" value="{{ banks.0.id }}">
+            </div>
+
+            <div class="checkout-section">
+                <button type="submit" class="btn-checkout">Tiếp tục</button>
+                <a href="{% url 'store:cart_detail' %}" style="margin-left:12px;">Hủy</a>
+            </div>
+        </form>
+
+        <style>
+            .bank-option:hover {
+                background: #e8f4f8;
+            }
+            .bank-option input[type="radio"]:checked + span {
+                color: #0066cc;
+                font-weight: 600;
+            }
+            #bankList {
+                animation: slideDown 0.3s ease-out;
+            }
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const bankToggle = document.getElementById('bankToggle');
+            const bankList = document.getElementById('bankList');
+            const bankSearch = document.getElementById('bankSearch');
+            const bankOptions = document.querySelectorAll('.bank-option');
+            const selectedBankId = document.getElementById('selectedBankId');
+            const selectedBankName = document.getElementById('selectedBankName');
+            const arrow = bankToggle.querySelector('i');
+
+            // Toggle dropdown
+            bankToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                bankList.style.display = bankList.style.display === 'none' ? 'block' : 'none';
+                arrow.style.transform = bankList.style.display === 'none' ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+
+            // Search filter
+            bankSearch.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                let visibleCount = 0;
+                
+                bankOptions.forEach(option => {
+                    const name = option.dataset.bankName.toLowerCase();
+                    const matches = name.includes(query);
+                    option.style.display = matches ? 'flex' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                // Auto-show list when searching
+                if (query.length > 0 && visibleCount > 0) {
+                    bankList.style.display = 'block';
+                    arrow.style.transform = 'rotate(180deg)';
+                }
+            });
+
+            // Select bank option
+            bankOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    const input = this.querySelector('input[type="radio"]');
+                    input.checked = true;
+                    selectedBankId.value = input.value;
+                    selectedBankName.textContent = '✓ ' + this.dataset.bankName;
+                    
+                    // Close dropdown after selection
+                    bankList.style.display = 'none';
+                    arrow.style.transform = 'rotate(0deg)';
+                    bankSearch.value = '';
+                    
+                    // Show all banks again
+                    bankOptions.forEach(opt => opt.style.display = 'flex');
+                });
+            });
+
+            // Set initial selected bank name
+            const checkedInput = document.querySelector('input[name="bank_id"]:checked');
+            if (checkedInput) {
+                const label = checkedInput.closest('.bank-option');
+                if (label) {
+                    selectedBankName.textContent = '✓ ' + label.dataset.bankName;
+                }
+            }
+        });
+        </script>
+
+    {% elif pay_section == 'bank_pay' %}
+        <div style="display:flex; gap:40px; align-items:flex-start; margin-top:20px;">
+            <!-- Left: Order Summary -->
+            <div style="flex:1; max-width:400px;">
+                <div style="background:#f8f9fa; padding:24px; border-radius:8px; border:1px solid #e0e0e0;">
+                    <h3 style="margin:0 0 20px 0; font-size:16px; color:#333;">Thông tin đơn hàng (Test)</h3>
+                    
+                    <div style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #ddd;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span style="color:#666; font-size:14px;">Số tiền thanh toán</span>
+                            <span style="font-weight:700; font-size:18px; color:#0066cc;">{{ pending.total_amount|floatformat:0|add:0 }}₫</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span style="color:#666; font-size:14px;">Giá trị đơn hàng</span>
+                            <span style="font-weight:600; color:#333;">{{ pending.total_amount|floatformat:0|add:0 }}₫</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#666; font-size:14px;">Phí giao dịch</span>
+                            <span style="font-weight:600; color:#333;">0₫</span>
+                        </div>
+                    </div>
+
+                    <div style="padding-bottom:20px; border-bottom:1px solid #ddd;">
+                        <div style="font-size:13px; color:#999; margin-bottom:4px;">Mã đơn hàng</div>
+                        <div style="font-weight:600; color:#333; font-size:14px;">ORD-{{ pending.fullname|truncatechars:20 }}-{{ pending.phone|slice:"-4:" }}</div>
+                    </div>
+
+                    <div style="padding-top:12px;">
+                        <div style="font-size:13px; color:#999; margin-bottom:8px;">Nhà cung cấp</div>
+                        <a href="#" style="color:#0066cc; text-decoration:none; font-size:13px;">https://mobile-store.vn/</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Bank Form -->
+            <div style="flex:1;">
+                <h2 style="margin:0 0 24px 0; font-size:18px; color:#333;">Thanh toán qua Ngân hàng {{ pending.bank_name|default:'NCB' }}</h2>
+                
+                <div style="background:#fff; padding:24px; border-radius:8px; border:1px solid #e0e0e0;">
+                    <h3 style="margin:0 0 20px 0; font-size:14px; color:#666; font-weight:600;">Thẻ nội địa</h3>
+
+                    <form method="POST" action="{% url 'store:bank_pay' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="bank_id" value="{{ pending.bank_id }}">
+
+                        <!-- Số thẻ -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:600; color:#333;">Số thẻ</label>
+                            <div style="position:relative;">
+                                <input type="text" name="account_no" placeholder="Nhập số thẻ" 
+                                       style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                                <span style="position:absolute; right:12px; top:12px; font-size:20px; color:#666;">🏦</span>
+                            </div>
+                        </div>
+
+                        <!-- Tên chủ thẻ -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:600; color:#333;">Tên chủ thẻ</label>
+                            <input type="text" name="account_name" placeholder="Nhập tên chủ thẻ (không dấu)" required
+                                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                        </div>
+
+                        <!-- Ngày phát hành -->
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:600; color:#333;">
+                                Ngày phát hành <span style="color:#999; font-weight:normal;">(MM/YY)</span>
+                            </label>
+                            <input type="text" name="expiry" placeholder="MM/YY" 
+                                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                        </div>
+
+                        <!-- Mã khuyến mại -->
+                        <div style="margin-bottom:28px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <label style="font-size:14px; font-weight:600; color:#333;">Mã khuyến mại</label>
+                                <a href="#" style="font-size:12px; color:#0066cc; text-decoration:none;">Chọn hoặc nhập mã</a>
+                            </div>
+                            <input type="text" name="promo" placeholder="Nhập mã khuyến mại (nếu có)" 
+                                   style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                        </div>
+
+                        <!-- Buttons -->
+                        <div style="display:flex; gap:12px; margin-top:24px;">
+                            <a href="{% url 'store:bank_select' %}" 
+                               style="flex:1; padding:12px; background:#f5f5f5; color:#333; border:1px solid #ddd; border-radius:6px; text-align:center; text-decoration:none; font-weight:600; cursor:pointer;">
+                                Hủy thanh toán
+                            </a>
+                            <button type="submit" 
+                                    style="flex:1; padding:12px; background:#0066cc; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px;">
+                                Tiếp tục
+                            </button>
+                        </div>
+
+                        <!-- Info link -->
+                        <div style="margin-top:16px; text-align:center;">
+                            <a href="#" style="font-size:12px; color:#0066cc; text-decoration:none;">📄 Điều kiện sử dụng dịch vụ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @media (max-width: 768px) {
+                .bank-pay-container {
+                    flex-direction: column;
+                    gap: 20px;
+                }
+                .bank-summary, .bank-form {
+                    max-width: 100%;
+                }
+            }
+        </style>
+
+    {% elif pay_section == 'bank_otp' %}
+        <h1 class="checkout-title">Xác nhận mã OTP</h1>
+        <p>Hệ thống đã gửi mã xác nhận đến email/số điện thoại của bạn. Vui lòng nhập mã để hoàn tất thanh toán.</p>
+
+        <form method="POST" action="{% url 'store:bank_otp' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Mã xác nhận</label>
+                <input type="text" name="otp" placeholder="Nhập mã xác nhận" required maxlength="6">
+            </div>
+
+            <button type="submit" class="btn-checkout">Xác nhận và đặt hàng</button>
+            <a href="{% url 'store:cart_detail' %}" style="margin-left:12px;">Hủy</a>
+        </form>
+
+    {% elif pay_section == 'vietqr' %}
+        <!-- Embed VietQR content -->
+        <div class="ldm-vqr-page">
+            <h1 class="ldm-page-title">THANH TOÁN CHUYỂN KHOẢN</h1>
+            <div class="ldm-vqr-wrapper" id="vqrCard">
+                <div id="vqrPending">
+                    <div class="ldm-vqr-header">
+                        <div class="ldm-vqr-header-left">
+                            <i class="ri-qr-code-line"></i>
+                            <div>
+                                <div class="ldm-vqr-header-title">Quét mã QR để thanh toán</div>
+                                <div class="ldm-vqr-header-sub">Đơn hàng: {{ order.order_code }}</div>
+                            </div>
+                        </div>
+                        <div class="ldm-vqr-timer-badge">
+                            <div class="ldm-vqr-timer-label">Còn lại</div>
+                            <div class="ldm-vqr-timer-value" id="vqrTimer">15:00</div>
+                        </div>
+                    </div>
+
+                    <div class="ldm-vqr-body">
+                        <div class="ldm-vqr-qr-wrap">
+                            <div class="ldm-vqr-qr-img">
+                                <img id="vqrQrImage" src="" alt="VietQR">
+                            </div>
+                            <div class="ldm-vqr-qr-hint">Dùng app ngân hàng quét mã</div>
+                        </div>
+
+                        <div class="ldm-vqr-info">
+                            <div class="ldm-vqr-info-title">
+                                <i class="ri-bank-line"></i> Thông tin chuyển khoản
+                            </div>
+                            <div class="ldm-vqr-row">
+                                <span class="lbl">Ngân hàng</span>
+                                <span class="val">{{ bank_account_name|default:'Bank' }}</span>
+                            </div>
+                            <div class="ldm-vqr-row">
+                                <span class="lbl">Chủ tài khoản</span>
+                                <span class="val">{{ bank_account_name }}</span>
+                            </div>
+                            <div class="ldm-vqr-row">
+                                <span class="lbl">Số tài khoản</span>
+                                <span class="val">{{ bank_account_no }}</span>
+                            </div>
+                            <div class="ldm-vqr-row">
+                                <span class="lbl">Số tiền</span>
+                                <span class="val amount">{{ order.total_amount|floatformat:0 }}₫</span>
+                            </div>
+                            <div class="ldm-vqr-row">
+                                <span class="lbl">Nội dung: </span>
+                                <span class="val code">{{ transfer_code }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ldm-vqr-footer">
+                        <div class="ldm-vqr-notice">
+                            <i class="ri-error-warning-line"></i>
+                            <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, hệ thống sẽ xác nhận.</div>
+                        </div>
+                        <div class="ldm-vqr-status" id="vqrStatusBox">
+                            <i class="ri-refresh-line"></i>
+                            <span>Chờ xác nhận</span>
+                            <div class="dot-pulse">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ldm-vqr-expired" id="vqrExpired" style="display:none;">
+                    <div class="ldm-vqr-expired-hero">
+                        <div class="ldm-vqr-expired-icon">
+                            <i class="ri-time-line"></i>
+                        </div>
+                        <h2>HẾT THỜI GIAN THANH TOÁN</h2>
+                        <p>Phiên thanh toán đã hết hạn (15 phút).<br>Đơn hàng đã bị huỷ. Vui lòng quay lại giỏ hàng và thử lại.</p>
+                    </div>
+                    <div class="ldm-vqr-expired-actions">
+                        <a href="{% url 'store:cart_detail' %}" class="ldm-vqr-btn primary">
+                            <i class="ri-shopping-cart-line"></i> Quay lại giỏ hàng
+                        </a>
+                        <a href="{% url 'store:home' %}" class="ldm-vqr-btn">
+                            <i class="ri-home-line"></i> Về trang chủ
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if pay_section == 'vietqr' %}
+<!-- VietQR JS (kept as in original) -->
+<div id="vietqr-config" class="hidden"
+     data-bank-id="{{ bank_id }}"
+     data-account-no="{{ bank_account_no }}"
+     data-account-name="{{ bank_account_name }}"
+     data-timeout="{{ timeout_seconds }}"
+     data-transfer-code="{{ transfer_code }}"
+     data-order-code="{{ order.order_code }}"
+     data-status-url="{% url 'store:vietqr_page_status' %}"
+     data-expire-url="{% url 'store:vietqr_expire' %}"
+     data-success-url="{% url 'store:order_success' order_code=order.order_code %}"
+     data-csrf-token="{{ csrf_token }}"
+     data-total-amount="{{ order.total_amount }}"
+></div>
+<script>
+(function() {
+    var configEl = document.getElementById('vietqr-config');
+    if (!configEl) return;
+    var BANK_ID = configEl.dataset.bankId;
+    var ACCOUNT_NO = configEl.dataset.accountNo;
+    var ACCOUNT_NAME = configEl.dataset.accountName;
+    var TIMEOUT_SECONDS = parseInt(configEl.dataset.timeout);
+    var TRANSFER_CODE = configEl.dataset.transferCode;
+    var ORDER_CODE = configEl.dataset.orderCode;
+    var STATUS_URL = configEl.dataset.statusUrl;
+    var EXPIRE_URL = configEl.dataset.expireUrl;
+    var SUCCESS_URL = configEl.dataset.successUrl;
+    var CSRF_TOKEN = configEl.dataset.csrfToken;
+    var TOTAL_AMOUNT = parseInt(configEl.dataset.totalAmount);
+
+    var timerEl = document.getElementById('vqrTimer');
+    var pendingEl = document.getElementById('vqrPending');
+    var expiredEl = document.getElementById('vqrExpired');
+    var qrImgEl = document.getElementById('vqrQrImage');
+
+    var timerInterval = null;
+    var pollInterval = null;
+    var remaining = TIMEOUT_SECONDS;
+
+    function buildQrUrl() {
+        return 'https://img.vietqr.io/image/' + BANK_ID + '-' + ACCOUNT_NO + '-vietqr_net_2.jpg'
+            + '?amount=' + TOTAL_AMOUNT
+            + '&addInfo=' + encodeURIComponent(TRANSFER_CODE)
+            + '&accountName=' + encodeURIComponent(ACCOUNT_NAME);
+    }
+
+    function formatTimer(sec) {
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function startTimer() {
+        if (timerEl) timerEl.textContent = formatTimer(remaining);
+        timerInterval = setInterval(function() {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                onExpired();
+                return;
+            }
+            if (timerEl) timerEl.textContent = formatTimer(remaining);
+        }, 1000);
+    }
+
+    function startPolling() {
+        pollInterval = setInterval(function() {
+            fetch(STATUS_URL + '?code=' + encodeURIComponent(TRANSFER_CODE) + '&order_code=' + encodeURIComponent(ORDER_CODE))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.success) return;
+                    if (data.status === 'approved') {
+                        onSuccess();
+                    } else if (data.status === 'cancelled' || data.status === 'expired') {
+                        onExpired();
+                    }
+                })
+                .catch(function() {});
+        }, 3000);
+    }
+
+    function stopAll() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    }
+
+    function onSuccess() {
+        stopAll();
+        if (window.ldmToast) ldmToast.show('Thanh toán thành công!', 'success');
+        window.location.href = SUCCESS_URL;
+    }
+
+    function onExpired() {
+        stopAll();
+        fetch(EXPIRE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+            body: JSON.stringify({ order_code: ORDER_CODE, transfer_code: TRANSFER_CODE })
+        }).catch(function() {});
+        if (pendingEl) pendingEl.style.display = 'none';
+        if (expiredEl) expiredEl.style.display = 'block';
+        if (window.ldmToast) ldmToast.show('Hết thời gian thanh toán. Đơn hàng đã bị huỷ.', 'error');
+    }
+
+    function loadQR() { if (qrImgEl) qrImgEl.src = buildQrUrl(); }
+    loadQR();
+    if (remaining > 0) { startTimer(); startPolling(); } else { onExpired(); }
+})();
+</script>
+{% endif %}
+{% endblock %}

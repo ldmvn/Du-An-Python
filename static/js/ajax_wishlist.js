@@ -5,6 +5,7 @@
 
 // Toggle wishlist  via AJAX
 function toggleWishlistAjax(productId, button = null) {
+    const loginUrl = window.AUTH_ENDPOINTS && window.AUTH_ENDPOINTS.login;
     const formData = new FormData();
     formData.append('product_id', productId);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
@@ -13,11 +14,14 @@ function toggleWishlistAjax(productId, button = null) {
         method: 'POST',
         body: formData,
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => ({ ok: response.ok, status: response.status, data: await response.json() }))
+    .then(({ ok, status, data }) => {
         if (data.success) {
             showToast(data.message, 'success');
             updateWishlistUI(productId, data.is_added, button, data.wishlist_count);
+        } else if (status === 401 || data.login_required || !ok) {
+            showToast(data.error || 'Vui lòng đăng nhập để thêm vào wishlist', 'error');
+            window.location.href = data.login_url || loginUrl || '/login/';
         } else {
             showToast(data.error, 'error');
         }

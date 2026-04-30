@@ -24,7 +24,7 @@
                     <div>
                         <div class="ldm-order-number">Đơn hàng #{{ order.id }}</div>
                     </div>
-                    <span class="ldm-order-status status-{{ order.status|lower }}">
+                    <span class="ldm-order-status status-{{ order.normalized_status|lower }}">
                         {{ order.get_status_display }}
                     </span>
                 </div>
@@ -122,7 +122,7 @@
                 Ngày tạo: {{ order.created_at|date:"d/m/Y H:i" }}
             </div>
         </div>
-        <span class="ldm-od-status {{ order.status|lower }}">
+        <span class="ldm-od-status {{ order.normalized_status|lower }}">
             {{ order.get_status_display }}
         </span>
     </div>
@@ -225,10 +225,10 @@
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Phương thức</div>
                     <div class="ldm-od-info-value">
-                        {% if order.payment_method == 'cod' %}
+                        {% if order.payment_method == 'cash' %}
                         💵 Tiền mặt (COD)
-                        {% elif order.payment_method == 'vietqr' %}
-                        🏦 VietQR
+                        {% elif order.payment_method == 'bank' %}
+                        🏦 Chuyển khoản ngân hàng
                         {% elif order.payment_method == 'vnpay' %}
                         💳 VNPay
                         {% else %}
@@ -238,8 +238,12 @@
                 </div>
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Trạng thái thanh toán</div>
-                    <div class="ldm-od-info-value pending">
+                    <div class="ldm-od-info-value {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' %}paid{% else %}pending{% endif %}">
+                        {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' %}
+                        ✓ Đã thanh toán
+                        {% else %}
                         ⏳ Chưa thanh toán
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -260,7 +264,7 @@
 
     <div class="ldm-od-actions">
         <a href="{% url 'store:order_tracking' %}" class="ldm-od-btn ldm-od-btn-secondary">← Quay lại</a>
-        {% if order.status == 'pending' %}
+        {% if order.normalized_status == 'pending' %}
         <form method="POST" action="{% url 'store:cancel_order' order.id %}" style="flex: 1;">
             {% csrf_token %}
             <button type="submit" class="ldm-od-btn ldm-od-btn-secondary" onclick="return confirm('Bạn có chắc muốn hủy đơn này?')" style="width: 100%;">
@@ -292,12 +296,12 @@
                     </div>
                     <div class="ldm-os-row">
                         <span class="label">Trạng thái</span>
-                        <span class="value ldm-status {% if order.status == 'pending' %}ldm-status-pending{% elif order.status == 'approved' %}ldm-status-approved{% elif order.status == 'shipped' %}ldm-status-shipped{% elif order.status == 'completed' %}ldm-status-completed{% elif order.status == 'cancelled' %}ldm-status-cancelled{% endif %}">
-                            {% if order.status == 'pending' %}⏳ Chờ xử lý
-                            {% elif order.status == 'approved' %}✓ Đã duyệt
-                            {% elif order.status == 'shipped' %}🚚 Đang giao
-                            {% elif order.status == 'completed' %}🎉 Hoàn tất
-                            {% elif order.status == 'cancelled' %}❌ Đã huỷ
+                        <span class="value ldm-status {% if order.normalized_status == 'pending' %}ldm-status-pending{% elif order.normalized_status == 'processing' %}ldm-status-processing{% elif order.normalized_status == 'shipped' %}ldm-status-shipped{% elif order.normalized_status == 'delivered' %}ldm-status-delivered{% elif order.normalized_status == 'cancelled' %}ldm-status-cancelled{% endif %}">
+                            {% if order.normalized_status == 'pending' %}⏳ Chờ xác nhận
+                            {% elif order.normalized_status == 'processing' %}⚙️ Đang xử lý
+                            {% elif order.normalized_status == 'shipped' %}📦 Đang giao hàng
+                            {% elif order.normalized_status == 'delivered' %}✓ Hoàn thành
+                            {% elif order.normalized_status == 'cancelled' %}❌ Đã huỷ
                             {% endif %}
                         </span>
                     </div>

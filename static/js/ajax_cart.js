@@ -5,6 +5,7 @@
 
 // Add to cart via AJAX
 function addToCartAjax(productId, quantity = 1) {
+    const loginUrl = window.AUTH_ENDPOINTS && window.AUTH_ENDPOINTS.login;
     const formData = new FormData();
     formData.append('product_id', productId);
     formData.append('quantity', quantity);
@@ -14,11 +15,16 @@ function addToCartAjax(productId, quantity = 1) {
         method: 'POST',
         body: formData,
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(async response => ({ ok: response.ok, status: response.status, data: await response.json() }))
+    .then(({ ok, status, data }) => {
         if (data.success) {
             showToast(data.message, 'success');
             updateCartUI(data.cart_count, data.cart_total);
+        } else if (status === 401 || data.login_required || !ok) {
+            showToast(data.error || 'Vui lòng đăng nhập để thêm vào giỏ hàng', 'error');
+            if (loginUrl) {
+                window.location.href = data.login_url || loginUrl;
+            }
         } else {
             showToast(data.error, 'error');
         }

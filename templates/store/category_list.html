@@ -1,17 +1,17 @@
 {% extends "admin/admin_base.html" %}
 {% load static %}
 
-{% block title %}Quản lý danh mục - Admin Panel{% endblock %}
-{% block page_title %}Quản lý danh mục{% endblock %}
+{% block title %}Quản lý Brand - Admin Panel{% endblock %}
+{% block page_title %}Quản lý Brand{% endblock %}
 
 {% block content %}
 <div class="ldm-section">
     <div class="ldm-section-header">
-        <h2 class="ldm-section-title">Danh sách danh mục</h2>
+        <h2 class="ldm-section-title">Danh sách Brand</h2>
         <div class="ldm-toolbar">
-            <input type="text" id="categorySearch" placeholder="Tìm kiếm danh mục..." class="ldm-input ldm-toolbar-input-sm">
+            <input type="text" id="categorySearch" placeholder="Tìm kiếm Brand..." class="ldm-input ldm-toolbar-input-sm">
             <a href="{% url 'store:category_create' %}" class="ldm-button ldm-button-primary">
-                <i class="ri-add-line"></i> Thêm danh mục
+                <i class="ri-add-line"></i> Thêm Brand
             </a>
         </div>
     </div>
@@ -21,7 +21,7 @@
             <thead>
                 <tr>
                     <th class="ldm-col-60">#</th>
-                    <th>Tên danh mục</th>
+                    <th>Tên Brand</th>
                     <th class="ldm-text-center ldm-col-180">Số sản phẩm</th>
                     <th class="ldm-text-center ldm-col-190">Hành động</th>
                 </tr>
@@ -36,12 +36,12 @@
                     </td>
                     <td class="ldm-text-center">
                         <a href="{% url 'store:category_edit' category.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Sửa</a>
-                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-button ldm-button-danger ldm-button-xs" onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">Xóa</a>
+                        <a href="{% url 'store:category_delete' category.id %}" class="ldm-button ldm-button-danger ldm-button-xs" onclick="return confirm('Bạn có chắc muốn xóa Brand này?')">Xóa</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="ldm-empty-table">📦 Chưa có danh mục nào</td>
+                    <td colspan="4" class="ldm-empty-table">📦 Chưa có Brand nào</td>
                 </tr>
                 {% endfor %}
             </tbody>

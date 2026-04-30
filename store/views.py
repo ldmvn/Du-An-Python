@@ -658,7 +658,6 @@ def register_view(request):
 
 
 # ================== HOME ==================
-@login_required(login_url='store:login')
 def home(request):
     q = request.GET.get('q')
     brand = request.GET.get('brand', '').strip()
@@ -684,7 +683,7 @@ def home(request):
         products = products.filter(name__icontains=q)
 
     # Filter by brand (category) if provided
-    if brand:
+    if brand and brand.lower() != 'all':
         products = products.filter(category__name__iexact=brand)
 
     # Filter by price range (legacy)
@@ -751,7 +750,7 @@ def home(request):
     context.update({
         'products': products,
         'categories': categories,
-        'selected_brand': brand,
+        'selected_brand': brand or 'all',
         'search_query': q,
         'price_range': price_range,
         'price_min': price_min,
@@ -769,10 +768,14 @@ def home(request):
 
 
 # ================== PRODUCT DETAIL ==================
-@login_required(login_url='store:login')
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, 'Vui lòng đăng nhập để gửi đánh giá.')
+            login_url = f"{resolve_url('store:login')}?next={reverse('store:product_detail', args=[id])}#pd-reviews"
+            return redirect(login_url)
+
         rating = int(request.POST.get('rating', '0') or 0)
         comment = (request.POST.get('comment') or '').strip()
         if rating < 1 or rating > 5:
@@ -944,6 +947,188 @@ def product_detail(request, id):
     return render(request, 'store/product_detail.html', context)
 
 
+def _fetch_vietqr_banks():
+    """Fetch bank list from VietQR API, with fallback to hardcoded list."""
+    try:
+        response = requests.get('https://api.vietqr.io/v2/banks', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('code') == '00' and data.get('data'):
+                banks = []
+                for bank in data['data']:
+                    banks.append({
+                        'id': bank.get('code', ''),
+                        'name': bank.get('name', ''),
+                        'bin': bank.get('bin', ''),
+                    })
+                return banks
+    except Exception:
+        pass
+    
+    # Fallback hardcoded list
+    return [
+        {'id': 'NCB', 'name': 'Ngân hàng Quốc Dân', 'bin': '970415'},
+        {'id': 'BIDV', 'name': 'Ngân hàng Đầu tư và Phát triển Việt Nam', 'bin': '970436'},
+        {'id': 'TECH', 'name': 'Techcombank', 'bin': '970407'},
+        {'id': 'VCB', 'name': 'Ngân hàng Ngoại thương Việt Nam', 'bin': '970403'},
+        {'id': 'VIB', 'name': 'Ngân hàng Quốc Tế Việt Nam', 'bin': '970441'},
+        {'id': 'ACB', 'name': 'Ngân hàng Á Châu', 'bin': '970425'},
+        {'id': 'TPB', 'name': 'Ngân hàng Tiên Phong', 'bin': '970423'},
+        {'id': 'VPB', 'name': 'Ngân hàng Việt Nam Thương Tín', 'bin': '970432'},
+    ]
+
+
+@login_required(login_url='store:login')
+def bank_select(request):
+    """Show bank options for pending bank-transfer orders."""
+    pending = request.session.get('pending_order')
+    if not pending or pending.get('payment_method') != 'bank':
+        messages.error(request, 'Không có đơn hàng đang chờ thanh toán chuyển khoản.')
+        return redirect('store:cart_detail')
+
+    # Fetch banks from VietQR API
+    banks = _fetch_vietqr_banks()
+
+    # Handle POST - save selected bank and redirect to form
+    if request.method == 'POST':
+        bank_id = request.POST.get('bank_id')
+        if bank_id:
+            pending['bank_id'] = bank_id
+            # Find and save the bank name
+            for bank in banks:
+                if bank['id'] == bank_id:
+                    pending['bank_name'] = bank['name']
+                    break
+            request.session['pending_order'] = pending
+            return redirect('store:bank_pay')
+
+    # GET - show bank selection dropdown
+    context = get_base_context(request)
+    context.update({'banks': banks, 'pending': pending, 'pay_section': 'bank_select'})
+    return render(request, 'store/pay.html', context)
+
+
+@login_required(login_url='store:login')
+def bank_pay(request):
+    """Display bank payment form after bank selection and handle submission to OTP step."""
+    pending = request.session.get('pending_order')
+    if not pending or pending.get('payment_method') != 'bank':
+        messages.error(request, 'Không có đơn hàng đang chờ thanh toán chuyển khoản.')
+        return redirect('store:cart_detail')
+
+    if request.method == 'POST':
+        # Process bank form submission
+        account_no = request.POST.get('account_no', '').strip()
+        account_name = request.POST.get('account_name', '').strip()
+        expiry = request.POST.get('expiry', '').strip()
+
+        # Validate form inputs
+        if not account_no or not account_name:
+            messages.error(request, 'Vui lòng nhập số tài khoản và tên chủ thẻ.')
+            return redirect('store:bank_pay')
+
+        # Save bank form data to session
+        pending['bank_account_no'] = account_no
+        pending['bank_account_name'] = account_name
+        pending['bank_expiry'] = expiry
+        request.session['pending_order'] = pending
+
+        # Generate OTP (fixed for testing)
+        import secrets
+        from django.utils import timezone
+        otp = '123456'  # TODO: Change to random in production
+        request.session['pending_order_otp'] = otp
+        request.session['pending_order_otp_expires'] = (timezone.now() + timezone.timedelta(minutes=15)).isoformat()
+
+        # In real system, send OTP via SMS/Email. Here we flash it for testing
+        messages.info(request, f'Mã xác nhận (demo): {otp}')
+        return redirect('store:bank_otp')
+
+    # GET - show bank payment form
+    context = get_base_context(request)
+    context.update({'pending': pending, 'pay_section': 'bank_pay'})
+    return render(request, 'store/pay.html', context)
+
+
+@login_required(login_url='store:login')
+def bank_otp(request):
+    """Verify OTP and create the final order."""
+    pending = request.session.get('pending_order')
+    otp_expected = request.session.get('pending_order_otp')
+    if not pending or pending.get('payment_method') != 'bank' or not otp_expected:
+        messages.error(request, 'Không có giao dịch đang chờ xác nhận.')
+        return redirect('store:cart_detail')
+
+    if request.method == 'POST':
+        code = request.POST.get('otp', '').strip()
+        if code != otp_expected:
+            messages.error(request, 'Mã xác nhận không đúng. Vui lòng thử lại.')
+            return redirect('store:bank_otp')
+
+        # Create Order from pending data
+        from datetime import datetime
+        order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+        try:
+            if pending.get('type') == 'single':
+                product = Product.objects.get(id=int(pending['product_id']))
+                order = Order.objects.create(
+                    user=request.user,
+                    order_number=order_number,
+                    total_amount=pending['total_amount'],
+                    status='pending',
+                    payment_method='bank',
+                    customer_name=pending['fullname'],
+                    customer_phone=pending['phone'],
+                    customer_address=pending['address']
+                )
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=pending['quantity'],
+                    price=product.get_discounted_price()
+                )
+            else:
+                # cart type
+                order = Order.objects.create(
+                    user=request.user,
+                    order_number=order_number,
+                    total_amount=pending['total_amount'],
+                    status='pending',
+                    payment_method='bank',
+                    customer_name=pending['fullname'],
+                    customer_phone=pending['phone'],
+                    customer_address=pending['address']
+                )
+                for item in pending.get('cart_items', []):
+                    try:
+                        prod = Product.objects.get(id=int(item.get('product_id')))
+                    except Product.DoesNotExist:
+                        continue
+                    OrderItem.objects.create(
+                        order=order,
+                        product=prod,
+                        quantity=item.get('quantity', 1),
+                        price=item.get('price', 0)
+                    )
+
+            # Clear session pending keys and cart
+            request.session.pop('pending_order', None)
+            request.session.pop('pending_order_otp', None)
+            request.session['cart'] = {}
+
+            messages.success(request, f'✅ Đơn hàng được tạo! Mã đơn hàng: {order_number}. Đơn hàng đang chờ xác nhận thanh toán chuyển khoản.')
+            return redirect('store:order_success')
+        except Exception as e:
+            messages.error(request, f'❌ Lỗi xử lý đơn hàng: {e}')
+            return redirect('store:cart_detail')
+
+    # GET - show OTP input
+    context = get_base_context(request)
+    context.update({'pending': pending, 'pay_section': 'bank_otp'})
+    return render(request, 'store/pay.html', context)
+
+
 # ================== PRODUCT SEARCH ==================
 @login_required(login_url='store:login')
 def product_search(request):
@@ -971,6 +1156,9 @@ def product_search(request):
 # ================== CART ==================
 @login_required(login_url='store:login')
 def add_to_cart(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+
     product_id = str(product_id)
     
     try:
@@ -1137,12 +1325,29 @@ def checkout(request):
             full_address = f"{address}, {ward}, {district}, {city}"
             
             try:
+                # Handle bank transfer flow separately
+                if payment_method == 'bank':
+                    # Save pending order in session and redirect to bank selection
+                    pending = {
+                        'type': 'single',
+                        'product_id': product.id,
+                        'quantity': quantity,
+                        'fullname': fullname,
+                        'email': email,
+                        'phone': phone,
+                        'address': full_address,
+                        'total_amount': product.get_discounted_price() * quantity + 30000,
+                        'payment_method': payment_method,
+                    }
+                    request.session['pending_order'] = pending
+                    return redirect('store:bank_select')
+
                 # Create Order
                 from datetime import datetime
                 order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                
-                total_amount = product.get_discounted_price() * quantity
-                
+            
+                total_amount = product.get_discounted_price() * quantity + 30000
+            
                 order = Order.objects.create(
                     user=request.user,
                     order_number=order_number,
@@ -1153,7 +1358,7 @@ def checkout(request):
                     customer_phone=phone,
                     customer_address=full_address
                 )
-                
+            
                 # Create OrderItem
                 OrderItem.objects.create(
                     order=order,
@@ -1161,22 +1366,22 @@ def checkout(request):
                     quantity=quantity,
                     price=product.get_discounted_price()
                 )
-                
+            
                 # Get or create user profile
                 user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-                
+            
                 # Update user profile with shipping info
                 user_profile.phone = phone
                 user_profile.address = full_address  # Save full address including district/ward
                 user_profile.save()
-                
+            
                 # Update user's name/email
                 parts = fullname.split(' ', 1)
                 request.user.first_name = parts[0] if len(parts) > 0 else ''
                 request.user.last_name = parts[1] if len(parts) > 1 else ''
                 request.user.email = email
                 request.user.save()
-                
+            
                 messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}')
                 return redirect('store:order_success')
             
@@ -1302,21 +1507,46 @@ def checkout_from_cart(request):
             full_address = f"{address}, {ward}, {district}, {city}"
             
             try:
+                # Handle bank transfer flow separately
+                if payment_method == 'bank':
+                    # Save pending order in session and redirect to bank selection
+                    # Serialize cart_items into JSON-serializable dicts
+                    serializable_items = []
+                    for it in cart_items:
+                        serializable_items.append({
+                            'product_id': it['product'].id,
+                            'quantity': it['quantity'],
+                            'price': it['price'],
+                        })
+
+                    pending = {
+                        'type': 'cart',
+                        'cart_items': serializable_items,
+                        'total_amount': total_amount + 30000,
+                        'fullname': fullname,
+                        'email': email,
+                        'phone': phone,
+                        'address': full_address,
+                        'payment_method': payment_method,
+                    }
+                    request.session['pending_order'] = pending
+                    return redirect('store:bank_select')
+
                 # Create Order
                 from datetime import datetime
                 order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                
+
                 order = Order.objects.create(
                     user=request.user,
                     order_number=order_number,
-                    total_amount=total_amount,
+                    total_amount=total_amount + 30000,
                     status='pending',
                     payment_method=payment_method,
                     customer_name=fullname,
                     customer_phone=phone,
                     customer_address=full_address
                 )
-                
+
                 # Create OrderItems for all cart items
                 for item in cart_items:
                     OrderItem.objects.create(
@@ -1325,25 +1555,25 @@ def checkout_from_cart(request):
                         quantity=item['quantity'],
                         price=item['price']
                     )
-                
+
                 # Clear cart after successful order
                 request.session['cart'] = {}
-                
+
                 # Get or create user profile
                 user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-                
+
                 # Update user profile with shipping info
                 user_profile.phone = phone
                 user_profile.address = full_address  # Save full address including district/ward
                 user_profile.save()
-                
+
                 # Update user's name/email
                 parts = fullname.split(' ', 1)
                 request.user.first_name = parts[0] if len(parts) > 0 else ''
                 request.user.last_name = parts[1] if len(parts) > 1 else ''
                 request.user.email = email
                 request.user.save()
-                
+
                 messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}')
                 return redirect('store:order_success')
             
@@ -1510,7 +1740,7 @@ def cancel_order(request, order_id):
     """Hủy đơn hàng (chỉ khi status = pending)"""
     order = get_object_or_404(Order, id=order_id, user=request.user)
     
-    if order.status == 'pending':
+    if order.normalized_status == 'pending':
         order.status = 'cancelled'
         order.save()
         messages.success(request, '✅ Đơn hàng đã được hủy')
@@ -1591,7 +1821,7 @@ def order_detail(request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
     
     # Check if shipping info can be edited
-    can_edit_shipping = order.status in ['pending', 'processing']
+    can_edit_shipping = order.normalized_status in ['pending', 'processing']
     
     show_edit_form = can_edit_shipping and request.GET.get('edit') == '1'
     
@@ -2361,9 +2591,17 @@ def get_wards(request, district_code):
 
 
 # ================== AJAX ENDPOINTS - WISHLIST ==================
-@login_required(login_url='store:login')
 def toggle_wishlist_ajax(request):
     """AJAX endpoint to toggle product in wishlist"""
+    if not request.user.is_authenticated:
+        referer = request.META.get('HTTP_REFERER', '/')
+        return JsonResponse({
+            'success': False,
+            'error': 'Vui lòng đăng nhập để thêm vào wishlist',
+            'login_required': True,
+            'login_url': f"{settings.LOGIN_URL}?next={referer}"
+        }, status=401)
+
     if request.method == 'POST':
         try:
             product_id = request.POST.get('product_id')
@@ -2392,6 +2630,14 @@ def toggle_wishlist_ajax(request):
 # ================== AJAX ENDPOINTS - CART ==================
 def add_to_cart_ajax(request):
     """AJAX endpoint to add product to cart"""
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng',
+            'login_required': True,
+            'login_url': f"{settings.LOGIN_URL}?next=/cart/"
+        }, status=401)
+
     if request.method == 'POST':
         try:
             product_id = request.POST.get('product_id')
@@ -2653,3 +2899,160 @@ def placeholder(request):
         return JsonResponse({'status': 'ok', 'message': 'Endpoint này sẽ được phát triển'})
     
     return JsonResponse({'status': 'ok', 'message': 'Request thành công'})
+
+
+# ================== PASSWORD RESET ==================
+def forgot_password_view(request):
+    """Handle forgot password requests"""
+    from .models import PasswordResetToken
+    import secrets
+    from django.utils import timezone
+    from datetime import timedelta
+
+    context = get_base_context(request)
+    context['auth_type'] = 'forgot_password'
+    context['show_code_step'] = False
+    context['email'] = ''
+    context['email_error'] = ''
+    context['code_error'] = ''
+    context['success_message'] = ''
+    context['token'] = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'send_email')
+
+        if action == 'send_email':
+            email = request.POST.get('email', '').strip()
+            context['email'] = email
+
+            if not email:
+                context['email_error'] = '❌ Vui lòng nhập email'
+                return render(request, 'store/auth.html', context)
+
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                context['email_error'] = '❌ Email không hợp lệ'
+                return render(request, 'store/auth.html', context)
+
+            token = secrets.token_urlsafe(32)
+            code = '123456'
+            expires_at = timezone.now() + timedelta(hours=24)
+
+            PasswordResetToken.objects.create(
+                user=user,
+                token=token,
+                code=code,
+                expires_at=expires_at
+            )
+
+            from django.core.mail import send_mail
+            subject = '🔐 Mã xác nhận đặt lại mật khẩu - Mobile Store'
+            message = f'''
+Xin chào {user.first_name or user.username},
+
+Bạn vừa yêu cầu đặt lại mật khẩu.
+
+Mã xác nhận của bạn là: {code}
+
+Nhập mã này vào trang quên mật khẩu để tiếp tục đặt lại mật khẩu.
+
+Nếu bạn không yêu cầu, hãy bỏ qua email này.
+
+---
+Mobile Store Team
+            '''
+
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+
+            context['show_code_step'] = True
+            context['success_message'] = '✅ Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra và nhập mã.'
+            context['token'] = token
+            return render(request, 'store/auth.html', context)
+
+        if action == 'verify_code':
+            token = request.POST.get('token', '').strip()
+            code = request.POST.get('code', '').strip()
+            context['show_code_step'] = True
+            context['token'] = token
+            context['email'] = request.POST.get('email', '').strip()
+
+            if not code:
+                context['code_error'] = '❌ Vui lòng nhập mã xác nhận'
+                return render(request, 'store/auth.html', context)
+
+            try:
+                reset_token = PasswordResetToken.objects.get(token=token)
+            except PasswordResetToken.DoesNotExist:
+                context['code_error'] = '❌ Mã không hợp lệ'
+                return render(request, 'store/auth.html', context)
+
+            if not reset_token.is_valid():
+                context['code_error'] = '❌ Mã đã hết hạn hoặc không hợp lệ'
+                return render(request, 'store/auth.html', context)
+
+            if not reset_token.is_code_valid(code):
+                context['code_error'] = '❌ Mã không hợp lệ'
+                return render(request, 'store/auth.html', context)
+
+            reset_token.is_email_verified = True
+            reset_token.save()
+            return redirect('store:reset_password', token=token)
+
+    return render(request, 'store/auth.html', context)
+
+
+def reset_password_view(request, token):
+    """Handle password reset with token"""
+    from .models import PasswordResetToken
+    
+    try:
+        reset_token = PasswordResetToken.objects.get(token=token)
+        
+        if not reset_token.is_valid() or not reset_token.is_email_verified:
+            messages.error(request, '❌ Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn')
+            return redirect('store:login')
+        
+        if request.method == 'POST':
+            password1 = request.POST.get('password1', '').strip()
+            password2 = request.POST.get('password2', '').strip()
+            
+            if not password1 or not password2:
+                messages.error(request, '❌ Vui lòng nhập mật khẩu')
+                return redirect('store:reset_password', token=token)
+            
+            if password1 != password2:
+                messages.error(request, '❌ Mật khẩu không khớp')
+                return redirect('store:reset_password', token=token)
+            
+            if len(password1) < 8:
+                messages.error(request, '❌ Mật khẩu phải có ít nhất 8 ký tự')
+                return redirect('store:reset_password', token=token)
+            
+            # Set new password
+            user = reset_token.user
+            user.set_password(password1)
+            user.save()
+            
+            # Mark token as used
+            reset_token.is_used = True
+            reset_token.save()
+            
+            messages.success(request, '✅ Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập.')
+            return redirect('store:login')
+        
+        context = get_base_context(request)
+        context['auth_type'] = 'reset_password'
+        context['token'] = token
+        return render(request, 'store/auth.html', context)
+        
+    except PasswordResetToken.DoesNotExist:
+        messages.error(request, '❌ Link đặt lại mật khẩu không hợp lệ')
+        return redirect('store:login')
+

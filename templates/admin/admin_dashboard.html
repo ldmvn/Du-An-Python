@@ -75,10 +75,10 @@
                         <td>{{ order.customer_name|default:"N/A" }}</td>
                         <td>{{ order.total_amount|intcomma }}₫</td>
                         <td>
-                            {% if order.status == 'completed' %}
+                            {% if order.status == 'delivered' %}
                             <span class="ldm-badge ldm-badge-success">✅ Hoàn thành</span>
                             {% elif order.status == 'pending' %}
-                            <span class="ldm-badge ldm-badge-warning">⏳ Chờ xử lý</span>
+                            <span class="ldm-badge ldm-badge-warning">⏳ Chờ xác nhận</span>
                             {% else %}
                             <span class="ldm-badge ldm-badge-info">{{ order.get_status_display }}</span>
                             {% endif %}

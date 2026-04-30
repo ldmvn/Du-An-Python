@@ -1,7 +1,9 @@
 ﻿/* Authentication Page Styling */
 
 body.auth-page {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: white !important;
+    background-image: none !important;
+    background-color: white !important;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -29,6 +31,10 @@ body.auth-page .ldm-main {
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     padding: 40px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .auth-header {

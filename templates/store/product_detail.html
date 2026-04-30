@@ -14,7 +14,7 @@
             <a href="{% url 'store:home' %}">Trang chủ</a>
             <span>/</span>
             {% if product.category %}
-            <a href="{% url 'store:home' %}?brand={{ product.category.name|urlencode }}">{{ product.category.name }}</a>
+            <a href="{% url 'store:home' %}?brand={{ product.category.name|urlencode }}">Brand: {{ product.category.name }}</a>
             <span>/</span>
             {% endif %}
             <span>{{ product.name }}</span>
@@ -322,7 +322,11 @@
 
                         <div class="pd-actions">
                             <button type="button" class="pd-buy-btn btn-buy-now" data-product-id="{{ product.id }}">Mua ngay</button>
+                            {% if request.user.is_authenticated %}
                             <button type="button" class="pd-cart-btn btn-add-cart" data-product-id="{{ product.id }}">Thêm vào giỏ hàng</button>
+                            {% else %}
+                            <a href="{% url 'store:login' %}?next={{ request.path|urlencode }}" class="pd-cart-btn" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">Đăng nhập để mua hàng</a>
+                            {% endif %}
                             <button type="button" class="pd-installment-btn">Trả góp 0%</button>
                         </div>
 
@@ -354,6 +358,7 @@
                                 </div>
                             </div>
 
+                            {% if request.user.is_authenticated %}
                             <form method="POST" class="pd-review-form">
                                 {% csrf_token %}
                                 <div class="pd-rating-picker">
@@ -370,6 +375,12 @@
                                 <textarea name="comment" rows="4" class="pd-review-textarea" placeholder="Chia sẻ cảm nhận thực tế về sản phẩm...">{% if selected_review %}{{ selected_review.comment }}{% endif %}</textarea>
                                 <button type="submit" class="pd-review-submit">Gửi đánh giá</button>
                             </form>
+                            {% else %}
+                            <div class="pd-review-login-box">
+                                <p>Bạn cần đăng nhập để gửi đánh giá cho sản phẩm này.</p>
+                                <a href="{% url 'store:login' %}?next={{ request.path|urlencode }}#pd-reviews" class="pd-review-submit" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">Đăng nhập để đánh giá</a>
+                            </div>
+                            {% endif %}
 
                             <div class="pd-comment-list">
                                 {% for review in reviews %}

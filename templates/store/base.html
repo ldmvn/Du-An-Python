@@ -45,6 +45,9 @@
             removeFromCart: '{% url "store:remove_from_cart_ajax" %}',
             toggleWishlist: '{% url "store:toggle_wishlist_ajax" %}',
         };
+        window.AUTH_ENDPOINTS = {
+            login: '{% url "store:login" %}'
+        };
     </script>
 
     <script>
@@ -78,7 +81,7 @@
         });
     </script>
 </head>
-<body{% if request.path == '/auth/' or request.path|startswith:'/login' or request.path|startswith:'/register' %} class="auth-page"{% endif %}>
+<body{% if request.path == '/auth/' or request.path|startswith:'/login' or request.path|startswith:'/register' or request.path|startswith:'/forgot-password' or request.path|startswith:'/reset-password' %} class="auth-page"{% endif %}>
     <!-- Messages/Notifications Data in JSON script tag -->
     <script type="application/json" id="ldm-messages-data">
     {% if messages %}[
@@ -113,7 +116,7 @@
     </script>
 
     <!-- Navigation Bar -->
-    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' %}
+    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' and not request.path|startswith:'/forgot-password' and not request.path|startswith:'/reset-password' %}
         {% include "components/navbar.html" %}
     {% endif %}
 
@@ -123,7 +126,7 @@
     </main>
 
     <!-- Footer -->
-    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' %}
+    {% if request.path != '/auth/' and not request.path|startswith:'/login' and not request.path|startswith:'/register' and not request.path|startswith:'/forgot-password' and not request.path|startswith:'/reset-password' %}
         {% include "components/footer.html" %}
     {% endif %}
 

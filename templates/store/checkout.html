@@ -220,14 +220,6 @@
                         </div>
                     </label>
                     
-                    <!-- VNPAY -->
-                    <label class="payment-option">
-                        <input type="radio" name="payment_method" value="vnpay">
-                        <div class="payment-label">
-                            <strong>💳 VNPay</strong>
-                            <small>Thanh toán qua cổng VNPay</small>
-                        </div>
-                    </label>
                 </div>
                 {% if form.payment_method.errors %}
                     {% for error in form.payment_method.errors %}
@@ -261,7 +253,7 @@
                 
                 <div class="summary-row total">
                     <span>Tổng cộng:</span>
-                    <span id="total-price">{{ total_price|default:total_amount|default:total|floatformat:0|add:0 }}₫</span>
+                    <span id="total-price">{{ total_price|default:total_amount|default:total|add:30000|floatformat:0|add:0 }}₫</span>
                 </div>
                 {% elif cart_items %}
                 <!-- Cart Summary -->
@@ -277,7 +269,7 @@
                 
                 <div class="summary-row total">
                     <span>Tổng cộng:</span>
-                    <span id="total-price">{{ total_amount|floatformat:0|add:0 }}₫</span>
+                    <span id="total-price">{{ total_amount|add:30000|floatformat:0|add:0 }}₫</span>
                 </div>
                 {% endif %}
                 

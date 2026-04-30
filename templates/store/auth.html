@@ -6,6 +6,8 @@
         ĐĂNG KÝ TÀI KHOẢN - MOBILE STORE
     {% elif auth_type == 'forgot_password' %}
         QUÊN MẬT KHẨU - MOBILE STORE
+    {% elif auth_type == 'reset_password' %}
+        ĐẶT LẠI MẬT KHẨU - MOBILE STORE
     {% else %}
         ĐĂNG NHẬP - MOBILE STORE
     {% endif %}
@@ -13,7 +15,7 @@
 
 {% block extra_css %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -21,7 +23,17 @@
     <!-- Header -->
     <div class="auth-header">
         <img src="{% static 'logos/logohome.png' %}" alt="MOBILE STORE" class="auth-header-logo">
-        <p id="auth-subtitle">Chào mừng bạn trở lại</p>
+        <p id="auth-subtitle">
+            {% if auth_type == 'register' %}
+                Tạo tài khoản mới của bạn
+            {% elif auth_type == 'forgot_password' %}
+                Đặt lại mật khẩu của bạn
+            {% elif auth_type == 'reset_password' %}
+                Đặt mật khẩu mới cho tài khoản của bạn
+            {% else %}
+                Chào mừng bạn trở lại
+            {% endif %}
+        </p>
     </div>
 
     <!-- Messages -->
@@ -33,102 +45,155 @@
         {% endfor %}
     {% endif %}
 
-    <!-- Tabs -->
-    <div class="auth-tabs">
-        <button class="auth-tab active" onclick="switchAuthTab('login')">Đăng nhập</button>
-        <button class="auth-tab" onclick="switchAuthTab('register')">Đăng ký</button>
-    </div>
-
-    <!-- Login Tab -->
-    <div id="login-tab" class="auth-tab-content active">
-        <form method="POST" action="{% url 'store:login' %}">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label>Tên đăng nhập / Email</label>
-                <input type="text" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
-            </div>
-
-            <div class="form-group">
-                <label>Mật khẩu</label>
-                <input type="password" name="password" placeholder="Nhập mật khẩu" required>
-            </div>
-
-            <div class="remember-forgot">
-                <label class="remember-me">
-                    <input type="checkbox" name="remember_me">
-                    <span>Ghi nhớ đăng nhập</span>
-                </label>
-                <a class="forgot-link" onclick="switchAuthTab('forgot_password')">Quên mật khẩu?</a>
-            </div>
-
-            <button type="submit" class="btn-primary">Đăng nhập</button>
-        </form>
-
-        <div class="auth-footer">
-            Chưa có tài khoản? <a onclick="switchAuthTab('register')">Đăng ký ngay</a>
+    {% if auth_type != 'reset_password' %}
+        <!-- Tabs -->
+        <div class="auth-tabs">
+            <button class="auth-tab {% if auth_type != 'register' and auth_type != 'forgot_password' %}active{% endif %}" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button class="auth-tab {% if auth_type == 'register' %}active{% endif %}" onclick="switchAuthTab('register')">Đăng ký</button>
         </div>
-    </div>
+    {% endif %}
 
-    <!-- Register Tab -->
-    <div id="register-tab" class="auth-tab-content">
-        <form method="POST" action="{% url 'store:register' %}">
-            {% csrf_token %}
+    {% if auth_type != 'reset_password' %}
+        <!-- Login Tab -->
+        <div id="login-tab" class="auth-tab-content {% if auth_type != 'register' and auth_type != 'forgot_password' %}active{% endif %}">
+            <form method="POST" action="{% url 'store:login' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Tên đăng nhập / Email</label>
+                    <input type="text" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
+                </div>
 
-            <div class="form-group">
-                <label>Tên đăng nhập</label>
-                <input type="text" name="username" placeholder="Tạo tên đăng nhập" required>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember_me">
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a class="forgot-link" onclick="switchAuthTab('forgot_password')">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn-primary">Đăng nhập</button>
+            </form>
+
+            <div class="auth-footer">
+                Chưa có tài khoản? <a onclick="switchAuthTab('register')">Đăng ký ngay</a>
             </div>
-
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="Nhập email" required>
-            </div>
-
-            <div class="form-group">
-                <label>Mật khẩu</label>
-                <input type="password" name="password1" placeholder="Tạo mật khẩu" required>
-            </div>
-
-            <div class="form-group">
-                <label>Xác nhận mật khẩu</label>
-                <input type="password" name="password2" placeholder="Nhập lại mật khẩu" required>
-            </div>
-
-            <div class="remember-me" style="margin-bottom: 20px;">
-                <input type="checkbox" name="agree_terms" required>
-                <span>Tôi đồng ý với <a href="#" style="color: #667eea; text-decoration: none;">điều khoản dịch vụ</a></span>
-            </div>
-
-            <button type="submit" class="btn-primary">Đăng ký tài khoản</button>
-        </form>
-
-        <div class="auth-footer">
-            Đã có tài khoản? <a onclick="switchAuthTab('login')">Đăng nhập ngay</a>
         </div>
-    </div>
 
-    <!-- Forgot Password Tab -->
-    <div id="forgot_password-tab" class="auth-tab-content">
-        <form method="POST" action="#">
-            {% csrf_token %}
+        <!-- Register Tab -->
+        <div id="register-tab" class="auth-tab-content">
+            <form method="POST" action="{% url 'store:register' %}">
+                {% csrf_token %}
 
-            <div class="form-group">
-                <label>Email đã đăng ký</label>
-                <input type="email" name="email" placeholder="Nhập email của bạn" required>
+                <div class="form-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" name="username" placeholder="Tạo tên đăng nhập" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="Nhập email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password1" placeholder="Tạo mật khẩu" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" name="password2" placeholder="Nhập lại mật khẩu" required>
+                </div>
+
+                <div class="remember-me" style="margin-bottom: 20px;">
+                    <input type="checkbox" name="agree_terms" required>
+                    <span>Tôi đồng ý với <a href="#" style="color: #667eea; text-decoration: none;">điều khoản dịch vụ</a></span>
+                </div>
+
+                <button type="submit" class="btn-primary">Đăng ký tài khoản</button>
+            </form>
+
+            <div class="auth-footer">
+                Đã có tài khoản? <a onclick="switchAuthTab('login')">Đăng nhập ngay</a>
             </div>
-
-            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
-                Chúng tôi sẽ gửi một mã xác nhận đến email của bạn
-            </p>
-
-            <button type="submit" class="btn-primary">Gửi mã xác nhận</button>
-        </form>
-
-        <div class="auth-footer">
-            <a onclick="switchAuthTab('login')">← Quay lại đăng nhập</a>
         </div>
-    </div>
+
+        <!-- Forgot Password Tab -->
+        <div id="forgot_password-tab" class="auth-tab-content {% if auth_type == 'forgot_password' %}active{% endif %}">
+            <form method="POST" action="{% url 'store:forgot_password' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="{% if show_code_step %}verify_code{% else %}send_email{% endif %}">
+                {% if token %}
+                    <input type="hidden" name="token" value="{{ token }}">
+                {% endif %}
+
+                <div class="form-group">
+                    <label>Email đã đăng ký</label>
+                    <input type="email" name="email" placeholder="Nhập email của bạn" value="{{ email }}" required>
+                    {% if email_error %}
+                        <div class="form-error">{{ email_error }}</div>
+                    {% endif %}
+                </div>
+
+                {% if show_code_step %}
+                    <div class="form-group">
+                        <label>Mã xác nhận</label>
+                        <input type="text" name="code" placeholder="Nhập mã xác nhận" required maxlength="6">
+                        {% if code_error %}
+                            <div class="form-error">{{ code_error }}</div>
+                        {% endif %}
+                    </div>
+                    {% if success_message %}
+                        <div class="success-message" style="margin-bottom: 20px;">{{ success_message }}</div>
+                    {% endif %}
+                    <button type="submit" class="btn-primary">Xác nhận mã</button>
+                {% else %}
+                    <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                        Chúng tôi sẽ gửi một mã xác nhận đến email của bạn
+                    </p>
+                    <button type="submit" class="btn-primary">Gửi mã xác nhận</button>
+                {% endif %}
+            </form>
+
+            <div class="auth-footer">
+                <a onclick="switchAuthTab('login')">← Quay lại đăng nhập</a>
+            </div>
+        </div>
+
+    {% endif %}
+
+    {% if auth_type == 'reset_password' %}
+        <div id="reset_password-tab" class="auth-tab-content {% if auth_type == 'reset_password' %}active{% endif %}">
+            <form method="POST" action="{% url 'store:reset_password' token %}">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Mật khẩu mới</label>
+                    <input type="password" name="password1" placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)" required minlength="8">
+                </div>
+
+                <div class="form-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" name="password2" placeholder="Nhập lại mật khẩu" required minlength="8">
+                </div>
+
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px; text-align: center;">
+                    💡 Mật khẩu phải có ít nhất 8 ký tự
+                </p>
+
+                <button type="submit" class="btn-primary">Đặt lại mật khẩu</button>
+            </form>
+
+            <div class="auth-footer" style="text-align: center; margin-top: 20px;">
+                <a href="{% url 'store:login' %}">← Quay lại đăng nhập</a>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 <script>
@@ -156,7 +221,8 @@
         const subtitles = {
             'login': 'Chào mừng bạn trở lại',
             'register': 'Tạo tài khoản mới của bạn',
-            'forgot_password': 'Đặt lại mật khẩu của bạn'
+            'forgot_password': 'Đặt lại mật khẩu của bạn',
+            'reset_password': 'Đặt mật khẩu mới cho tài khoản của bạn'
         };
         document.getElementById('auth-subtitle').textContent = subtitles[tabName] || '';
     }

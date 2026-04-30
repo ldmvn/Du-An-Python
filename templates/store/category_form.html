@@ -15,13 +15,13 @@
     </div>
 
     <div class="ldm-form-card">
-        <p>Quản lý thông tin danh mục / thương hiệu sản phẩm.</p>
+        <p>Quản lý thông tin Brand / thương hiệu sản phẩm.</p>
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
             <div class="ldm-form-group">
-                <label for="id_name">Tên danh mục</label>
+                <label for="id_name">Tên Brand</label>
                 {{ form.name }}
                 {% if form.name.errors %}
                     <div class="ldm-form-error">{{ form.name.errors.0 }}</div>
@@ -34,7 +34,7 @@
 
             <div class="ldm-form-actions">
                 <button type="submit" class="ldm-button ldm-button-primary">
-                    {% if category %}Cập nhật{% else %}Thêm danh mục{% endif %}
+                    {% if category %}Cập nhật{% else %}Thêm Brand{% endif %}
                 </button>
                 <a href="{% url 'store:category_list' %}" class="ldm-button ldm-button-secondary">Hủy</a>
             </div>

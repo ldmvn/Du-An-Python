@@ -75,6 +75,9 @@
                         <i class="ri-filter-3-line"></i>
                         Lọc
                     </button>
+                    <a href="?{% if search_query %}q={{ search_query|urlencode }}{% endif %}{% if price_range %}{% if search_query %}&{% endif %}price_range={{ price_range|urlencode }}{% endif %}" class="ldm-filter-chip {% if selected_brand == 'all' %}active{% endif %}">
+                        Tất cả
+                    </a>
                     {% for cat in categories %}
                     <a href="?brand={{ cat.name|urlencode }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if price_range %}&price_range={{ price_range|urlencode }}{% endif %}" class="ldm-filter-chip {% if selected_brand == cat.name %}active{% endif %}">
                         {{ cat.name }}
