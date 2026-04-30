@@ -1033,10 +1033,10 @@ def bank_pay(request):
         pending['bank_expiry'] = expiry
         request.session['pending_order'] = pending
 
-        # Generate OTP (fixed for testing)
+        # Generate OTP
         import secrets
         from django.utils import timezone
-        otp = '123456'  # TODO: Change to random in production
+        otp = secrets.token_hex(3).upper()  # Generate 6-character hex OTP
         request.session['pending_order_otp'] = otp
         request.session['pending_order_otp_expires'] = (timezone.now() + timezone.timedelta(minutes=15)).isoformat()
 
@@ -2890,15 +2890,6 @@ def update_order_status(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
     return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'}, status=400)
-
-
-# ================== PLACEHOLDER VIEW ==================
-def placeholder(request):
-    """Placeholder view để tránh 404 errors"""
-    if request.method == 'GET':
-        return JsonResponse({'status': 'ok', 'message': 'Endpoint này sẽ được phát triển'})
-    
-    return JsonResponse({'status': 'ok', 'message': 'Request thành công'})
 
 
 # ================== PASSWORD RESET ==================
