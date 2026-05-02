@@ -9,117 +9,140 @@
 
 {% block content %}
 <div class="cart-page-container">
-  {% csrf_token %}
-  
-  <!-- Header -->
-  <div class="cart-header">
-    <div class="cart-emoji">🛒</div>
-    <h1>Giỏ hàng của bạn</h1>
-    <p>Quản lý sản phẩm bạn đã thêm vào giỏ</p>
-  </div>
-
   {% if products %}
-  <!-- Cart Content -->
-  <div class="cart-content-wrapper">
-    <!-- Left: Cart Table -->
-    <div>
-      <div class="cart-table-wrapper">
-        <div class="cart-table-header">
-          <div></div>
-          <div>Sản phẩm</div>
-          <div>Đơn giá</div>
-          <div>Số lượng</div>
-          <div>Thành tiền</div>
-          <div>Xóa</div>
-        </div>
-
-        {% for product in products %}
-        <div class="cart-item-row" data-product-id="{{ product.id }}">
-          <!-- Checkbox -->
-          <div class="item-checkbox">
-            <input type="checkbox" class="product-checkbox" value="{{ product.id }}">
-          </div>
-
-          <!-- Product -->
-          <div class="item-product">
-            <div class="item-product-image">
-              {% if product.image %}
-              <img src="{{ product.image.url }}" alt="{{ product.name }}">
-              {% endif %}
-            </div>
-            <div class="item-product-info">
-              <div class="item-product-name">
-                <a href="{% url 'store:product_detail' product.id %}">
-                  {{ product.name }}
-                </a>
-              </div>
-              {% if product.color %}
-              <div class="item-product-variant">Màu: {{ product.color }}</div>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- Unit Price -->
-          <div class="item-price">
-            {{ product.price|floatformat:0|add:0 }}₫
-          </div>
-
-          <!-- Quantity -->
-          <div class="item-quantity">
-            <button class="qty-btn qty-decrease" data-product-id="{{ product.id }}">−</button>
-            <input type="number" class="qty-input" value="{{ product.quantity }}" min="1" max="99">
-            <button class="qty-btn qty-increase" data-product-id="{{ product.id }}">+</button>
-          </div>
-
-          <!-- Subtotal -->
-          <div class="item-subtotal" data-subtotal="{{ product.subtotal|floatformat:0|add:0 }}">
-            {{ product.subtotal|floatformat:0|add:0 }}₫
-          </div>
-          <div class="item-remove">
-            <a href="{% url 'store:remove_from_cart' product.id %}" class="remove-item-link" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?');">Xóa</a>
-          </div>
-        </div>
-        {% endfor %}
+  <div class="ldm-cart-container">
+    <div class="ldm-cart-list">
+      <div class="ldm-cart-select-all">
+        <label for="selectAll">
+          <input type="checkbox" id="selectAll" class="ldm-cart-checkbox" onchange="toggleSelectAll(this)">
+          <span>Chọn tất cả (<span id="selectedCount">0</span> sản phẩm)</span>
+        </label>
+        <button type="button" class="ldm-cart-delete-all" onclick="deleteSelected()" title="Xóa sản phẩm đã chọn">
+          <i class="ri-delete-bin-line"></i>
+        </button>
       </div>
+
+      {% for product in products %}
+      <div class="ldm-cart-item" data-item-id="{{ product.id }}">
+        <div class="ldm-cart-item-check">
+          <input type="checkbox" class="ldm-cart-checkbox cart-item-check" data-item-id="{{ product.id }}" onchange="updateSelectedCount()">
+        </div>
+
+        <div class="ldm-cart-item-img">
+          {% if product.image %}
+          <img id="itemImg_{{ product.id }}" src="{{ product.image.url }}" alt="{{ product.name }}">
+          {% else %}
+          <div class="ldm-cart-no-img">Ảnh</div>
+          {% endif %}
+        </div>
+
+        <div class="ldm-cart-item-details">
+          <a href="{% url 'store:product_detail' product.id %}" class="ldm-cart-item-name">{{ product.name }}</a>
+
+          {% if product.colors.all %}
+          <div class="ldm-cart-color-dropdown" data-item-id="{{ product.id }}">
+            <button type="button" class="ldm-cart-color-selected" onclick="toggleColorDropdown(this)">
+              <strong>Màu:</strong> <span>{{ product.selected_color|default:product.default_color }}</span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <div id="colorOptions_{{ product.id }}" class="ldm-cart-color-options">
+              {% for color in product.colors.all %}
+              <button type="button" class="ldm-cart-color-opt {% if color.name == product.selected_color %}selected{% endif %}" onclick="changeColor(this, '{{ product.id }}', '{{ color.name|escapejs }}')">
+                {{ color.name }}{% if color.price_delta and color.price_delta != 0 %} (+{{ color.price_delta|floatformat:0|add:0 }}đ){% endif %}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          {% elif product.selected_color %}
+          <div class="ldm-cart-color-selected">
+            <span>Màu: {{ product.selected_color }}</span>
+          </div>
+          {% endif %}
+
+          {% if product.ram_options.all %}
+          <div class="ldm-cart-ram-dropdown" data-item-id="{{ product.id }}">
+            <button type="button" class="ldm-cart-storage-selected ldm-cart-ram-selected" onclick="toggleRamDropdown(this)">
+              <strong>RAM:</strong> <span>{{ product.selected_ram|default:product.ram }}</span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <div id="ramOptions_{{ product.id }}" class="ldm-cart-storage-options ldm-cart-ram-options">
+              {% for ram in product.ram_options.all %}
+              <button type="button" class="ldm-cart-storage-opt ldm-cart-ram-opt {% if ram.value == product.selected_ram %}selected{% endif %}" onclick="changeRam(this, '{{ product.id }}', '{{ ram.value|escapejs }}')">
+                {{ ram.value }}{% if ram.price_delta and ram.price_delta != 0 %} (+{{ ram.price_delta|floatformat:0|add:0 }}đ){% endif %}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          {% elif product.selected_ram %}
+          <div class="ldm-cart-storage-selected">
+            <span>RAM: {{ product.selected_ram }}</span>
+          </div>
+          {% endif %}
+
+          {% if product.storage_options.all %}
+          <div class="ldm-cart-storage-dropdown" data-item-id="{{ product.id }}">
+            <button type="button" class="ldm-cart-storage-selected" onclick="toggleStorageDropdown(this)">
+              <strong>Dung lượng:</strong> <span>{{ product.selected_storage|default:product.rom }}</span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+            <div id="storageOptions_{{ product.id }}" class="ldm-cart-storage-options">
+              {% for storage in product.storage_options.all %}
+              <button type="button" class="ldm-cart-storage-opt {% if storage.capacity == product.selected_storage %}selected{% endif %}" onclick="changeStorage(this, '{{ product.id }}', '{{ storage.capacity|escapejs }}')">
+                {{ storage.capacity }}{% if storage.price_delta and storage.price_delta != 0 %} (+{{ storage.price_delta|floatformat:0|add:0 }}đ){% endif %}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          {% elif product.selected_storage %}
+          <div class="ldm-cart-storage-selected">
+            <span>Dung lượng: {{ product.selected_storage }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="ldm-cart-item-right">
+          <div class="ldm-cart-item-price">
+            <div id="itemPrice_{{ product.id }}" class="ldm-cart-item-current-price">{{ product.price|floatformat:0|add:0 }}đ</div>
+            <div id="itemOrigPrice_{{ product.id }}" class="ldm-cart-item-original-price" style="display: none;"></div>
+          </div>
+
+          <div class="ldm-cart-item-actions">
+            <div class="ldm-cart-qty">
+              <button type="button" class="ldm-cart-qty-btn qty-decrease" data-item-id="{{ product.id }}">−</button>
+              <input id="qtyInput_{{ product.id }}" type="text" class="ldm-cart-qty-input" value="{{ product.quantity }}" inputmode="numeric" pattern="[0-9]*" onchange="updateCartQuantity({{ product.id }}, this.value); updateSelectedCount()">
+              <button type="button" class="ldm-cart-qty-btn qty-increase" data-item-id="{{ product.id }}">+</button>
+            </div>
+            <button type="button" class="ldm-cart-delete-btn" onclick="removeFromCart({{ product.id }})" title="Xóa">
+              <i class="ri-delete-bin-line"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
     </div>
 
-    <!-- Right: Sidebar -->
-    <div class="cart-sidebar">
-      <!-- Total Section -->
-      <div class="sidebar-section">
-        <h3>💳 Tổng giỏ hàng</h3>
+    <aside class="ldm-cart-summary order-summary-card">
+      <div class="order-summary-title">TÓM TẮT ĐƠN HÀNG</div>
 
-        <div class="total-section">
-          <div class="total-row">
-            <span>Số sản phẩm đã chọn:</span>
-            <span class="selected-count">0</span>
-          </div>
-
-          <div class="total-row">
-            <span>Tạm tính:</span>
-            <span class="subtotal-amount">0đ</span>
-          </div>
-
-          <div class="total-row">
-            <span>Phí vận chuyển:</span>
-            <span>0đ</span>
-          </div>
-
-          <div class="total-row final">
-            <span>Thành tiền:</span>
-            <span class="total-amount">0đ</span>
-          </div>
-
-          <button class="btn-checkout" onclick="checkout()">
-            ✓ Tiến hành thanh toán
-          </button>
-        </div>
+      <div id="summaryProductList" style="min-height: 120px; margin-bottom: 16px; color:#94a3b8; font-style:italic;">
+        <p>Chưa chọn sản phẩm nào</p>
       </div>
-    </div>
+
+      <div class="order-summary-row">
+        <span>Phí vận chuyển</span>
+        <strong class="order-summary-value">Miễn phí</strong>
+      </div>
+
+      <div class="order-summary-total">
+        <span>TỔNG TIỀN</span>
+        <strong id="summaryTotal" class="order-summary-total-value">0 đ</strong>
+      </div>
+
+      <button type="button" class="ldm-cart-checkout-btn order-summary-btn" onclick="checkout()">ĐẶT HÀNG</button>
+      <a href="{% url 'store:home' %}" class="order-summary-back">Quay lại giỏ hàng</a>
+    </aside>
   </div>
-
   {% else %}
-  <!-- Empty Cart -->
   <div class="empty-cart">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/>
@@ -130,157 +153,7 @@
   </div>
   {% endif %}
 </div>
-
-<script>
-// Update totals when checkboxes change
-document.addEventListener('DOMContentLoaded', function() {
-  const checkboxes = document.querySelectorAll('.product-checkbox');
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', updateTotals);
-  });
-
-  document.querySelectorAll('.qty-increase').forEach(button => {
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      const productId = event.currentTarget.dataset.productId;
-      updateQuantity(productId, 1);
-    });
-  });
-
-  document.querySelectorAll('.qty-decrease').forEach(button => {
-    button.addEventListener('click', event => {
-      event.preventDefault();
-      const productId = event.currentTarget.dataset.productId;
-      updateQuantity(productId, -1);
-    });
-  });
-
-  document.querySelectorAll('.qty-input').forEach(input => {
-    input.addEventListener('change', event => {
-      const productId = event.currentTarget.closest('.cart-item-row').dataset.productId;
-      updateQuantity(productId, event.currentTarget.value);
-    });
-  });
-  
-  // Initial update
-  updateTotals();
-});
-
-function updateTotals() {
-  const checkboxes = document.querySelectorAll('.product-checkbox:checked');
-  let total = 0;
-  let count = 0;
-
-  checkboxes.forEach(checkbox => {
-    const row = checkbox.closest('.cart-item-row');
-    const subtotal = parseInt(row.querySelector('.item-subtotal').dataset.subtotal) || 0;
-    total += subtotal;
-    count++;
-  });
-
-  // Update display
-  document.querySelector('.selected-count').textContent = count;
-  document.querySelector('.subtotal-amount').textContent = total.toLocaleString('vi-VN') + 'đ';
-  document.querySelector('.total-amount').textContent = total.toLocaleString('vi-VN') + 'đ';
-}
-
-async function updateQuantity(productId, change) {
-  const row = document.querySelector(`[data-product-id="${productId}"]`);
-  const qtyInput = row.querySelector('.qty-input');
-  const subtotalElement = row.querySelector('.item-subtotal');
-  
-  let currentQty = parseInt(qtyInput.value);
-  
-  // If change is a string, it's the new quantity value
-  if (typeof change === 'string') {
-    currentQty = parseInt(change);
-  } else {
-    currentQty += parseInt(change);
-  }
-  
-  if (currentQty < 1) currentQty = 1;
-  if (currentQty > 99) currentQty = 99;
-  
-  qtyInput.value = currentQty;
-  
-  // Send update to backend
-  try {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? 
-                      document.querySelector('[name=csrfmiddlewaretoken]').value : 
-                      getCookie('csrftoken');
-    
-    const response = await fetch(`/cart/update/${productId}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-CSRFToken': csrfToken
-      },
-      body: `quantity=${currentQty}`
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      // Update subtotal display
-      subtotalElement.textContent = data.subtotal_formatted;
-      subtotalElement.dataset.subtotal = data.subtotal;
-      
-      updateTotals();
-    } else {
-      alert('Lỗi cập nhật số lượng: ' + (data.error || 'Unknown error'));
-    }
-  } catch (error) {
-    console.error('Error updating quantity:', error);
-    alert('Lỗi kết nối khi cập nhật số lượng');
-  }
-}
-
-function checkout() {
-  const checkedProducts = document.querySelectorAll('.product-checkbox:checked');
-  if (checkedProducts.length === 0) {
-    alert('Vui lòng chọn ít nhất một sản phẩm');
-    return;
-  }
-  
-  // Collect selected product IDs
-  const selectedIds = [];
-  checkedProducts.forEach(checkbox => {
-    selectedIds.push(checkbox.value);
-  });
-  
-  // Redirect with selected product IDs as query parameter
-  const itemsParam = selectedIds.join(',');
-  window.location.href = '{% url "store:checkout_from_cart" %}?items=' + itemsParam;
-}
-
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-  // Add CSRF token to form for AJAX requests
-  if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = 'csrfmiddlewaretoken';
-    csrfToken.value = '{{ csrf_token }}';
-    document.body.appendChild(csrfToken);
-  }
-});
-</script>
-
 {% endblock %}
+
 
 

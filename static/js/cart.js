@@ -91,14 +91,15 @@ function deleteSelected() {
         var promises = [];
         checked.forEach(function (cb) {
             var itemId = cb.getAttribute('data-item-id');
+            var removeUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.removeFromCart) ? window.API_ENDPOINTS.removeFromCart : '/ajax/cart/remove/';
             promises.push(
-                fetch('/cart/remove/', {
+                fetch(removeUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': getCsrfToken()
                     },
-                    body: 'item_id=' + itemId
+                    body: 'product_id=' + itemId
                 })
             );
         });
@@ -118,8 +119,8 @@ function toggleColorDropdown(el) {
         if (d !== dropdown) d.classList.remove('open');
     });
 
-    // Đóng tất cả các dropdown dung lượng
-    document.querySelectorAll('.ldm-cart-storage-dropdown.open').forEach(function (d) {
+    // Đóng tất cả các dropdown dung lượng và RAM
+    document.querySelectorAll('.ldm-cart-storage-dropdown.open, .ldm-cart-ram-dropdown.open').forEach(function (d) {
         d.classList.remove('open');
     });
 
@@ -138,6 +139,11 @@ document.addEventListener('click', function (e) {
             d.classList.remove('open');
         });
     }
+    if (!e.target.closest('.ldm-cart-ram-dropdown')) {
+        document.querySelectorAll('.ldm-cart-ram-dropdown.open').forEach(function (d) {
+            d.classList.remove('open');
+        });
+    }
 });
 
 /* ==================== Thay đổi màu sắc ==================== */
@@ -149,13 +155,14 @@ function changeColor(btn, itemId, colorName) {
     });
     btn.classList.add('selected');
 
-    fetch('/cart/change-color/', {
+    var updateUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.updateCartOption) ? window.API_ENDPOINTS.updateCartOption : '/ajax/cart/update-option/';
+    fetch(updateUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCsrfToken()
         },
-        body: 'item_id=' + itemId + '&color_name=' + encodeURIComponent(colorName)
+        body: 'product_id=' + itemId + '&option_type=color&option_value=' + encodeURIComponent(colorName)
     })
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -191,7 +198,7 @@ function changeColor(btn, itemId, colorName) {
 
                 // Cập nhật tổng tiền
                 updateSummaryPrices(data.total_price);
-                updateCartBadge(data.total_items);
+                updateCartBadge(data.cart_count || data.total_items || 0);
 
                 if (window.LDMToast) LDMToast.show(data.message, 'success');
 
@@ -217,12 +224,85 @@ function toggleStorageDropdown(el) {
         if (d !== dropdown) d.classList.remove('open');
     });
 
-    // Đóng tất cả các dropdown màu
-    document.querySelectorAll('.ldm-cart-color-dropdown.open').forEach(function (d) {
+    // Đóng tất cả các dropdown màu và RAM
+    document.querySelectorAll('.ldm-cart-color-dropdown.open, .ldm-cart-ram-dropdown.open').forEach(function (d) {
         d.classList.remove('open');
     });
 
     dropdown.classList.toggle('open');
+}
+
+function toggleRamDropdown(el) {
+    var dropdown = el.closest('.ldm-cart-ram-dropdown');
+    var itemId = dropdown.getAttribute('data-item-id');
+
+    // Đóng tất cả các dropdown RAM khác
+    document.querySelectorAll('.ldm-cart-ram-dropdown.open').forEach(function (d) {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+
+    // Đóng tất cả các dropdown màu và dung lượng
+    document.querySelectorAll('.ldm-cart-color-dropdown.open, .ldm-cart-storage-dropdown.open').forEach(function (d) {
+        d.classList.remove('open');
+    });
+
+    dropdown.classList.toggle('open');
+}
+
+/* ==================== Thay đổi RAM ==================== */
+function changeRam(btn, itemId, ramValue) {
+    var options = document.getElementById('ramOptions_' + itemId);
+    if (options) {
+        options.querySelectorAll('.ldm-cart-ram-opt').forEach(function (o) {
+            o.classList.remove('selected');
+        });
+    }
+    btn.classList.add('selected');
+
+    var updateUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.updateCartOption) ? window.API_ENDPOINTS.updateCartOption : '/ajax/cart/update-option/';
+    fetch(updateUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: 'product_id=' + itemId + '&option_type=ram&option_value=' + encodeURIComponent(ramValue)
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                var dropdown = document.querySelector('.ldm-cart-ram-dropdown[data-item-id="' + itemId + '"]');
+                if (dropdown) {
+                    var label = dropdown.querySelector('.ldm-cart-ram-selected span') || dropdown.querySelector('.ldm-cart-storage-selected span');
+                    if (label) label.textContent = 'RAM: ' + data.new_ram;
+                }
+
+                var priceEl = document.getElementById('itemPrice_' + itemId);
+                if (priceEl) priceEl.textContent = formatPrice(data.item_price) + 'đ';
+
+                var origPriceEl = document.getElementById('itemOrigPrice_' + itemId);
+                if (origPriceEl) {
+                    if (data.original_price > 0) {
+                        origPriceEl.textContent = formatPrice(data.original_price) + 'đ';
+                        origPriceEl.style.display = 'block';
+                    } else {
+                        origPriceEl.style.display = 'none';
+                    }
+                }
+
+                updateSummaryPrices(data.total_price);
+                updateCartBadge(data.cart_count || data.total_items || 0);
+
+                if (window.LDMToast) LDMToast.show(data.message, 'success');
+                setTimeout(function () { location.reload(); }, 800);
+            } else {
+                if (window.LDMToast) LDMToast.show(data.message, 'error');
+            }
+        })
+        .catch(function (err) {
+            console.error('Lỗi:', err);
+            if (window.LDMToast) LDMToast.show('Có lỗi xảy ra', 'error');
+        });
 }
 
 /* ==================== Thay đổi dung lượng ==================== */
@@ -234,13 +314,14 @@ function changeStorage(btn, itemId, storage) {
     });
     btn.classList.add('selected');
 
-    fetch('/cart/change-storage/', {
+    var updateUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.updateCartOption) ? window.API_ENDPOINTS.updateCartOption : '/ajax/cart/update-option/';
+    fetch(updateUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCsrfToken()
         },
-        body: 'item_id=' + itemId + '&storage=' + encodeURIComponent(storage)
+        body: 'product_id=' + itemId + '&option_type=storage&option_value=' + encodeURIComponent(storage)
     })
         .then(function (r) { return r.json(); })
         .then(function (data) {
@@ -268,7 +349,7 @@ function changeStorage(btn, itemId, storage) {
 
                 // Cập nhật tổng tiền
                 updateSummaryPrices(data.total_price);
-                updateCartBadge(data.total_items);
+                updateCartBadge(data.cart_count || data.total_items || 0);
 
                 if (window.LDMToast) LDMToast.show(data.message, 'success');
 
@@ -291,31 +372,30 @@ function updateCartQuantity(itemId, quantity) {
         if (window.LDMToast) LDMToast.show('Số lượng tối thiểu là 1', 'error');
         return;
     }
-    fetch('/cart/update/', {
+    var updateUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.updateCartQuantity) ? window.API_ENDPOINTS.updateCartQuantity : '/ajax/cart/update/';
+    fetch(updateUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'X-CSRFToken': getCsrfToken()
         },
-        body: 'item_id=' + itemId + '&quantity=' + quantity
+        body: 'product_id=' + itemId + '&quantity=' + quantity
     })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (data.success) {
-                updateCartBadge(data.total_items);
+                updateCartBadge(data.cart_count || 0);
 
                 // Cập nhật ô nhập số lượng
                 var qtyInput = document.getElementById('qtyInput_' + itemId);
-                if (qtyInput) qtyInput.value = data.item_quantity;
+                if (qtyInput) qtyInput.value = quantity;
 
                 // Bật/tắt nút trừ
-                var minusBtn = document.querySelector('.ldm-cart-qty-minus[data-item-id="' + itemId + '"]');
-                if (minusBtn) minusBtn.disabled = (data.item_quantity <= 1);
+                var minusBtn = document.querySelector('.qty-decrease[data-item-id="' + itemId + '"]');
+                if (minusBtn) minusBtn.disabled = (quantity <= 1);
 
                 // Cập nhật tổng tiền cho các sản phẩm đã chọn
                 updateSelectedCount();
-
-                if (window.LDMToast) LDMToast.show(data.message, 'success');
             } else if (data.require_login) {
                 LDMConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function () {
                     window.location.href = '/login/';
@@ -333,18 +413,19 @@ function updateCartQuantity(itemId, quantity) {
 /* ==================== Xóa sản phẩm ==================== */
 function removeFromCart(itemId) {
     LDMConfirm.show('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?', function () {
-        fetch('/cart/remove/', {
+        var removeUrl = (window.API_ENDPOINTS && window.API_ENDPOINTS.removeFromCart) ? window.API_ENDPOINTS.removeFromCart : '/ajax/cart/remove/';
+        fetch(removeUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': getCsrfToken()
             },
-            body: 'item_id=' + itemId
+            body: 'product_id=' + itemId
         })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.success) {
-                    updateCartBadge(data.total_items);
+                    updateCartBadge(data.cart_count || data.total_items || 0);
                     if (window.LDMToast) LDMToast.show(data.message, 'success');
                     setTimeout(function () { location.reload(); }, 500);
                 } else if (data.require_login) {
@@ -468,18 +549,20 @@ function checkout() {
     checked.forEach(function (cb) {
         ids.push(cb.getAttribute('data-item-id'));
     });
-    window.location.href = '/checkout/?items=' + ids.join(',');
+    window.location.href = '/checkout/cart/?items=' + ids.join(',');
 }
 
 /* ==================== Event Listeners for Quantity Buttons ==================== */
 document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+
     // Quantity decrease buttons
     document.querySelectorAll('.qty-decrease').forEach(function(btn) {
         var itemRow = btn.closest('[data-item-id]');
         if (!itemRow) return;
 
         btn.addEventListener('click', function() {
-            var input = this.parentElement.querySelector('.qty-input');
+            var input = this.parentElement.querySelector('.ldm-cart-qty-input');
             var currentQty = parseInt(input.value) || 1;
             var newQty = Math.max(1, currentQty - 1);
             input.value = newQty;
@@ -494,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!itemRow) return;
 
         btn.addEventListener('click', function() {
-            var input = this.parentElement.querySelector('.qty-input');
+            var input = this.parentElement.querySelector('.ldm-cart-qty-input');
             var currentQty = parseInt(input.value) || 1;
             var newQty = currentQty + 1;
             input.value = newQty;

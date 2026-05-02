@@ -5,14 +5,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.db.models import Q, Count
 from django.urls import reverse
 import os
 import requests
 
-from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Wishlist
-from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm, OrderShippingForm
+from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Voucher, Wishlist
+from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm, OrderShippingForm, VoucherForm
 
 
 # ================== UTILS ==================
@@ -147,6 +149,51 @@ def _is_image_upload(uploaded_file):
     return os.path.splitext(uploaded_file.name)[1].lower() in allowed_image_formats
 
 
+def _resolve_location_name(code, location_type):
+    """Resolve a province/district/ward code to its display name."""
+    if not code or not isinstance(code, str):
+        return ''
+    if not code.isdigit():
+        return code.strip()
+
+    api_url = None
+    if location_type == 'city':
+        api_url = f'https://provinces.open-api.vn/api/p/{code}'
+    elif location_type == 'district':
+        api_url = f'https://provinces.open-api.vn/api/d/{code}'
+    elif location_type == 'ward':
+        api_url = f'https://provinces.open-api.vn/api/w/{code}'
+    else:
+        return code.strip()
+
+    try:
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return str(data.get('name', code)).strip()
+    except Exception:
+        return code.strip()
+
+
+def _build_full_address(request):
+    city = request.POST.get('city', '').strip()
+    district = request.POST.get('district', '').strip()
+    ward = request.POST.get('ward', '').strip()
+    city_name = request.POST.get('city_name', '').strip()
+    district_name = request.POST.get('district_name', '').strip()
+    ward_name = request.POST.get('ward_name', '').strip()
+
+    if not city_name:
+        city_name = _resolve_location_name(city, 'city')
+    if not district_name:
+        district_name = _resolve_location_name(district, 'district')
+    if not ward_name:
+        ward_name = _resolve_location_name(ward, 'ward')
+
+    detail_address = request.POST.get('address', '').strip()
+    return f"{detail_address}, {ward_name}, {district_name}, {city_name}"
+
+
 def _sync_product_media(product, request):
     delete_media_ids = request.POST.getlist('delete_media')
     if delete_media_ids:
@@ -244,6 +291,35 @@ def _safe_int(value, default=0):
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _validate_voucher_code(code):
+    code = (code or '').strip()
+    if not code:
+        return None, 'Vui lòng nhập mã voucher.'
+
+    try:
+        voucher = Voucher.objects.get(code__iexact=code)
+    except Voucher.DoesNotExist:
+        return None, 'Mã voucher không hợp lệ.'
+
+    today = timezone.now().date()
+    if not voucher.active:
+        return None, 'Voucher hiện không hoạt động.'
+    if voucher.start_date and voucher.start_date > today:
+        return None, 'Voucher chưa đến thời hạn sử dụng.'
+    if voucher.end_date and voucher.end_date < today:
+        return None, 'Voucher đã hết hạn.'
+    if voucher.usage_limit is not None and voucher.used_count >= voucher.usage_limit:
+        return None, 'Voucher đã đạt số lần sử dụng tối đa.'
+
+    return voucher, None
+
+
+def _calculate_voucher_discount(subtotal, voucher):
+    if not voucher or subtotal <= 0:
+        return 0
+    return int(subtotal * voucher.discount_percent / 100)
 
 
 def _sync_product_colors(product, request):
@@ -832,11 +908,7 @@ def product_detail(request, id):
                 'label': label,
             })
     else:
-        storage_options = [
-            {'capacity': product.rom or '128GB', 'price': base_price, 'price_delta': 0, 'label': 'Tiêu chuẩn'},
-            {'capacity': '256GB', 'price': base_price + 1500000, 'price_delta': 1500000, 'label': 'Phổ biến'},
-            {'capacity': '512GB', 'price': base_price + 4000000, 'price_delta': 4000000, 'label': 'Cao cấp'},
-        ]
+        storage_options = []
 
     db_ram_options = list(product.ram_options.all())
     if db_ram_options:
@@ -855,18 +927,8 @@ def product_detail(request, id):
             })
         default_ram = ram_options[0]['value'] if ram_options else (product.ram or '8GB')
     else:
-        ram_options = [
-            {'value': '8G', 'price_delta': 0, 'label': 'Tiêu chuẩn'},
-            {'value': '12G', 'price_delta': 1000000, 'label': 'Phổ biến'},
-            {'value': '16G', 'price_delta': 2000000, 'label': 'Hiệu năng cao'},
-        ]
-        product_ram_text = (product.ram or '').upper()
-        if '16' in product_ram_text:
-            default_ram = '16G'
-        elif '12' in product_ram_text:
-            default_ram = '12G'
-        else:
-            default_ram = '8G'
+        ram_options = []
+        default_ram = ''
     db_colors = list(product.colors.all())
     if db_colors:
         color_options = [
@@ -879,12 +941,7 @@ def product_detail(request, id):
             for color in db_colors
         ]
     else:
-        color_options = [
-            {'name': 'Titan Den', 'hex': '#2d2f34', 'price_delta': 0, 'image_url': ''},
-            {'name': 'Titan Trang', 'hex': '#e7e5e4', 'price_delta': 200000, 'image_url': ''},
-            {'name': 'Titan Xanh', 'hex': '#72879a', 'price_delta': 200000, 'image_url': ''},
-            {'name': 'Titan Sa Mac', 'hex': '#b6855f', 'price_delta': 300000, 'image_url': ''},
-        ]
+        color_options = []
     promotions = [
         {'icon': 'gift', 'text': 'Giảm thêm 500.000đ khi thanh toán qua VNPAY.'},
         {'icon': 'shield', 'text': 'Tặng gói bảo hành rơi vỡ 6 tháng đầu.'},
@@ -1129,6 +1186,101 @@ def bank_otp(request):
     return render(request, 'store/pay.html', context)
 
 
+@login_required(login_url='store:login')
+def vietqr_page(request):
+    pending = request.session.get('pending_order')
+    if not pending or pending.get('payment_method') != 'vietqr':
+        messages.error(request, 'Không có đơn hàng VietQR đang chờ thanh toán.')
+        return redirect('store:cart_detail')
+
+    order = None
+    if pending.get('order_id'):
+        order = Order.objects.filter(id=pending.get('order_id')).first()
+
+    timeout_seconds = getattr(settings, 'VIETQR_TIMEOUT_SECONDS', 900)
+    remaining_seconds = timeout_seconds
+    if order and order.payment_method == 'vietqr':
+        if order.status == 'pending':
+            elapsed = (timezone.now() - order.created_at).total_seconds()
+            if elapsed >= timeout_seconds:
+                order.status = 'expired'
+                order.save()
+            else:
+                remaining_seconds = int(timeout_seconds - elapsed)
+        elif order.status == 'expired':
+            remaining_seconds = 0
+
+    context = get_base_context(request)
+    context.update({
+        'pending': pending,
+        'pay_section': 'vietqr',
+        'bank_id': getattr(settings, 'VIETQR_BANK_ID', 'MB'),
+        'bank_name': getattr(settings, 'VIETQR_BANK_NAME', 'MB Bank'),
+        'bank_account_no': getattr(settings, 'VIETQR_BANK_ACCOUNT_NO', '0386220065'),
+        'bank_account_name': getattr(settings, 'VIETQR_BANK_ACCOUNT_NAME', 'LUU DUC MANH'),
+        'order': {
+            'order_id': pending.get('order_id') or (order.id if order else None),
+            'order_code': pending.get('order_code', ''),
+            'total_amount': pending.get('total_amount', 0),
+        },
+        'transfer_code': pending.get('transfer_code', ''),
+        'timeout_seconds': remaining_seconds,
+    })
+    return render(request, 'store/pay.html', context)
+
+
+@login_required(login_url='store:login')
+def vietqr_page_status(request):
+    pending = request.session.get('pending_order')
+    if not pending or pending.get('payment_method') != 'vietqr':
+        return JsonResponse({'success': False, 'error': 'Pending VietQR order không tồn tại.'})
+
+    order = None
+    if pending.get('order_id'):
+        order = Order.objects.filter(id=pending.get('order_id')).first()
+
+    if order and order.payment_method == 'vietqr':
+        timeout_seconds = getattr(settings, 'VIETQR_TIMEOUT_SECONDS', 900)
+        if order.status == 'pending':
+            elapsed = (timezone.now() - order.created_at).total_seconds()
+            if elapsed >= timeout_seconds:
+                order.status = 'expired'
+                order.save()
+                return JsonResponse({'success': True, 'status': 'expired'})
+            return JsonResponse({'success': True, 'status': 'pending'})
+        if order.status in ['processing', 'shipped', 'delivered']:
+            return JsonResponse({'success': True, 'status': 'approved'})
+        return JsonResponse({'success': True, 'status': order.status})
+
+    return JsonResponse({'success': False, 'error': 'Pending VietQR order không tồn tại.'})
+
+
+@login_required(login_url='store:login')
+def vietqr_page_expire(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Phải dùng phương thức POST.'})
+
+    pending = request.session.get('pending_order')
+    order = None
+    if pending and pending.get('payment_method') == 'vietqr':
+        if pending.get('order_id'):
+            order = Order.objects.filter(id=pending.get('order_id')).first()
+        elif request.body:
+            try:
+                import json
+                data = json.loads(request.body)
+                order_code = data.get('order_code')
+                order = Order.objects.filter(order_number=order_code, payment_method='vietqr').first()
+            except Exception:
+                order = None
+
+        if order and order.status == 'pending':
+            order.status = 'expired'
+            order.save()
+        request.session.pop('pending_order', None)
+    return JsonResponse({'success': True})
+
+
 # ================== PRODUCT SEARCH ==================
 @login_required(login_url='store:login')
 def product_search(request):
@@ -1168,24 +1320,52 @@ def add_to_cart(request, product_id):
         if product_id in cart:
             # Item already in cart - increase quantity
             if isinstance(cart[product_id], dict):
-                # New format
-                cart[product_id]['quantity'] += 1
+                cart_item = cart[product_id]
+                cart_item['quantity'] = cart_item.get('quantity', 0) + 1
+                cart[product_id] = cart_item
             else:
-                # Old format - convert to new format and add
+                # Old format - convert to new format and keep existing quantity
                 old_qty = cart[product_id]
+                default_color = product.colors.order_by('sort_order', 'id').first()
+                default_color_name = default_color.name if default_color else ''
+                default_color_price = default_color.price_delta if default_color else 0
+                default_color_image = default_color.image.url if default_color and default_color.image else ''
+                default_ram = product.ram or ''
+                default_storage = product.rom or ''
+                base_price = product.get_discounted_price()
                 cart[product_id] = {
                     'name': product.name,
-                    'price': product.get_discounted_price(),
+                    'price': base_price + default_color_price,
                     'quantity': old_qty + 1,
-                    'image': product.image.url if product.image else ''
+                    'image': default_color_image or (product.image.url if product.image else ''),
+                    'color': default_color_name,
+                    'color_price_delta': default_color_price,
+                    'color_image': default_color_image,
+                    'ram': default_ram,
+                    'ram_price_delta': 0,
+                    'storage': default_storage,
+                    'storage_price_delta': 0,
                 }
         else:
-            # New item - add with new format
+            default_color = product.colors.order_by('sort_order', 'id').first()
+            default_color_name = default_color.name if default_color else ''
+            default_color_price = default_color.price_delta if default_color else 0
+            default_color_image = default_color.image.url if default_color and default_color.image else ''
+            default_ram = product.ram or ''
+            default_storage = product.rom or ''
+            base_price = product.get_discounted_price()
             cart[product_id] = {
                 'name': product.name,
-                'price': product.get_discounted_price(),
+                'price': base_price + default_color_price,
                 'quantity': 1,
-                'image': product.image.url if product.image else ''
+                'image': default_color_image or (product.image.url if product.image else ''),
+                'color': default_color_name,
+                'color_price_delta': default_color_price,
+                'color_image': default_color_image,
+                'ram': default_ram,
+                'ram_price_delta': 0,
+                'storage': default_storage,
+                'storage_price_delta': 0,
             }
         
         request.session['cart'] = cart
@@ -1201,26 +1381,35 @@ def cart_view(request):
     cart = request.session.get('cart', {})
     products = []
     total = 0
+    cart_changed = False
 
-    for product_id, cart_item in cart.items():
+    for product_id, cart_item in list(cart.items()):
         try:
             product = Product.objects.get(id=int(product_id))
-            
-            # Handle both old format (int) and new format (dict)
-            if isinstance(cart_item, dict):
-                # New format from AJAX: {'name': str, 'price': int, 'quantity': int, 'image': str}
-                product.quantity = cart_item.get('quantity', 1)
-                product.price = cart_item.get('price', product.get_discounted_price())
-            else:
-                # Old format: just an integer quantity
-                product.quantity = cart_item
-                product.price = product.get_discounted_price()
-            
+            normalized_item = _normalize_cart_item(product, cart_item)
+            if cart_item != normalized_item:
+                cart[product_id] = normalized_item
+                cart_changed = True
+
+            product.quantity = normalized_item.get('quantity', 1)
+            product.price = normalized_item.get('price', product.get_discounted_price())
             product.subtotal = product.price * product.quantity
+            product.selected_color = normalized_item.get('color', '')
+            product.default_color = product.colors.order_by('sort_order', 'id').first().name if product.colors.exists() else ''
+            product.selected_ram = normalized_item.get('ram', '')
+            product.selected_storage = normalized_item.get('storage', '')
+            product.selected_color_image = normalized_item.get('color_image', '')
+            product.selected_color_price_delta = normalized_item.get('color_price_delta', 0)
+            product.selected_ram_price_delta = normalized_item.get('ram_price_delta', 0)
+            product.selected_storage_price_delta = normalized_item.get('storage_price_delta', 0)
+
             total += product.subtotal
             products.append(product)
         except (Product.DoesNotExist, ValueError):
             pass
+
+    if cart_changed:
+        request.session['cart'] = cart
 
     context = get_base_context(request)
     context.update({
@@ -1280,12 +1469,131 @@ def update_cart_quantity(request, product_id):
     return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'})
 
 
+def _calculate_cart_item_price(product, cart_item):
+    price = product.get_discounted_price()
+
+    color_name = cart_item.get('color')
+    if color_name:
+        color_obj = product.colors.filter(name=color_name).first()
+        if color_obj:
+            price += color_obj.price_delta or 0
+
+    ram_value = cart_item.get('ram')
+    if ram_value:
+        ram_obj = product.ram_options.filter(value=ram_value).first()
+        if ram_obj:
+            price += ram_obj.price_delta or 0
+
+    storage_value = cart_item.get('storage')
+    if storage_value:
+        storage_obj = product.storage_options.filter(capacity=storage_value).first()
+        if storage_obj:
+            price += storage_obj.price_delta or 0
+
+    return price
+
+
+def _normalize_cart_item(product, cart_item):
+    if not isinstance(cart_item, dict):
+        cart_item = {'quantity': cart_item}
+
+    default_color = product.colors.order_by('sort_order', 'id').first()
+    color_name = cart_item.get('color') or (default_color.name if default_color else '')
+    color_obj = product.colors.filter(name=color_name).first() if color_name else None
+    ram_value = cart_item.get('ram') or product.ram or ''
+    storage_value = cart_item.get('storage') or product.rom or ''
+
+    cart_item['color'] = color_name
+    cart_item['color_price_delta'] = color_obj.price_delta if color_obj else 0
+    cart_item['color_image'] = color_obj.image.url if color_obj and color_obj.image else cart_item.get('color_image', '')
+    cart_item['ram'] = ram_value
+    cart_item['ram_price_delta'] = cart_item.get('ram_price_delta', 0)
+    cart_item['storage'] = storage_value
+    cart_item['storage_price_delta'] = cart_item.get('storage_price_delta', 0)
+    cart_item['price'] = _calculate_cart_item_price(product, cart_item)
+    return cart_item
+
+
+def update_cart_option_ajax(request):
+    if request.method == 'POST':
+        try:
+            product_id = request.POST.get('product_id')
+            option_type = request.POST.get('option_type')
+            option_value = request.POST.get('option_value')
+
+            cart = request.session.get('cart', {})
+            product_key = str(product_id)
+
+            if product_key not in cart:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại trong giỏ'}, status=404)
+
+            product = get_object_or_404(Product, id=int(product_id))
+            cart_item = cart[product_key] if isinstance(cart[product_key], dict) else {'quantity': cart[product_key]}
+
+            if option_type == 'color':
+                color_obj = product.colors.filter(name=option_value).first()
+                if not color_obj:
+                    return JsonResponse({'success': False, 'error': 'Màu sắc không hợp lệ'}, status=400)
+                cart_item['color'] = color_obj.name
+                cart_item['color_price_delta'] = color_obj.price_delta or 0
+                cart_item['color_image'] = color_obj.image.url if color_obj.image else cart_item.get('color_image', '')
+            elif option_type == 'ram':
+                ram_obj = product.ram_options.filter(value=option_value).first()
+                if not ram_obj and option_value != product.ram:
+                    return JsonResponse({'success': False, 'error': 'RAM không hợp lệ'}, status=400)
+                cart_item['ram'] = option_value
+                cart_item['ram_price_delta'] = ram_obj.price_delta if ram_obj else 0
+            elif option_type == 'storage':
+                storage_obj = product.storage_options.filter(capacity=option_value).first()
+                if not storage_obj and option_value != product.rom:
+                    return JsonResponse({'success': False, 'error': 'Dung lượng không hợp lệ'}, status=400)
+                cart_item['storage'] = option_value
+                cart_item['storage_price_delta'] = storage_obj.price_delta if storage_obj else 0
+            else:
+                return JsonResponse({'success': False, 'error': 'Tùy chọn không hợp lệ'}, status=400)
+
+            cart_item['price'] = _calculate_cart_item_price(product, cart_item)
+            cart[product_key] = cart_item
+            request.session['cart'] = cart
+
+            total_price = sum((item['price'] * item['quantity']) if isinstance(item, dict) else 0 for item in cart.values())
+            original_price = 0
+            if product.discount > 0:
+                original_price = product.price + cart_item.get('color_price_delta', 0) + cart_item.get('ram_price_delta', 0) + cart_item.get('storage_price_delta', 0)
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Cập nhật tùy chọn thành công',
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)) if cart else 0,
+                'cart_total': total_price,
+                'total_price': total_price,
+                'item_price': cart_item['price'],
+                'item_price_formatted': f"{cart_item['price']:,.0f}₫",
+                'new_thumbnail': cart_item.get('color_image', ''),
+                'new_color': cart_item.get('color', ''),
+                'new_ram': cart_item.get('ram', ''),
+                'new_storage': cart_item.get('storage', ''),
+                'original_price': original_price,
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
 @login_required(login_url='store:login')
 def clear_cart(request):
     """Clear all items from cart"""
     request.session['cart'] = {}
     messages.success(request, '🗑️ Đã xóa toàn bộ giỏ hàng')
     return redirect('store:cart_detail')
+
+
+def _remove_products_from_cart(request, product_ids):
+    cart = request.session.get('cart', {})
+    for product_id in product_ids:
+        cart.pop(str(product_id), None)
+    request.session['cart'] = cart
 
 
 # ================== CHECKOUT ==================
@@ -1320,9 +1628,31 @@ def checkout(request):
             district = form.cleaned_data['district']
             ward = form.cleaned_data['ward']
             payment_method = form.cleaned_data['payment_method']
-            
+            voucher_code = request.POST.get('voucher_code', '').strip().upper()
+            voucher = None
+            discount_amount = 0
+            voucher_error = ''
+            if voucher_code:
+                voucher, voucher_error = _validate_voucher_code(voucher_code)
+                if voucher_error:
+                    subtotal = product.get_discounted_price() * quantity
+                    total_amount = max(subtotal + 30000, 0)
+                    context = get_base_context(request)
+                    context.update({
+                        'product': product,
+                        'quantity': quantity,
+                        'subtotal': subtotal,
+                        'shipping_cost': 30000,
+                        'total_amount': total_amount,
+                        'discount_amount': 0,
+                        'voucher_code': voucher_code,
+                        'voucher_error': voucher_error,
+                        'form': form,
+                    })
+                    return render(request, 'store/checkout.html', context)
+
             # Combine address with district and ward for full address
-            full_address = f"{address}, {ward}, {district}, {city}"
+            full_address = _build_full_address(request)
             
             try:
                 # Handle bank transfer flow separately
@@ -1336,17 +1666,65 @@ def checkout(request):
                         'email': email,
                         'phone': phone,
                         'address': full_address,
-                        'total_amount': product.get_discounted_price() * quantity + 30000,
+                        'voucher_code': voucher_code,
+                        'discount_amount': discount_amount,
+                        'total_amount': max(product.get_discounted_price() * quantity + 30000 - discount_amount, 0),
                         'payment_method': payment_method,
                     }
                     request.session['pending_order'] = pending
+                    _remove_products_from_cart(request, [product.id])
                     return redirect('store:bank_select')
+
+                if payment_method == 'vietqr':
+                    import random
+                    order_code = f"ldm{random.randint(10000, 99999)}"
+                    transfer_code = f"ldm{random.randint(10000, 99999)}"
+                    subtotal = product.get_discounted_price() * quantity
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_code,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='vietqr',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        price=product.get_discounted_price()
+                    )
+                    pending = {
+                        'type': 'single',
+                        'product_id': product.id,
+                        'quantity': quantity,
+                        'fullname': fullname,
+                        'email': email,
+                        'phone': phone,
+                        'address': full_address,
+                        'voucher_code': voucher_code,
+                        'discount_amount': discount_amount,
+                        'order_code': order_code,
+                        'transfer_code': transfer_code,
+                        'order_id': order.id,
+                        'total_amount': total_amount,
+                        'payment_method': payment_method,
+                    }
+                    request.session['pending_order'] = pending
+                    _remove_products_from_cart(request, [product.id])
+                    return redirect('store:vietqr_page')
 
                 # Create Order
                 from datetime import datetime
                 order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            
-                total_amount = product.get_discounted_price() * quantity + 30000
+
+                subtotal = product.get_discounted_price() * quantity
+                discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                total_amount = max(subtotal + 30000 - discount_amount, 0)
             
                 order = Order.objects.create(
                     user=request.user,
@@ -1366,6 +1744,8 @@ def checkout(request):
                     quantity=quantity,
                     price=product.get_discounted_price()
                 )
+
+                _remove_products_from_cart(request, [product.id])
             
                 # Get or create user profile
                 user_profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -1387,29 +1767,35 @@ def checkout(request):
             
             except Exception as e:
                 messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
-                total_price = product.get_discounted_price() * quantity
+                subtotal = product.get_discounted_price() * quantity
+                total_amount = max(subtotal + 30000 - discount_amount, 0)
                 context = get_base_context(request)
                 context.update({
                     'product': product,
                     'quantity': quantity,
-                    'total_price': total_price,
-                    'total_amount': total_price,
-                    'total': total_price,
-                    'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
+                    'subtotal': subtotal,
+                    'shipping_cost': 30000,
+                    'total_amount': total_amount,
+                    'discount_amount': discount_amount,
+                    'voucher_code': voucher_code,
+                    'voucher_error': voucher_error,
                     'form': form,
                 })
                 return render(request, 'store/checkout.html', context)
         else:
             # Form validation failed - display errors
-            total_price = product.get_discounted_price() * quantity
+            subtotal = product.get_discounted_price() * quantity
+            total_amount = max(subtotal + 30000 - discount_amount, 0)
             context = get_base_context(request)
             context.update({
                 'product': product,
                 'quantity': quantity,
-                'total_price': total_price,
-                'total_amount': total_price,
-                'total': total_price,
-                'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
+                'subtotal': subtotal,
+                'shipping_cost': 30000,
+                'total_amount': total_amount,
+                'discount_amount': discount_amount,
+                'voucher_code': voucher_code,
+                'voucher_error': voucher_error,
                 'form': form,
             })
             return render(request, 'store/checkout.html', context)
@@ -1421,14 +1807,17 @@ def checkout(request):
         form = CheckoutForm(initial=initial_data)
     
     context = get_base_context(request)
-    total_price = product.get_discounted_price() * quantity
+    subtotal = product.get_discounted_price() * quantity
+    total_amount = subtotal + 30000
     context.update({
         'product': product,
         'quantity': quantity,
-        'total_price': total_price,
-        'total_amount': total_price,
-        'total': total_price,
-        'discount_amount': (product.price - product.get_discounted_price()) * quantity if product.discount > 0 else 0,
+        'subtotal': subtotal,
+        'shipping_cost': 30000,
+        'total_amount': total_amount,
+        'discount_amount': 0,
+        'voucher_code': '',
+        'voucher_error': '',
         'form': form,
     })
     return render(request, 'store/checkout.html', context)
@@ -1492,6 +1881,10 @@ def checkout_from_cart(request):
     if request.method == 'POST':
         # Process checkout form using CheckoutForm
         form = CheckoutForm(request.POST)
+        voucher_code = ''
+        voucher = None
+        discount_amount = 0
+        voucher_error = ''
         
         if form.is_valid():
             fullname = form.cleaned_data['fullname']
@@ -1502,9 +1895,28 @@ def checkout_from_cart(request):
             district = form.cleaned_data['district']
             ward = form.cleaned_data['ward']
             payment_method = form.cleaned_data['payment_method']
-            
+            voucher_code = request.POST.get('voucher_code', '').strip().upper()
+            if voucher_code:
+                voucher, voucher_error = _validate_voucher_code(voucher_code)
+                if voucher_error:
+                    subtotal = total_amount
+                    final_total = max(subtotal + 30000, 0)
+                    context = get_base_context(request)
+                    context.update({
+                        'cart_items': cart_items,
+                        'subtotal': subtotal,
+                        'shipping_cost': 30000,
+                        'total_amount': final_total,
+                        'discount_amount': 0,
+                        'voucher_code': voucher_code,
+                        'voucher_error': voucher_error,
+                        'form': form,
+                        'selected_items': selected_items_str,
+                    })
+                    return render(request, 'store/checkout.html', context)
+
             # Combine address with district and ward for full address
-            full_address = f"{address}, {ward}, {district}, {city}"
+            full_address = _build_full_address(request)
             
             try:
                 # Handle bank transfer flow separately
@@ -1519,10 +1931,14 @@ def checkout_from_cart(request):
                             'price': it['price'],
                         })
 
+                    subtotal = total_amount
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
                     pending = {
                         'type': 'cart',
                         'cart_items': serializable_items,
-                        'total_amount': total_amount + 30000,
+                        'voucher_code': voucher_code,
+                        'discount_amount': discount_amount,
+                        'total_amount': max(subtotal + 30000 - discount_amount, 0),
                         'fullname': fullname,
                         'email': email,
                         'phone': phone,
@@ -1530,16 +1946,70 @@ def checkout_from_cart(request):
                         'payment_method': payment_method,
                     }
                     request.session['pending_order'] = pending
+                    _remove_products_from_cart(request, [it['product'].id for it in cart_items])
                     return redirect('store:bank_select')
+
+                if payment_method == 'vietqr':
+                    import random
+                    order_code = f"ldm{random.randint(10000, 99999)}"
+                    transfer_code = f"ldm{random.randint(10000, 99999)}"
+                    subtotal = total_amount
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_code,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='vietqr',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    for it in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            product=it['product'],
+                            quantity=it['quantity'],
+                            price=it['price'],
+                        )
+                    serializable_items = []
+                    for it in cart_items:
+                        serializable_items.append({
+                            'product_id': it['product'].id,
+                            'quantity': it['quantity'],
+                            'price': it['price'],
+                        })
+                    pending = {
+                        'type': 'cart',
+                        'cart_items': serializable_items,
+                        'voucher_code': voucher_code,
+                        'discount_amount': discount_amount,
+                        'order_code': order_code,
+                        'transfer_code': transfer_code,
+                        'order_id': order.id,
+                        'total_amount': total_amount,
+                        'fullname': fullname,
+                        'email': email,
+                        'phone': phone,
+                        'address': full_address,
+                        'payment_method': payment_method,
+                    }
+                    request.session['pending_order'] = pending
+                    _remove_products_from_cart(request, [it['product'].id for it in cart_items])
+                    return redirect('store:vietqr_page')
 
                 # Create Order
                 from datetime import datetime
                 order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                subtotal = total_amount
+                discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                final_total = max(subtotal + 30000 - discount_amount, 0)
 
                 order = Order.objects.create(
                     user=request.user,
                     order_number=order_number,
-                    total_amount=total_amount + 30000,
+                    total_amount=final_total,
                     status='pending',
                     payment_method=payment_method,
                     customer_name=fullname,
@@ -1556,8 +2026,7 @@ def checkout_from_cart(request):
                         price=item['price']
                     )
 
-                # Clear cart after successful order
-                request.session['cart'] = {}
+                _remove_products_from_cart(request, [it['product'].id for it in cart_items])
 
                 # Get or create user profile
                 user_profile, created = UserProfile.objects.get_or_create(user=request.user)
@@ -1579,20 +2048,34 @@ def checkout_from_cart(request):
             
             except Exception as e:
                 messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
+                subtotal = total_amount
+                final_total = max(subtotal + 30000 - discount_amount, 0)
                 context = get_base_context(request)
                 context.update({
                     'cart_items': cart_items,
-                    'total_amount': total_amount,
+                    'subtotal': subtotal,
+                    'shipping_cost': 30000,
+                    'total_amount': final_total,
+                    'discount_amount': discount_amount,
+                    'voucher_code': voucher_code,
+                    'voucher_error': voucher_error,
                     'form': form,
                     'selected_items': selected_items_str,
                 })
                 return render(request, 'store/checkout.html', context)
         else:
             # Form validation failed - display errors
+            subtotal = total_amount
+            final_total = max(subtotal + 30000 - discount_amount, 0)
             context = get_base_context(request)
             context.update({
                 'cart_items': cart_items,
-                'total_amount': total_amount,
+                'subtotal': subtotal,
+                'shipping_cost': 30000,
+                'total_amount': final_total,
+                'discount_amount': discount_amount,
+                'voucher_code': voucher_code,
+                'voucher_error': voucher_error,
                 'form': form,
                 'selected_items': selected_items_str,
             })
@@ -1604,14 +2087,37 @@ def checkout_from_cart(request):
         }
         form = CheckoutForm(initial=initial_data)
     
+    subtotal = total_amount
+    final_total = subtotal + 30000
     context = get_base_context(request)
     context.update({
         'cart_items': cart_items,
-        'total_amount': total_amount,
+        'subtotal': subtotal,
+        'shipping_cost': 30000,
+        'total_amount': final_total,
+        'discount_amount': 0,
+        'voucher_code': '',
+        'voucher_error': '',
         'form': form,
         'selected_items': selected_items_str,
     })
     return render(request, 'store/checkout.html', context)
+
+
+@login_required(login_url='store:login')
+@require_GET
+def validate_voucher(request):
+    code = request.GET.get('code', '').strip()
+    voucher, error = _validate_voucher_code(code)
+    if error:
+        return JsonResponse({'success': False, 'error': error})
+
+    return JsonResponse({
+        'success': True,
+        'code': voucher.code,
+        'discount_percent': voucher.discount_percent,
+        'message': f'Voucher {voucher.code} áp dụng giảm {voucher.discount_percent}%'
+    })
 
 
 # ================== WISHLIST ==================
@@ -1743,10 +2249,15 @@ def cancel_order(request, order_id):
     if order.normalized_status == 'pending':
         order.status = 'cancelled'
         order.save()
+        if request.session.get('pending_order', {}).get('order_id') == order.id:
+            request.session.pop('pending_order', None)
         messages.success(request, '✅ Đơn hàng đã được hủy')
     else:
         messages.error(request, f'❌ Không thể hủy đơn hàng với trạng thái: {order.get_status_display()}')
-    
+
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect('store:order_tracking')
 
 
@@ -2654,22 +3165,43 @@ def add_to_cart_ajax(request):
             
             product_key = str(product_id)
             if product_key in cart:
-                cart[product_key]['quantity'] += quantity
+                if isinstance(cart[product_key], dict):
+                    cart[product_key]['quantity'] += quantity
+                else:
+                    cart[product_key] = {
+                        'name': product.name,
+                        'price': product.get_discounted_price(),
+                        'quantity': cart[product_key] + quantity,
+                        'image': product.image.url if product.image else ''
+                    }
             else:
+                default_color = product.colors.order_by('sort_order', 'id').first()
+                default_color_name = default_color.name if default_color else ''
+                default_color_price = default_color.price_delta if default_color else 0
+                default_color_image = default_color.image.url if default_color and default_color.image else ''
+                default_ram = product.ram or ''
+                default_storage = product.rom or ''
+                base_price = product.get_discounted_price()
                 cart[product_key] = {
                     'name': product.name,
-                    'price': product.get_discounted_price(),
+                    'price': base_price + default_color_price,
                     'quantity': quantity,
-                    'image': product.image.url if product.image else ''
+                    'image': default_color_image or (product.image.url if product.image else ''),
+                    'color': default_color_name,
+                    'color_price_delta': default_color_price,
+                    'color_image': default_color_image,
+                    'ram': default_ram,
+                    'ram_price_delta': 0,
+                    'storage': default_storage,
+                    'storage_price_delta': 0,
                 }
-            
             request.session['cart'] = cart
             
             return JsonResponse({
                 'success': True,
                 'message': f'✅ Thêm {quantity} sản phẩm vào giỏ hàng',
-                'cart_count': sum(item['quantity'] for item in cart.values()),
-                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values())
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
+                'cart_total': sum((item['price'] * item['quantity']) for item in cart.values() if isinstance(item, dict))
             })
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại'}, status=404)
@@ -2802,6 +3334,83 @@ def admin_orders(request):
 
 @login_required(login_url='store:login')
 @user_passes_test(is_admin, login_url='store:login')
+def admin_vouchers(request):
+    from django.core.paginator import Paginator
+
+    vouchers = Voucher.objects.all().order_by('-created_at')
+    paginator = Paginator(vouchers, 20)
+    page_number = request.GET.get('page', 1)
+    vouchers_page = paginator.get_page(page_number)
+
+    context = get_base_context(request)
+    context.update({
+        'vouchers': vouchers_page,
+        'is_paginated': vouchers_page.has_other_pages(),
+        'page_obj': vouchers_page,
+        'show_form': False,
+    })
+    return render(request, 'admin/admin_vouchers.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def voucher_create(request):
+    if request.method == 'POST':
+        form = VoucherForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Thêm voucher thành công')
+            return redirect('store:admin_vouchers')
+    else:
+        form = VoucherForm()
+
+    context = get_base_context(request)
+    context.update({
+        'form': form,
+        'title': 'Thêm voucher mới',
+        'show_form': True,
+        'form_action': 'store:voucher_create',
+        'submit_label': 'Tạo voucher'
+    })
+    return render(request, 'admin/admin_vouchers.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def voucher_edit(request, pk):
+    voucher = get_object_or_404(Voucher, pk=pk)
+    if request.method == 'POST':
+        form = VoucherForm(request.POST, instance=voucher)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Cập nhật voucher thành công')
+            return redirect('store:admin_vouchers')
+    else:
+        form = VoucherForm(instance=voucher)
+
+    context = get_base_context(request)
+    context.update({
+        'form': form,
+        'voucher': voucher,
+        'title': f'Chỉnh sửa voucher: {voucher.code}',
+        'show_form': True,
+        'form_action': 'store:voucher_edit',
+        'submit_label': 'Cập nhật voucher'
+    })
+    return render(request, 'admin/admin_vouchers.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def voucher_delete(request, pk):
+    voucher = get_object_or_404(Voucher, pk=pk)
+    voucher.delete()
+    messages.success(request, '🗑️ Đã xoá voucher')
+    return redirect('store:admin_vouchers')
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
 def admin_media_library(request):
     products = Product.objects.annotate(
         media_count=Count('media_items'),
@@ -2871,7 +3480,7 @@ def update_order_status(request):
             
             order = get_object_or_404(Order, id=order_id)
             
-            valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+            valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'expired', 'cancelled']
             if new_status not in valid_statuses:
                 return JsonResponse({'success': False, 'error': 'Trạng thái không hợp lệ'})
             
@@ -2889,6 +3498,31 @@ def update_order_status(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
+    return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'}, status=400)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def approve_order(request):
+    """Approve a pending VietQR order and mark it completed."""
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            order_id = data.get('order_id')
+            order = get_object_or_404(Order, id=order_id)
+
+            if order.status != 'pending':
+                return JsonResponse({'success': False, 'error': 'Đơn hàng không ở trạng thái chờ xác nhận.'})
+
+            order.status = 'processing'
+            order.save()
+            return JsonResponse({'success': True, 'message': 'Đơn hàng đã được duyệt và chuyển sang trạng thái Đã đặt hàng.'})
+        except Order.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Đơn hàng không tồn tại'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
     return JsonResponse({'success': False, 'error': 'Phương thức không hợp lệ'}, status=400)
 
 
@@ -2927,7 +3561,7 @@ def forgot_password_view(request):
                 return render(request, 'store/auth.html', context)
 
             token = secrets.token_urlsafe(32)
-            code = '123456'
+            code = ''.join(secrets.choice('0123456789') for _ in range(6))
             expires_at = timezone.now() + timedelta(hours=24)
 
             PasswordResetToken.objects.create(

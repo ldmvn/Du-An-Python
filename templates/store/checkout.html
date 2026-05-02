@@ -163,6 +163,10 @@
                     </div>
                 </div>
                 
+                <input type="hidden" name="city_name" id="id_city_name" value="{{ form.data.city_name|default:''|escapejs }}">
+                <input type="hidden" name="district_name" id="id_district_name" value="{{ form.data.district_name|default:''|escapejs }}">
+                <input type="hidden" name="ward_name" id="id_ward_name" value="{{ form.data.ward_name|default:''|escapejs }}">
+
                 <!-- Address -->
                 <div class="form-group">
                     <label>Địa chỉ chi tiết <span class="required">*</span></label>
@@ -204,22 +208,39 @@
                 <div class="payment-methods">
                     <!-- Cash/COD -->
                     <label class="payment-option">
-                        <input type="radio" name="payment_method" value="cash" checked>
+                        <input type="radio" name="payment_method" value="cash" {% if form.payment_method.value == 'cash' or not form.payment_method.value %}checked{% endif %}>
                         <div class="payment-label">
                             <strong>💵 Thanh toán khi nhận hàng (COD)</strong>
                             <small>Trả tiền mặt khi nhận hàng</small>
                         </div>
                     </label>
-                    
-                    <!-- Bank Transfer -->
+
+                    <!-- VietQR -->
                     <label class="payment-option">
-                        <input type="radio" name="payment_method" value="bank">
+                        <input type="radio" name="payment_method" value="vietqr" {% if form.payment_method.value == 'vietqr' %}checked{% endif %}>
                         <div class="payment-label">
-                            <strong>🏦 Chuyển khoản ngân hàng</strong>
-                            <small>Chuyển khoản trước khi giao hàng</small>
+                            <strong>🧾 VIETQR</strong>
+                            <small>Quét mã QR để thanh toán nhanh chóng</small>
                         </div>
                     </label>
-                    
+
+                    <!-- VNPay -->
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="vnpay" {% if form.payment_method.value == 'vnpay' %}checked{% endif %}>
+                        <div class="payment-label">
+                            <strong>💳 VNPAY</strong>
+                            <small>Thanh toán qua cổng VNPay</small>
+                        </div>
+                    </label>
+
+                    <!-- MoMo -->
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="momo" {% if form.payment_method.value == 'momo' %}checked{% endif %}>
+                        <div class="payment-label">
+                            <strong>📱 MoMo</strong>
+                            <small>Thanh toán qua ví điện tử MoMo</small>
+                        </div>
+                    </label>
                 </div>
                 {% if form.payment_method.errors %}
                     {% for error in form.payment_method.errors %}
@@ -229,62 +250,55 @@
             </div>
             
             <!-- Order Summary -->
-            <div class="checkout-section">
-                <div class="section-title">🧾 Tóm tắt đơn hàng</div>
-                
+            <div class="checkout-section order-summary-card" id="checkoutSummaryCard" data-subtotal="{{ subtotal|default:0|floatformat:0|add:0 }}">
+                <div class="order-summary-title">TÓM TẮT ĐƠN HÀNG</div>
+
+                <div class="order-summary-voucher">
+                    <input type="text" id="checkoutVoucherCode" name="voucher_code" placeholder="NHẬP MÃ GIẢM GIÁ" value="{{ voucher_code|default:'' }}">
+                    <button type="button" id="checkoutVoucherApplyBtn">Áp dụng</button>
+                </div>
+
+                <div id="voucherMessage" class="order-summary-message" style="display: {% if voucher_error %}block{% else %}none{% endif %}; margin-bottom: 16px; color: #dc2626;">
+                    {{ voucher_error }}
+                </div>
+
+                <div class="order-summary-row">
+                    <span>Voucher đang áp dụng</span>
+                    <strong id="voucherAppliedText" class="order-summary-value">{% if voucher_code %}{{ voucher_code }}{% else %}-{% endif %}</strong>
+                </div>
+                <div class="order-summary-row">
+                    <span>Số tiền đã chiết khấu</span>
+                    <strong id="discountAmountText" class="order-summary-value">{{ discount_amount|default:0|floatformat:0|add:0 }} đ</strong>
+                </div>
+                <div class="order-summary-row">
+                    <span>Phương thức thanh toán</span>
+                    <strong class="order-summary-value">{% if form.payment_method.value %}{{ form.payment_method.value|upper }}{% else %}COD{% endif %}</strong>
+                </div>
+                <div class="order-summary-row">
+                    <span>Phí vận chuyển</span>
+                    <strong class="order-summary-value">30.000 đ</strong>
+                </div>
+
                 {% if product %}
-                <!-- Single Product Summary -->
-                <div class="summary-row">
-                    <span>Giá sản phẩm:</span>
-                    <span>{{ product.price|floatformat:0|add:0 }}₫</span>
-                </div>
-                
-                {% if product.discount > 0 %}
-                <div class="summary-row" style="color: #4caf50;">
-                    <span>Giảm giá ({{ product.discount }}%):</span>
-                    <span>-{{ discount_amount|floatformat:0|add:0 }}₫</span>
-                </div>
-                {% endif %}
-                
-                <div class="summary-row">
-                    <span>Phí vận chuyển:</span>
-                    <span id="shipping-fee">30,000₫</span>
-                </div>
-                
                 <div class="summary-row total">
                     <span>Tổng cộng:</span>
-                    <span id="total-price">{{ total_price|default:total_amount|default:total|add:30000|floatformat:0|add:0 }}₫</span>
+                    <span id="total-price">{{ total_price|default:total_amount|floatformat:0|add:0 }}₫</span>
                 </div>
                 {% elif cart_items %}
-                <!-- Cart Summary -->
-                <div class="summary-row">
-                    <span>Tổng tiền hàng:</span>
-                    <span>{{ total_amount|floatformat:0|add:0 }}₫</span>
-                </div>
-                
-                <div class="summary-row">
-                    <span>Phí vận chuyển:</span>
-                    <span id="shipping-fee">30,000₫</span>
-                </div>
-                
                 <div class="summary-row total">
                     <span>Tổng cộng:</span>
-                    <span id="total-price">{{ total_amount|add:30000|floatformat:0|add:0 }}₫</span>
+                    <span id="total-price">{{ total_amount|floatformat:0|add:0 }}₫</span>
                 </div>
                 {% endif %}
-                
-                <button type="submit" id="checkout-submit-btn" class="btn-checkout">
-                    <i class="ri-check-line"></i> Xác nhận thanh toán
+
+                <button type="submit" id="checkout-submit-btn" class="btn-checkout order-summary-btn">
+                    <i class="ri-check-line"></i> ĐẶT HÀNG
                 </button>
-                
+
                 {% if product %}
-                <a href="{% url 'store:product_detail' product.id %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
-                    ← Quay lại sản phẩm
-                </a>
+                <a href="{% url 'store:product_detail' product.id %}" class="btn-back">← Quay lại sản phẩm</a>
                 {% elif cart_items %}
-                <a href="{% url 'store:cart_detail' %}" style="display: block; text-align: center; margin-top: 16px; color: #667eea; text-decoration: none; font-size: 14px;">
-                    ← Quay lại giỏ hàng
-                </a>
+                <a href="{% url 'store:cart_detail' %}" class="btn-back">← Quay lại giỏ hàng</a>
                 {% endif %}
             </div>
         </div>
@@ -365,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         html += `<option value="${ward.code}">${ward.name}</option>`;
                     });
                     wardSelect.innerHTML = html;
+                    updateLocationNameInputs();
                 } else {
                     console.error('Error loading wards:', data.error);
                     if (window.LDMToast) window.LDMToast.show('Lỗi khi tải danh sách phường/xã', 'error');
@@ -376,6 +391,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    const cityNameInput = document.getElementById('id_city_name');
+    const districtNameInput = document.getElementById('id_district_name');
+    const wardNameInput = document.getElementById('id_ward_name');
+
+    function updateLocationNameInputs() {
+        if (citySelect && cityNameInput && citySelect.selectedIndex > 0) {
+            cityNameInput.value = citySelect.options[citySelect.selectedIndex].text;
+        }
+        if (districtSelect && districtNameInput && districtSelect.selectedIndex > 0) {
+            districtNameInput.value = districtSelect.options[districtSelect.selectedIndex].text;
+        }
+        if (wardSelect && wardNameInput && wardSelect.selectedIndex > 0) {
+            wardNameInput.value = wardSelect.options[wardSelect.selectedIndex].text;
+        }
+    }
+
     citySelect.addEventListener('change', function() {
         if (this.value) {
             loadDistricts(this.value);
@@ -385,6 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
             districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
         }
+        updateLocationNameInputs();
     });
 
     districtSelect.addEventListener('change', function() {
@@ -393,6 +425,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
         }
+        updateLocationNameInputs();
+    });
+
+    wardSelect.addEventListener('change', function() {
+        updateLocationNameInputs();
     });
 
     loadProvinces().then(function() {
@@ -409,9 +446,67 @@ document.addEventListener('DOMContentLoaded', function() {
         if (initialWard) {
             wardSelect.value = initialWard;
         }
+        updateLocationNameInputs();
     }).catch(function() {
         // Ignore restore if any step fails
     });
+
+    const summaryCard = document.getElementById('checkoutSummaryCard');
+    const voucherInput = document.getElementById('checkoutVoucherCode');
+    const voucherApplyBtn = document.getElementById('checkoutVoucherApplyBtn');
+    const voucherMessage = document.getElementById('voucherMessage');
+    const voucherAppliedText = document.getElementById('voucherAppliedText');
+    const discountAmountText = document.getElementById('discountAmountText');
+    const totalPriceText = document.getElementById('total-price');
+
+    function formatCurrency(value) {
+        return value.toLocaleString('vi-VN').replace(/,/g, '.') + ' đ';
+    }
+
+    function showVoucherMessage(message, isError) {
+        if (!voucherMessage) return;
+        voucherMessage.textContent = message;
+        voucherMessage.style.display = 'block';
+        voucherMessage.style.color = isError ? '#dc2626' : '#16a34a';
+    }
+
+    function updateSummary(discountAmount, voucherCode) {
+        const subtotal = parseInt(summaryCard?.dataset.subtotal || '0', 10) || 0;
+        const shipping = 30000;
+        const finalTotal = Math.max(subtotal + shipping - discountAmount, 0);
+        if (voucherAppliedText) voucherAppliedText.textContent = voucherCode || '-';
+        if (discountAmountText) discountAmountText.textContent = formatCurrency(discountAmount);
+        if (totalPriceText) totalPriceText.textContent = formatCurrency(finalTotal);
+    }
+
+    if (voucherApplyBtn && voucherInput) {
+        voucherApplyBtn.addEventListener('click', function() {
+            const code = voucherInput.value.trim();
+            if (!code) {
+                showVoucherMessage('Vui lòng nhập mã voucher.', true);
+                return;
+            }
+
+            fetch('{% url "store:validate_voucher" %}?code=' + encodeURIComponent(code), {
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    showVoucherMessage(data.error || 'Mã voucher không hợp lệ.', true);
+                    return;
+                }
+                const subtotal = parseInt(summaryCard?.dataset.subtotal || '0', 10) || 0;
+                const discountAmount = Math.floor(subtotal * data.discount_percent / 100);
+                showVoucherMessage(data.message, false);
+                updateSummary(discountAmount, data.code);
+            })
+            .catch(function(error) {
+                console.error('Voucher validation failed:', error);
+                showVoucherMessage('Không thể kiểm tra voucher. Vui lòng thử lại.', true);
+            });
+        });
+    }
 
     // Validate form before submit
     const checkoutForm = document.getElementById('checkout-form');

@@ -239,6 +239,7 @@
                             <div class="pd-promo-line">Giá đã gồm ưu đãi online. Có hỗ trợ thu cũ, trả góp và giao nhanh trong ngày.</div>
                         </div>
 
+                        {% if storage_options %}
                         <div class="pd-option-block">
                             <div class="pd-option-head">
                                 <h3>Dung lượng</h3>
@@ -261,7 +262,9 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
 
+                        {% if ram_options %}
                         <div class="pd-option-block">
                             <div class="pd-option-head">
                                 <h3>RAM</h3>
@@ -285,7 +288,9 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
 
+                        {% if color_options %}
                         <div class="pd-option-block">
                             <div class="pd-option-head">
                                 <h3>Màu sắc</h3>
@@ -319,6 +324,7 @@
                                 {% endfor %}
                             </div>
                         </div>
+                        {% endif %}
 
                         <div class="pd-actions">
                             <button type="button" class="pd-buy-btn btn-buy-now" data-product-id="{{ product.id }}">Mua ngay</button>

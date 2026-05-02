@@ -1,0 +1,196 @@
+{% extends "admin/admin_base.html" %}
+{% load static humanize %}
+
+{% block title %}{% if show_form %}{{ title }}{% else %}Quản lý voucher{% endif %} - Admin Panel{% endblock %}
+{% block page_title %}{% if show_form %}🎫 {{ title }}{% else %}Quản lý voucher{% endif %}{% endblock %}
+
+{% block content %}
+<div class="ldm-section">
+    {% if show_form %}
+    <div class="ldm-form-card">
+        <form method="POST" action="{% if voucher %}{% url 'store:voucher_edit' voucher.id %}{% else %}{% url 'store:voucher_create' %}{% endif %}">
+            {% csrf_token %}
+
+            <div class="ldm-form-group">
+                <label for="id_code">Mã voucher</label>
+                {{ form.code }}
+                {% if form.code.errors %}
+                    <div class="ldm-form-error">{{ form.code.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="ldm-form-group">
+                <label for="id_description">Mô tả</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="ldm-form-error">{{ form.description.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="ldm-form-group">
+                <label for="id_discount_percent">Giảm giá (%)</label>
+                {{ form.discount_percent }}
+                {% if form.discount_percent.errors %}
+                    <div class="ldm-form-error">{{ form.discount_percent.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="ldm-form-row">
+                <div class="ldm-form-group ldm-col-6">
+                    <label for="id_start_date">Ngày bắt đầu</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <div class="ldm-form-error">{{ form.start_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="ldm-form-group ldm-col-6">
+                    <label for="id_end_date">Ngày kết thúc</label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                        <div class="ldm-form-error">{{ form.end_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="ldm-form-group">
+                <label for="id_usage_limit">Số lần sử dụng</label>
+                {{ form.usage_limit }}
+                {% if form.usage_limit.errors %}
+                    <div class="ldm-form-error">{{ form.usage_limit.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="ldm-form-group ldm-checkbox-group">
+                {{ form.active }}
+                <label for="id_active">Kích hoạt voucher</label>
+                {% if form.active.errors %}
+                    <div class="ldm-form-error">{{ form.active.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="ldm-form-error">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <div class="ldm-form-actions">
+                <button type="submit" class="ldm-button ldm-button-primary">{{ submit_label|default:'Lưu voucher' }}</button>
+                <a href="{% url 'store:admin_vouchers' %}" class="ldm-button ldm-button-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="ldm-section-header">
+        <h2 class="ldm-section-title">Danh sách voucher</h2>
+        <div class="ldm-toolbar">
+            <input type="text" id="voucherSearch" placeholder="Tìm kiếm voucher..." class="ldm-input ldm-toolbar-input-sm">
+            <a href="{% url 'store:voucher_create' %}" class="ldm-button ldm-button-primary">
+                <i class="ri-add-line"></i> Thêm voucher
+            </a>
+        </div>
+    </div>
+
+    <div class="ldm-table-wrap">
+        <table class="ldm-table">
+            <thead>
+                <tr>
+                    <th class="ldm-col-50">#</th>
+                    <th>Mã</th>
+                    <th>Giảm giá</th>
+                    <th class="ldm-text-center">Hiệu lực</th>
+                    <th class="ldm-text-center">Trạng thái</th>
+                    <th class="ldm-text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="vouchersTableBody">
+                {% for voucher in vouchers %}
+                <tr>
+                    <td><strong>{{ forloop.counter }}</strong></td>
+                    <td>
+                        <strong>{{ voucher.code }}</strong>
+                        {% if voucher.description %}
+                        <div class="ldm-cell-note">{{ voucher.description }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ voucher.discount_percent }}%</td>
+                    <td class="ldm-text-center">
+                        {% if voucher.start_date and voucher.end_date %}
+                            {{ voucher.start_date|date:"d/m/Y" }} - {{ voucher.end_date|date:"d/m/Y" }}
+                        {% elif voucher.start_date %}
+                            từ {{ voucher.start_date|date:"d/m/Y" }}
+                        {% elif voucher.end_date %}
+                            đến {{ voucher.end_date|date:"d/m/Y" }}
+                        {% else %}
+                            Không giới hạn
+                        {% endif %}
+                    </td>
+                    <td class="ldm-text-center">
+                        {% if not voucher.active %}
+                        <span class="ldm-badge ldm-badge-warning">Tắt</span>
+                        {% elif voucher.is_expired %}
+                        <span class="ldm-badge ldm-badge-danger">Hết hạn</span>
+                        {% else %}
+                        <span class="ldm-badge ldm-badge-success">Hoạt động</span>
+                        {% endif %}
+                    </td>
+                    <td class="ldm-text-center">
+                        <a href="{% url 'store:voucher_edit' voucher.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Sửa</a>
+                        <button class="ldm-button ldm-button-danger ldm-button-xs delete-voucher-btn" data-voucher-id="{{ voucher.id }}" data-voucher-code="{{ voucher.code }}">Xóa</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="ldm-empty-table">🎫 Chưa có voucher nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="ldm-pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page=1">« Đầu</a>
+        <a href="?page={{ page_obj.previous_page_number }}">‹ Trước</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="active">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Tiếp ›</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Cuối »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+{% if not show_form %}
+<script>
+document.querySelectorAll('.delete-voucher-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const voucherId = this.dataset.voucherId;
+        const voucherCode = this.dataset.voucherCode;
+        if (confirm(`Xóa voucher "${voucherCode}"?`)) {
+            window.location = `/dashboard/admin/vouchers/delete/${voucherId}/`;
+        }
+    });
+});
+
+document.getElementById('voucherSearch').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('#vouchersTableBody tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

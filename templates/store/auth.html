@@ -80,6 +80,13 @@
                 <button type="submit" class="btn-primary">Đăng nhập</button>
             </form>
 
+            <div class="auth-social-login" style="margin-top:20px; text-align:center;">
+                <a href="{% url 'social:begin' 'google-oauth2' %}" class="btn-google" style="display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px 16px; background:#4285f4; color:#fff; border-radius:8px; text-decoration:none; font-weight:600;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" height="20">
+                    Đăng nhập với Google
+                </a>
+            </div>
+
             <div class="auth-footer">
                 Chưa có tài khoản? <a onclick="switchAuthTab('register')">Đăng ký ngay</a>
             </div>

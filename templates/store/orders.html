@@ -14,8 +14,6 @@
 
 {% if page_type == 'list' %}
 <div class="ldm-orders-container">
-    <h1 class="ldm-orders-title">📦 Tra cứu đơn hàng</h1>
-
     {% if orders %}
         {% for order in orders %}
             <div class="ldm-order-card">
@@ -127,6 +125,16 @@
         </span>
     </div>
 
+    {% if order.payment_method == 'vietqr' and order.status == 'processing' or order.payment_method == 'vietqr' and order.status == 'shipped' or order.payment_method == 'vietqr' and order.status == 'delivered' %}
+    <div class="ldm-od-alert ldm-od-alert-success" style="margin-top: 16px;">
+        ✅ Đơn hàng của bạn đã được đặt thành công. Vui lòng theo dõi tiến trình đơn hàng.
+    </div>
+    {% elif order.payment_method == 'vietqr' and order.status == 'expired' %}
+    <div class="ldm-od-alert ldm-od-alert-warning" style="margin-top: 16px;">
+        ⏰ Hết thời gian thanh toán. Đơn hàng đã hết hạn và không còn hiệu lực.
+    </div>
+    {% endif %}
+
     <div class="ldm-od-grid">
         <div>
             <div class="ldm-od-items">
@@ -231,15 +239,19 @@
                         🏦 Chuyển khoản ngân hàng
                         {% elif order.payment_method == 'vnpay' %}
                         💳 VNPay
+                        {% elif order.payment_method == 'vietqr' %}
+                        🧾 VIETQR
+                        {% elif order.payment_method == 'momo' %}
+                        📱 MoMo
                         {% else %}
-                        {{ order.payment_method }}
+                        {{ order.get_payment_method_display }}
                         {% endif %}
                     </div>
                 </div>
                 <div class="ldm-od-info-group">
                     <div class="ldm-od-info-label">Trạng thái thanh toán</div>
-                    <div class="ldm-od-info-value {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' %}paid{% else %}pending{% endif %}">
-                        {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' %}
+                    <div class="ldm-od-info-value {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' or order.payment_method == 'vietqr' or order.payment_method == 'momo' %}paid{% else %}pending{% endif %}">
+                        {% if order.payment_method == 'bank' or order.payment_method == 'vnpay' or order.payment_method == 'vietqr' or order.payment_method == 'momo' %}
                         ✓ Đã thanh toán
                         {% else %}
                         ⏳ Chưa thanh toán
@@ -298,9 +310,10 @@
                         <span class="label">Trạng thái</span>
                         <span class="value ldm-status {% if order.normalized_status == 'pending' %}ldm-status-pending{% elif order.normalized_status == 'processing' %}ldm-status-processing{% elif order.normalized_status == 'shipped' %}ldm-status-shipped{% elif order.normalized_status == 'delivered' %}ldm-status-delivered{% elif order.normalized_status == 'cancelled' %}ldm-status-cancelled{% endif %}">
                             {% if order.normalized_status == 'pending' %}⏳ Chờ xác nhận
-                            {% elif order.normalized_status == 'processing' %}⚙️ Đang xử lý
-                            {% elif order.normalized_status == 'shipped' %}📦 Đang giao hàng
-                            {% elif order.normalized_status == 'delivered' %}✓ Hoàn thành
+                            {% elif order.normalized_status == 'processing' %}✅ Đã đặt hàng
+                            {% elif order.normalized_status == 'shipped' %}🚚 Đang giao
+                            {% elif order.normalized_status == 'delivered' %}✓ Đã giao hàng
+                            {% elif order.normalized_status == 'expired' %}⏰ Hết hạn thanh toán
                             {% elif order.normalized_status == 'cancelled' %}❌ Đã huỷ
                             {% endif %}
                         </span>
@@ -315,6 +328,8 @@
                             {% if order.payment_method == 'cash' %}💵 Thanh toán khi nhận hàng
                             {% elif order.payment_method == 'bank' %}🏦 Chuyển khoản ngân hàng
                             {% elif order.payment_method == 'vnpay' %}💳 VNPAY
+                            {% elif order.payment_method == 'vietqr' %}🧾 VIETQR
+                            {% elif order.payment_method == 'momo' %}📱 MoMo
                             {% endif %}
                         </span>
                     </div>

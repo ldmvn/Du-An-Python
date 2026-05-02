@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.models import User
-from .models import Product, ProductSpecification, UserProfile, Category, Banner, Order
+from .models import Product, ProductSpecification, UserProfile, Category, Banner, Order, Voucher
 import re
 
 
@@ -27,6 +27,73 @@ class CategoryForm(forms.ModelForm):
         if not name or not name.strip():
             raise forms.ValidationError('Tên nhà sản xuất không được để trống')
         return name.strip()
+
+
+class VoucherForm(forms.ModelForm):
+    class Meta:
+        model = Voucher
+        fields = [
+            'code',
+            'description',
+            'discount_percent',
+            'start_date',
+            'end_date',
+            'usage_limit',
+            'active'
+        ]
+        widgets = {
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Mã voucher',
+                'required': True
+            }),
+            'description': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Mô tả ngắn (tùy chọn)'
+            }),
+            'discount_percent': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0,
+                'max': 100
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'usage_limit': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            }),
+            'active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+        }
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code', '').strip().upper()
+        if not code:
+            raise forms.ValidationError('Mã voucher không được để trống')
+        return code
+
+    def clean_discount_percent(self):
+        discount = self.cleaned_data.get('discount_percent')
+        if discount is not None and (discount < 0 or discount > 100):
+            raise forms.ValidationError('Giảm giá phải nằm giữa 0 và 100')
+        return discount
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date and end_date < start_date:
+            self.add_error('end_date', 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu')
+
+        return cleaned_data
 
 
 class UserManagementForm(forms.ModelForm):
@@ -287,7 +354,9 @@ class CheckoutForm(forms.Form):
     payment_method = forms.ChoiceField(
         choices=[
             ('cash', 'Thanh toán khi nhận hàng'),
-            ('bank', 'Chuyển khoản ngân hàng'),
+            ('vietqr', 'VIETQR'),
+            ('vnpay', 'VNPAY'),
+            ('momo', 'MoMo'),
         ],
         required=True,
         widget=forms.RadioSelect()

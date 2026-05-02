@@ -294,6 +294,10 @@
                                 <img id="vqrQrImage" src="" alt="VietQR">
                             </div>
                             <div class="ldm-vqr-qr-hint">Dùng app ngân hàng quét mã</div>
+                            <div class="ldm-vqr-notice">
+                                <i class="ri-error-warning-line"></i>
+                                <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, hệ thống sẽ xác nhận.</div>
+                            </div>
                         </div>
 
                         <div class="ldm-vqr-info">
@@ -302,7 +306,7 @@
                             </div>
                             <div class="ldm-vqr-row">
                                 <span class="lbl">Ngân hàng</span>
-                                <span class="val">{{ bank_account_name|default:'Bank' }}</span>
+                                <span class="val">{{ bank_name|default:'MB' }}</span>
                             </div>
                             <div class="ldm-vqr-row">
                                 <span class="lbl">Chủ tài khoản</span>
@@ -320,21 +324,25 @@
                                 <span class="lbl">Nội dung: </span>
                                 <span class="val code">{{ transfer_code }}</span>
                             </div>
+
+                            <div class="ldm-vqr-actions">
+                                <div class="ldm-vqr-status" id="vqrStatusBox">
+                                    <i class="ri-refresh-line"></i>
+                                    <span>Chờ xác nhận</span>
+                                    <div class="dot-pulse">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                                <form method="POST" action="{% url 'store:cancel_order' order.order_id %}" style="display:inline; margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'store:cart_detail' %}" />
+                                    <button type="submit" class="ldm-vqr-btn-cancel" onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">Hủy đơn hàng</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
                     <div class="ldm-vqr-footer">
-                        <div class="ldm-vqr-notice">
-                            <i class="ri-error-warning-line"></i>
-                            <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, hệ thống sẽ xác nhận.</div>
-                        </div>
-                        <div class="ldm-vqr-status" id="vqrStatusBox">
-                            <i class="ri-refresh-line"></i>
-                            <span>Chờ xác nhận</span>
-                            <div class="dot-pulse">
-                                <span></span><span></span><span></span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -372,9 +380,9 @@
      data-timeout="{{ timeout_seconds }}"
      data-transfer-code="{{ transfer_code }}"
      data-order-code="{{ order.order_code }}"
-     data-status-url="{% url 'store:vietqr_page_status' %}"
+     data-status-url="{% url 'store:vietqr_status' %}"
      data-expire-url="{% url 'store:vietqr_expire' %}"
-     data-success-url="{% url 'store:order_success' order_code=order.order_code %}"
+     data-success-url="{% url 'store:order_success' %}"
      data-csrf-token="{{ csrf_token }}"
      data-total-amount="{{ order.total_amount }}"
 ></div>

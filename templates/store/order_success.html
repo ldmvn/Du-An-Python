@@ -20,7 +20,7 @@
                 <div><strong>Ngày đặt:</strong> {{ order.created_at|date:'d/m/Y H:i' }}</div>
                 <div><strong>Trạng thái:</strong> {{ order.get_status_display }}</div>
                 <div><strong>Tổng thanh toán:</strong> {{ order.total_amount|floatformat:0|add:0 }}₫</div>
-                <div><strong>Phương thức thanh toán:</strong> {{ order.payment_method|upper }}</div>
+                <div><strong>Phương thức thanh toán:</strong> {{ order.get_payment_method_display }}</div>
             </div>
         </div>
 

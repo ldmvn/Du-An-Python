@@ -19,21 +19,6 @@
 </div>
 <div class="ldm-search-page">
     <!-- Tiêu đề trang -->
-    <section class="ldm-search-header">
-        <div class="container">
-            <h1>Kết Quả Tìm Kiếm</h1>
-            {% if search_query %}
-            <p>Tìm kiếm cho: <span>"{{ search_query }}"</span></p>
-            {% endif %}
-            {% if brand %}
-            <p>Brand: <span>{{ brand }}</span></p>
-            {% endif %}
-            {% if not search_query and not brand %}
-            <p>Danh sách tất cả sản phẩm</p>
-            {% endif %}
-        </div>
-    </section>
-
     <!-- Kết quả -->
     {% if products %}
     <div class="ldm-search-results">

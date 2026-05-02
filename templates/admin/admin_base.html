@@ -53,6 +53,11 @@
             </a>
         </div>
 
+        <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">VOUCHER</div>
+        <a href="{% url 'store:admin_vouchers' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_vouchers' %}active{% endif %}">
+            <i class="ri-price-tag-3-line"></i> Voucher
+        </a>
+
         <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">BÁN HÀNG</div>
         <a href="{% url 'store:admin_orders' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}">
             <i class="ri-shopping-cart-line"></i> Đơn hàng

@@ -42,7 +42,7 @@
                 {% for order in orders %}
                 <tr data-status="{{ order.status|lower }}">
                     <td><strong>{{ forloop.counter }}</strong></td>
-                    <td><span class="ldm-order-id">ORD-{{ order.id }}</span></td>
+                    <td><span class="ldm-order-id">{{ order.order_number }}</span></td>
                     <td>
                         <div class="ldm-order-user-name">{{ order.user.get_full_name|default:order.user.username }}</div>
                         <div class="ldm-order-user-email">{{ order.user.email }}</div>
@@ -65,16 +65,20 @@
                     <td class="ldm-text-center">
                         <select class="order-status-select" data-order-id="{{ order.id }}" data-current-status="{{ order.status }}">
                             <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>⏳ Chờ xác nhận</option>
-                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>⚙️ Đang xử lý</option>
-                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>📦 Đang giao hàng</option>
-                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✓ Hoàn thành</option>
-                            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy</option>
+                            <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>✅ Đã đặt hàng</option>
+                            <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>🚚 Đang giao</option>
+                            <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>✓ Đã giao hàng</option>
+                            <option value="expired" {% if order.status == 'expired' %}selected{% endif %}>⏰ Hết hạn thanh toán</option>
+                            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>✕ Hủy đơn</option>
                         </select>
                     </td>
                     <td class="ldm-text-center"><span class="ldm-order-date">{{ order.created_at|date:"d/m/Y" }}</span></td>
                     <td class="ldm-text-center">
                         <div class="ldm-order-actions">
                             <a href="{% url 'store:order_detail' order.id %}" class="ldm-button ldm-button-secondary ldm-button-xs">Chi tiết</a>
+                            {% if order.status == 'pending' and order.payment_method == 'vietqr' %}
+                            <button class="ldm-button ldm-button-success ldm-button-xs approve-order-btn" data-order-id="{{ order.id }}">Duyệt</button>
+                            {% endif %}
                             <button class="ldm-button ldm-button-danger ldm-button-xs delete-order-btn" data-order-id="{{ order.id }}">Xóa</button>
                         </div>
                     </td>
@@ -141,6 +145,38 @@ document.querySelectorAll('.delete-order-btn').forEach(btn => {
         if (confirm('Xóa đơn hàng này?')) {
             window.location = `/order/delete/${this.dataset.orderId}/`;
         }
+    });
+});
+
+document.querySelectorAll('.approve-order-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (!confirm('Duyệt đơn hàng và đánh dấu hoàn thành?')) {
+            return;
+        }
+        const orderId = this.dataset.orderId;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        const approveUrl = '{% url "store:approve_order" %}';
+
+        fetch(approveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ order_id: orderId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message || 'Đơn hàng đã được duyệt');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + (data.error || 'Không thể duyệt đơn'));
+            }
+        })
+        .catch(error => {
+            alert('❌ Lỗi kết nối: ' + error.message);
+        });
     });
 });
 

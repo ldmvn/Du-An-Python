@@ -174,10 +174,11 @@ class ProductStorageOption(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Chờ xác nhận'),
-        ('processing', 'Đang xử lý'),
-        ('shipped', 'Đang giao hàng'),
-        ('delivered', 'Hoàn thành'),
-        ('cancelled', 'Đã huỷ'),
+        ('processing', 'Đã đặt hàng'),
+        ('shipped', 'Đang giao'),
+        ('delivered', 'Đã giao hàng'),
+        ('expired', 'Hết hạn thanh toán'),
+        ('cancelled', 'Hủy đơn'),
     ]
 
     LEGACY_STATUS_MAP = {
@@ -190,6 +191,8 @@ class Order(models.Model):
         ('cash', 'Thanh toán khi nhận hàng'),
         ('bank', 'Chuyển khoản ngân hàng'),
         ('vnpay', 'VNPAY'),
+        ('vietqr', 'VIETQR'),
+        ('momo', 'MoMo'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -290,6 +293,42 @@ class Banner(models.Model):
     @property
     def is_video(self):
         return self.media_extension in {'.mp4', '.webm', '.ogg', '.mov', '.m4v'}
+
+
+class Voucher(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=255, blank=True, default='')
+    discount_percent = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Giảm giá theo phần trăm'
+    )
+    usage_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Số lần sử dụng tối đa (để trống nếu không giới hạn)'
+    )
+    used_count = models.PositiveIntegerField(default=0)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.code
+
+    @property
+    def is_expired(self):
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.end_date is not None and self.end_date < today
+
+    def can_use(self):
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False
+        if self.end_date and self.end_date < self.start_date:
+            return False
+        return self.active
 
 
 class ProductMedia(models.Model):
