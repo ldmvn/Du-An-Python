@@ -165,7 +165,10 @@ if not SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET:
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
 SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['id', 'email', 'name', 'picture']
-SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/oauth/complete/google-oauth2/'
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = os.getenv(
+    'GOOGLE_OAUTH2_REDIRECT_URI',
+    'http://160.187.229.147/oauth/complete/google-oauth2/'
+)
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 # ==================== EMAIL CONFIGURATION ====================
@@ -215,8 +218,8 @@ if not VNPAY_HASH_SECRET:
     )
 
 VNPAY_URL = os.getenv('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
-VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'http://localhost:8000/vnpay/return/')
-VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'http://localhost:8000/vnpay/ipn/')
+VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'http://idvn.io.vn/vnpay/return/')
+VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'http://idvn.io.vn/vnpay/ipn/')
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8625948551:AAGO2A4emtPJOH555z21vsO14if5F-vwuVs')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '3756857984')
