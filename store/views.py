@@ -12,6 +12,12 @@ from django.db.models import Q, Count
 from django.urls import reverse
 import os
 import requests
+import hashlib
+import hmac
+import logging
+from urllib.parse import urlencode
+
+logger = logging.getLogger(__name__)
 
 from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Voucher, Wishlist
 from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm, OrderShippingForm, VoucherForm
@@ -65,6 +71,111 @@ def get_base_context(request):
         'order_count': order_count,
         'user_display_name': user_display_name,
     }
+
+
+def _get_client_ip(request):
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '')
+
+
+def _build_vnpay_payment_url(request, order_number, amount):
+    """Build VNPAY redirect URL for an order."""
+    params = {
+        'vnp_Version': '2.1.0',
+        'vnp_Command': 'pay',
+        'vnp_TmnCode': settings.VNPAY_TMN_CODE,
+        'vnp_Amount': str(int(amount) * 100),
+        'vnp_CurrCode': 'VND',
+        'vnp_TxnRef': order_number,
+        'vnp_OrderInfo': f'Thanh toan don hang {order_number}',
+        'vnp_OrderType': 'other',
+        'vnp_Locale': 'vn',
+        'vnp_ReturnUrl': settings.VNPAY_RETURN_URL,
+        'vnp_IpAddr': _get_client_ip(request),
+        'vnp_CreateDate': timezone.now().strftime('%Y%m%d%H%M%S'),
+    }
+
+    sorted_items = sorted(params.items())
+    hash_data = '&'.join(f"{k}={v}" for k, v in sorted_items)
+    secure_hash = hmac.new(
+        settings.VNPAY_HASH_SECRET.encode('utf-8'),
+        hash_data.encode('utf-8'),
+        hashlib.sha512
+    ).hexdigest()
+
+    params['vnp_SecureHashType'] = 'SHA512'
+    params['vnp_SecureHash'] = secure_hash
+    return f"{settings.VNPAY_URL}?{urlencode(params)}"
+
+
+def _send_telegram_notification(message):
+    token = settings.TELEGRAM_BOT_TOKEN
+    chat_id = settings.TELEGRAM_CHAT_ID
+    
+    logger.info(f"🔔 Telegram Notification - Token: {token[:10]}..., Chat ID: {chat_id}")
+    
+    if not token or not chat_id:
+        logger.error("❌ Token hoặc Chat ID trống!")
+        return False
+
+    try:
+        url = f'https://api.telegram.org/bot{token}/sendMessage'
+        payload = {
+            'chat_id': chat_id,
+            'text': message,
+            'parse_mode': 'HTML',
+        }
+        
+        logger.info(f"📤 Gửi request tới: {url}")
+        response = requests.post(url, data=payload, timeout=5)
+        
+        logger.info(f"📥 Response status: {response.status_code}")
+        logger.info(f"📥 Response body: {response.text}")
+        
+        if response.ok:
+            logger.info("✅ Telegram notification sent successfully!")
+            return True
+        else:
+            logger.error(f"❌ Telegram API error: {response.status_code} - {response.text}")
+            return False
+            
+    except requests.exceptions.Timeout:
+        logger.error("❌ Timeout khi gọi Telegram API (5s)")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f"❌ Request error: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
+        return False
+
+
+def _notify_order_pending(order):
+    message = (
+        f"🟡 Đơn hàng mới chờ duyệt\n"
+        f"Mã đơn hàng: {order.order_number}\n"
+        f"Khách hàng: {order.customer_name or 'Khách vãng lai'}\n"
+        f"SĐT: {order.customer_phone or 'Không có'}\n"
+        f"Tổng: {order.total_amount:,}đ\n"
+        f"Phương thức: {order.get_payment_method_display()}\n"
+        f"Trạng thái: {order.get_status_display()}"
+    )
+    _send_telegram_notification(message)
+
+
+def _notify_order_success(order):
+    message = (
+        f"✅ Đơn hàng thành công\n"
+        f"Mã đơn hàng: {order.order_number}\n"
+        f"Khách hàng: {order.customer_name or 'Khách vãng lai'}\n"
+        f"SĐT: {order.customer_phone or 'Không có'}\n"
+        f"Tổng: {order.total_amount:,}đ\n"
+        f"Phương thức: {order.get_payment_method_display()}\n"
+        f"Trạng thái: {order.get_status_display()}"
+    )
+    _send_telegram_notification(message)
 
 
 def _get_next_banner_id():
@@ -1174,6 +1285,7 @@ def bank_otp(request):
             request.session.pop('pending_order_otp', None)
             request.session['cart'] = {}
 
+            _notify_order_pending(order)
             messages.success(request, f'✅ Đơn hàng được tạo! Mã đơn hàng: {order_number}. Đơn hàng đang chờ xác nhận thanh toán chuyển khoản.')
             return redirect('store:order_success')
         except Exception as e:
@@ -1619,6 +1731,12 @@ def checkout(request):
         # Process checkout form using CheckoutForm
         form = CheckoutForm(request.POST)
         
+        # Initialize variables that may be used in both if and else branches
+        voucher_code = request.POST.get('voucher_code', '').strip().upper()
+        voucher = None
+        discount_amount = 0
+        voucher_error = ''
+        
         if form.is_valid():
             fullname = form.cleaned_data['fullname']
             email = form.cleaned_data['email']
@@ -1628,10 +1746,6 @@ def checkout(request):
             district = form.cleaned_data['district']
             ward = form.cleaned_data['ward']
             payment_method = form.cleaned_data['payment_method']
-            voucher_code = request.POST.get('voucher_code', '').strip().upper()
-            voucher = None
-            discount_amount = 0
-            voucher_error = ''
             if voucher_code:
                 voucher, voucher_error = _validate_voucher_code(voucher_code)
                 if voucher_error:
@@ -1698,6 +1812,7 @@ def checkout(request):
                         quantity=quantity,
                         price=product.get_discounted_price()
                     )
+                    _notify_order_pending(order)
                     pending = {
                         'type': 'single',
                         'product_id': product.id,
@@ -1717,6 +1832,75 @@ def checkout(request):
                     request.session['pending_order'] = pending
                     _remove_products_from_cart(request, [product.id])
                     return redirect('store:vietqr_page')
+
+                if payment_method == 'vnpay':
+                    from datetime import datetime
+                    order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    subtotal = product.get_discounted_price() * quantity
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='vnpay',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        price=product.get_discounted_price()
+                    )
+                    _notify_order_pending(order)
+                    _remove_products_from_cart(request, [product.id])
+                    return redirect(_build_vnpay_payment_url(request, order_number, total_amount))
+
+                if payment_method == 'cash':
+                    # Handle Cash On Delivery (COD) payment
+                    from datetime import datetime
+                    order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    subtotal = product.get_discounted_price() * quantity
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=total_amount,
+                        status='processing',
+                        payment_method='cash',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        price=product.get_discounted_price()
+                    )
+                    # Send success notification for COD orders
+                    _notify_order_success(order)
+                    _remove_products_from_cart(request, [product.id])
+                    
+                    # Get or create user profile
+                    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+                    user_profile.phone = phone
+                    user_profile.address = full_address
+                    user_profile.save()
+                    
+                    # Update user's name/email
+                    parts = fullname.split(' ', 1)
+                    request.user.first_name = parts[0] if len(parts) > 0 else ''
+                    request.user.last_name = parts[1] if len(parts) > 1 else ''
+                    request.user.email = email
+                    request.user.save()
+                    
+                    messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}. Chúng tôi sẽ liên hệ sớm để xác nhận.')
+                    return redirect('store:order_success')
 
                 # Create Order
                 from datetime import datetime
@@ -1745,6 +1929,7 @@ def checkout(request):
                     price=product.get_discounted_price()
                 )
 
+                _notify_order_pending(order)
                 _remove_products_from_cart(request, [product.id])
             
                 # Get or create user profile
@@ -1973,6 +2158,7 @@ def checkout_from_cart(request):
                             quantity=it['quantity'],
                             price=it['price'],
                         )
+                    _notify_order_pending(order)
                     serializable_items = []
                     for it in cart_items:
                         serializable_items.append({
@@ -1998,6 +2184,80 @@ def checkout_from_cart(request):
                     request.session['pending_order'] = pending
                     _remove_products_from_cart(request, [it['product'].id for it in cart_items])
                     return redirect('store:vietqr_page')
+
+                if payment_method == 'vnpay':
+                    subtotal = total_amount
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    order_number = f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='vnpay',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    for it in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            product=it['product'],
+                            quantity=it['quantity'],
+                            price=it['price'],
+                        )
+                    _notify_order_pending(order)
+                    _remove_products_from_cart(request, [it['product'].id for it in cart_items])
+                    return redirect(_build_vnpay_payment_url(request, order_number, total_amount))
+
+                if payment_method == 'cash':
+                    # Handle Cash On Delivery (COD) payment for cart checkout
+                    from datetime import datetime
+                    order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    subtotal = total_amount
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    final_total = max(subtotal + 30000 - discount_amount, 0)
+                    
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=final_total,
+                        status='processing',
+                        payment_method='cash',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address
+                    )
+
+                    # Create OrderItems for all cart items
+                    for item in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            product=item['product'],
+                            quantity=item['quantity'],
+                            price=item['price']
+                        )
+
+                    # Send success notification for COD orders
+                    _notify_order_success(order)
+                    _remove_products_from_cart(request, [it['product'].id for it in cart_items])
+
+                    # Get or create user profile
+                    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+                    user_profile.phone = phone
+                    user_profile.address = full_address
+                    user_profile.save()
+
+                    # Update user's name/email
+                    parts = fullname.split(' ', 1)
+                    request.user.first_name = parts[0] if len(parts) > 0 else ''
+                    request.user.last_name = parts[1] if len(parts) > 1 else ''
+                    request.user.email = email
+                    request.user.save()
+
+                    messages.success(request, f'✅ Đặt hàng thành công! Mã đơn hàng: {order_number}. Chúng tôi sẽ liên hệ sớm để xác nhận.')
+                    return redirect('store:order_success')
 
                 # Create Order
                 from datetime import datetime
@@ -2026,6 +2286,7 @@ def checkout_from_cart(request):
                         price=item['price']
                     )
 
+                _notify_order_pending(order)
                 _remove_products_from_cart(request, [it['product'].id for it in cart_items])
 
                 # Get or create user profile
@@ -2320,6 +2581,30 @@ def order_success(request):
     context = get_base_context(request)
     context['order'] = order
     return render(request, 'store/order_success.html', context)
+
+
+def vnpay_return(request):
+    """Handle return from VNPAY after payment completion."""
+    txn_ref = request.GET.get('vnp_TxnRef') or request.GET.get('vnp_TransactionNo')
+    response_code = request.GET.get('vnp_ResponseCode')
+
+    if response_code == '00':
+        messages.success(request, '✅ Thanh toán VNPAY đã thành công. Cảm ơn bạn!')
+        if txn_ref:
+            order = Order.objects.filter(order_number=txn_ref).first()
+            if order and order.status == 'pending':
+                order.status = 'processing'
+                order.save()
+                _notify_order_success(order)
+    else:
+        messages.error(request, '❌ Thanh toán VNPAY chưa thành công hoặc đã bị hủy. Vui lòng kiểm tra lại.')
+
+    return redirect('store:order_success')
+
+
+def vnpay_ipn(request):
+    """Placeholder endpoint for VNPAY IPN notifications."""
+    return JsonResponse({'message': 'VNPAY IPN nhận thành công'})
 
 
 @login_required(login_url='store:login')
@@ -3517,6 +3802,7 @@ def approve_order(request):
 
             order.status = 'processing'
             order.save()
+            _notify_order_success(order)
             return JsonResponse({'success': True, 'message': 'Đơn hàng đã được duyệt và chuyển sang trạng thái Đã đặt hàng.'})
         except Order.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Đơn hàng không tồn tại'}, status=404)

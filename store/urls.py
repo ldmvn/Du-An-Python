@@ -63,6 +63,8 @@ urlpatterns = [
     path('checkout/bank/select/', views.bank_select, name='bank_select'),
     path('checkout/bank/pay/', views.bank_pay, name='bank_pay'),
     path('checkout/bank/otp/', views.bank_otp, name='bank_otp'),
+    path('vnpay/return/', views.vnpay_return, name='vnpay_return'),
+    path('vnpay/ipn/', views.vnpay_ipn, name='vnpay_ipn'),
     path('ajax/order/update-status/', views.update_order_status, name='update_order_status'),
     path('ajax/order/approve/', views.approve_order, name='approve_order'),
 

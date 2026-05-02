@@ -199,3 +199,25 @@ VIETQR_BANK_ACCOUNT_NO = os.getenv('VIETQR_BANK_ACCOUNT_NO', '0386220065')
 VIETQR_BANK_ACCOUNT_NAME = os.getenv('VIETQR_BANK_ACCOUNT_NAME', 'LUU DUC MANH')
 VIETQR_TIMEOUT_SECONDS = int(os.getenv('VIETQR_TIMEOUT_SECONDS', '900'))
 
+# VNPAY sandbox configuration
+VNPAY_TMN_CODE = os.getenv('VNPAY_TMN_CODE')
+if not VNPAY_TMN_CODE:
+    raise ValueError(
+        "VNPAY_TMN_CODE environment variable is not set. "
+        "Please add it to your .env file"
+    )
+
+VNPAY_HASH_SECRET = os.getenv('VNPAY_HASH_SECRET')
+if not VNPAY_HASH_SECRET:
+    raise ValueError(
+        "VNPAY_HASH_SECRET environment variable is not set. "
+        "Please add it to your .env file"
+    )
+
+VNPAY_URL = os.getenv('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
+VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'http://localhost:8000/vnpay/return/')
+VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'http://localhost:8000/vnpay/ipn/')
+
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8625948551:AAGO2A4emtPJOH555z21vsO14if5F-vwuVs')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '3756857984')
+
