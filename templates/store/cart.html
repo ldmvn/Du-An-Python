@@ -1,4 +1,4 @@
-﻿{% extends 'store/base.html' %}
+{% extends 'store/base.html' %}
 {% load static %}
 
 {% block title %}Giỏ hàng - MOBILE STORE{% endblock %}
@@ -23,14 +23,14 @@
       </div>
 
       {% for product in products %}
-      <div class="ldm-cart-item" data-item-id="{{ product.id }}">
+      <div class="ldm-cart-item" data-cart-key="{{ product.cart_key }}">
         <div class="ldm-cart-item-check">
-          <input type="checkbox" class="ldm-cart-checkbox cart-item-check" data-item-id="{{ product.id }}" onchange="updateSelectedCount()">
+          <input type="checkbox" class="ldm-cart-checkbox cart-item-check" data-cart-key="{{ product.cart_key }}" onchange="updateSelectedCount()">
         </div>
 
         <div class="ldm-cart-item-img">
           {% if product.image %}
-          <img id="itemImg_{{ product.id }}" src="{{ product.image.url }}" alt="{{ product.name }}">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}">
           {% else %}
           <div class="ldm-cart-no-img">Ảnh</div>
           {% endif %}
@@ -40,14 +40,15 @@
           <a href="{% url 'store:product_detail' product.id %}" class="ldm-cart-item-name">{{ product.name }}</a>
 
           {% if product.colors.all %}
-          <div class="ldm-cart-color-dropdown" data-item-id="{{ product.id }}">
+          <div class="ldm-cart-color-dropdown">
             <button type="button" class="ldm-cart-color-selected" onclick="toggleColorDropdown(this)">
               <strong>Màu:</strong> <span>{{ product.selected_color|default:product.default_color }}</span>
               <i class="ri-arrow-down-s-line"></i>
             </button>
-            <div id="colorOptions_{{ product.id }}" class="ldm-cart-color-options">
+            <div class="ldm-cart-color-options">
               {% for color in product.colors.all %}
-              <button type="button" class="ldm-cart-color-opt {% if color.name == product.selected_color %}selected{% endif %}" onclick="changeColor(this, '{{ product.id }}', '{{ color.name|escapejs }}')">
+              <button type="button" class="ldm-cart-color-opt {% if color.name == product.selected_color %}selected{% endif %}"
+                onclick="changeColor(this, '{{ product.cart_key|escapejs }}', '{{ color.name|escapejs }}', {{ product.id }})">
                 {{ color.name }}{% if color.price_delta and color.price_delta != 0 %} (+{{ color.price_delta|floatformat:0|add:0 }}đ){% endif %}
               </button>
               {% endfor %}
@@ -60,14 +61,15 @@
           {% endif %}
 
           {% if product.ram_options.all %}
-          <div class="ldm-cart-ram-dropdown" data-item-id="{{ product.id }}">
+          <div class="ldm-cart-ram-dropdown">
             <button type="button" class="ldm-cart-storage-selected ldm-cart-ram-selected" onclick="toggleRamDropdown(this)">
               <strong>RAM:</strong> <span>{{ product.selected_ram|default:product.ram }}</span>
               <i class="ri-arrow-down-s-line"></i>
             </button>
-            <div id="ramOptions_{{ product.id }}" class="ldm-cart-storage-options ldm-cart-ram-options">
+            <div class="ldm-cart-storage-options ldm-cart-ram-options">
               {% for ram in product.ram_options.all %}
-              <button type="button" class="ldm-cart-storage-opt ldm-cart-ram-opt {% if ram.value == product.selected_ram %}selected{% endif %}" onclick="changeRam(this, '{{ product.id }}', '{{ ram.value|escapejs }}')">
+              <button type="button" class="ldm-cart-storage-opt ldm-cart-ram-opt {% if ram.value == product.selected_ram %}selected{% endif %}"
+                onclick="changeRam(this, '{{ product.cart_key|escapejs }}', '{{ ram.value|escapejs }}', {{ product.id }})">
                 {{ ram.value }}{% if ram.price_delta and ram.price_delta != 0 %} (+{{ ram.price_delta|floatformat:0|add:0 }}đ){% endif %}
               </button>
               {% endfor %}
@@ -80,14 +82,15 @@
           {% endif %}
 
           {% if product.storage_options.all %}
-          <div class="ldm-cart-storage-dropdown" data-item-id="{{ product.id }}">
+          <div class="ldm-cart-storage-dropdown">
             <button type="button" class="ldm-cart-storage-selected" onclick="toggleStorageDropdown(this)">
               <strong>Dung lượng:</strong> <span>{{ product.selected_storage|default:product.rom }}</span>
               <i class="ri-arrow-down-s-line"></i>
             </button>
-            <div id="storageOptions_{{ product.id }}" class="ldm-cart-storage-options">
+            <div class="ldm-cart-storage-options">
               {% for storage in product.storage_options.all %}
-              <button type="button" class="ldm-cart-storage-opt {% if storage.capacity == product.selected_storage %}selected{% endif %}" onclick="changeStorage(this, '{{ product.id }}', '{{ storage.capacity|escapejs }}')">
+              <button type="button" class="ldm-cart-storage-opt {% if storage.capacity == product.selected_storage %}selected{% endif %}"
+                onclick="changeStorage(this, '{{ product.cart_key|escapejs }}', '{{ storage.capacity|escapejs }}', {{ product.id }})">
                 {{ storage.capacity }}{% if storage.price_delta and storage.price_delta != 0 %} (+{{ storage.price_delta|floatformat:0|add:0 }}đ){% endif %}
               </button>
               {% endfor %}
@@ -102,17 +105,18 @@
 
         <div class="ldm-cart-item-right">
           <div class="ldm-cart-item-price">
-            <div id="itemPrice_{{ product.id }}" class="ldm-cart-item-current-price">{{ product.price|floatformat:0|add:0 }}đ</div>
-            <div id="itemOrigPrice_{{ product.id }}" class="ldm-cart-item-original-price" style="display: none;"></div>
+            <div class="ldm-cart-item-current-price">{{ product.price|floatformat:0|add:0 }}đ</div>
+            <div class="ldm-cart-item-original-price" style="display: none;"></div>
           </div>
 
           <div class="ldm-cart-item-actions">
             <div class="ldm-cart-qty">
-              <button type="button" class="ldm-cart-qty-btn qty-decrease" data-item-id="{{ product.id }}">−</button>
-              <input id="qtyInput_{{ product.id }}" type="text" class="ldm-cart-qty-input" value="{{ product.quantity }}" inputmode="numeric" pattern="[0-9]*" onchange="updateCartQuantity({{ product.id }}, this.value); updateSelectedCount()">
-              <button type="button" class="ldm-cart-qty-btn qty-increase" data-item-id="{{ product.id }}">+</button>
+              <button type="button" class="ldm-cart-qty-btn qty-decrease" onclick="changeQty(this, -1)">−</button>
+              <input type="text" class="ldm-cart-qty-input" value="{{ product.quantity }}" inputmode="numeric" pattern="[0-9]*"
+                data-cart-key="{{ product.cart_key }}" onchange="updateCartQty(this)">
+              <button type="button" class="ldm-cart-qty-btn qty-increase" onclick="changeQty(this, 1)">+</button>
             </div>
-            <button type="button" class="ldm-cart-delete-btn" onclick="removeFromCart({{ product.id }})" title="Xóa">
+            <button type="button" class="ldm-cart-delete-btn" data-cart-key="{{ product.cart_key }}" onclick="removeFromCart(this)" title="Xóa">
               <i class="ri-delete-bin-line"></i>
             </button>
           </div>
@@ -153,7 +157,227 @@
   </div>
   {% endif %}
 </div>
+
+<script>
+function toggleColorDropdown(btn) {
+    var dropdown = btn.closest('.ldm-cart-color-dropdown');
+    var wasOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.ldm-cart-color-dropdown, .ldm-cart-ram-dropdown, .ldm-cart-storage-dropdown').forEach(el => el.classList.remove('open'));
+    if (!wasOpen) dropdown.classList.add('open');
+}
+function toggleRamDropdown(btn) {
+    var dropdown = btn.closest('.ldm-cart-ram-dropdown');
+    var wasOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.ldm-cart-color-dropdown, .ldm-cart-ram-dropdown, .ldm-cart-storage-dropdown').forEach(el => el.classList.remove('open'));
+    if (!wasOpen) dropdown.classList.add('open');
+}
+function toggleStorageDropdown(btn) {
+    var dropdown = btn.closest('.ldm-cart-storage-dropdown');
+    var wasOpen = dropdown.classList.contains('open');
+    document.querySelectorAll('.ldm-cart-color-dropdown, .ldm-cart-ram-dropdown, .ldm-cart-storage-dropdown').forEach(el => el.classList.remove('open'));
+    if (!wasOpen) dropdown.classList.add('open');
+}
+
+function updateCartQty(input) {
+    var cartKey = input.dataset.cartKey;
+    var qty = parseInt(input.value) || 1;
+    if (typeof updateCartQuantityAjax === 'function') {
+        updateCartQuantityAjax(cartKey, qty);
+    }
+}
+
+function changeQty(btn, delta) {
+    var input = btn.parentElement.querySelector('.ldm-cart-qty-input');
+    var qty = (parseInt(input.value) || 1) + delta;
+    if (qty < 1) qty = 1;
+    if (qty > 99) qty = 99;
+    input.value = qty;
+    input.dispatchEvent(new Event('change'));
+}
+
+function removeFromCart(btn) {
+    var cartKey = btn.dataset.cartKey || btn.getAttribute('data-cart-key');
+    if (!cartKey) return;
+    if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) return;
+    if (typeof removeFromCartAjax === 'function') {
+        removeFromCartAjax(cartKey);
+    }
+}
+
+function changeColor(btn, cartKey, colorName, productId) {
+    var dropdown = btn.closest('.ldm-cart-color-dropdown');
+    dropdown.querySelector('.ldm-cart-color-selected span').textContent = colorName;
+    dropdown.classList.remove('open');
+    dropdown.querySelectorAll('.ldm-cart-color-opt').forEach(el => el.classList.remove('selected'));
+    btn.classList.add('selected');
+    btn.disabled = true;
+    updateCartVariant(cartKey, 'color', colorName, function(data) {
+        btn.disabled = false;
+        if (data.success) {
+            // Update UI using original cartKey (key never changes now)
+            if (data.item_price_formatted) {
+                var priceEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-current-price`);
+                if (priceEl) priceEl.textContent = data.item_price_formatted;
+            }
+            if (data.item_subtotal_formatted) {
+                var subtotalEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-subtotal`);
+                if (subtotalEl) subtotalEl.textContent = data.item_subtotal_formatted;
+            }
+            if (data.new_thumbnail) {
+                var imgEl = document.querySelector(`[data-cart-key="${cartKey}"] img`);
+                if (imgEl) imgEl.src = data.new_thumbnail;
+            }
+            updateSummary();
+        }
+    });
+}
+
+function changeRam(btn, cartKey, ramValue, productId) {
+    var dropdown = btn.closest('.ldm-cart-ram-dropdown');
+    dropdown.querySelector('.ldm-cart-ram-selected span').textContent = ramValue;
+    dropdown.classList.remove('open');
+    dropdown.querySelectorAll('.ldm-cart-ram-opt').forEach(el => el.classList.remove('selected'));
+    btn.classList.add('selected');
+    btn.disabled = true;
+    updateCartVariant(cartKey, 'ram', ramValue, function(data) {
+        btn.disabled = false;
+        if (data.success) {
+            if (data.item_price_formatted) {
+                var priceEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-current-price`);
+                if (priceEl) priceEl.textContent = data.item_price_formatted;
+            }
+            if (data.item_subtotal_formatted) {
+                var subtotalEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-subtotal`);
+                if (subtotalEl) subtotalEl.textContent = data.item_subtotal_formatted;
+            }
+            updateSummary();
+        }
+    });
+}
+
+function changeStorage(btn, cartKey, capacity, productId) {
+    var dropdown = btn.closest('.ldm-cart-storage-dropdown');
+    dropdown.querySelector('.ldm-cart-storage-selected span').textContent = capacity;
+    dropdown.classList.remove('open');
+    dropdown.querySelectorAll('.ldm-cart-storage-opt').forEach(el => el.classList.remove('selected'));
+    btn.classList.add('selected');
+    btn.disabled = true;
+    updateCartVariant(cartKey, 'storage', capacity, function(data) {
+        btn.disabled = false;
+        if (data.success) {
+            if (data.item_price_formatted) {
+                var priceEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-current-price`);
+                if (priceEl) priceEl.textContent = data.item_price_formatted;
+            }
+            if (data.item_subtotal_formatted) {
+                var subtotalEl = document.querySelector(`[data-cart-key="${cartKey}"] .ldm-cart-item-subtotal`);
+                if (subtotalEl) subtotalEl.textContent = data.item_subtotal_formatted;
+            }
+            updateSummary();
+        }
+    });
+}
+
+function updateCartVariant(cartKey, optionType, optionValue, callback) {
+    var formData = new FormData();
+    formData.append('cart_key', cartKey);
+    formData.append('option_type', optionType);
+    formData.append('option_value', optionValue);
+    formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+    fetch('{% url "store:update_cart_option_ajax" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            updateCartUI(data.cart_count, data.cart_total);
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.error || 'Cập nhật thất bại', 'error');
+        }
+        if (callback) callback(data);
+    })
+    .catch(function(error) {
+        btn.disabled = false;
+        console.error('Error:', error);
+        showToast('Lỗi khi cập nhật giỏ hàng', 'error');
+    });
+}
+
+function toggleSelectAll(checkbox) {
+    document.querySelectorAll('.cart-item-check').forEach(cb => cb.checked = checkbox.checked);
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    var count = document.querySelectorAll('.cart-item-check:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+    updateSummary();
+}
+
+function updateSummary() {
+    var total = 0;
+    document.querySelectorAll('.ldm-cart-item').forEach(function(row) {
+        var checkbox = row.querySelector('.cart-item-check');
+        if (checkbox && checkbox.checked) {
+            var priceEl = row.querySelector('.ldm-cart-item-current-price');
+            var qtyEl = row.querySelector('.ldm-cart-qty-input');
+            if (priceEl && qtyEl) {
+                // Remove thousand separators and "đ" suffix before parsing
+                var priceText = priceEl.textContent.replace(/[^\d]/g, '');
+                var price = parseInt(priceText) || 0;
+                var qty = parseInt(qtyEl.value) || 1;
+                total += price * qty;
+            }
+        }
+    });
+    var summaryTotal = document.getElementById('summaryTotal');
+    if (summaryTotal) {
+        summaryTotal.textContent = new Intl.NumberFormat('vi-VN').format(total) + ' đ';
+    }
+}
+
+function deleteSelected() {
+    if (!confirm('Xóa các sản phẩm đã chọn?')) return;
+    document.querySelectorAll('.cart-item-check:checked').forEach(function(cb) {
+        var cartKey = cb.dataset.cartKey;
+        if (cartKey && typeof removeFromCartAjax === 'function') {
+            removeFromCartAjax(cartKey);
+        }
+    });
+}
+
+function checkout() {
+    var selectedItems = [];
+    document.querySelectorAll('.ldm-cart-item').forEach(function(row) {
+        var checkbox = row.querySelector('.cart-item-check');
+        if (checkbox && checkbox.checked) {
+            selectedItems.push(row.dataset.cartKey);
+        }
+    });
+    if (selectedItems.length === 0) {
+        alert('Vui lòng chọn ít nhất một sản phẩm');
+        return;
+    }
+    window.location.href = '{% url "store:checkout_from_cart" %}?items=' + selectedItems.join(',');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.ldm-cart-color-dropdown') &&
+            !e.target.closest('.ldm-cart-ram-dropdown') &&
+            !e.target.closest('.ldm-cart-storage-dropdown')) {
+            document.querySelectorAll('.ldm-cart-color-dropdown, .ldm-cart-ram-dropdown, .ldm-cart-storage-dropdown').forEach(function(el) {
+                el.classList.remove('open');
+            });
+        }
+    });
+});
+</script>
 {% endblock %}
-
-
-

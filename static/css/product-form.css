@@ -145,9 +145,31 @@
     background: #ffffff;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 640px) {
     .product-form-feature-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 641px) {
+    .product-spec-table-ui {
+        display: table;
+    }
+    .product-spec-table-ui thead {
+        display: table-header-group;
+    }
+    .product-spec-table-ui tbody {
+        display: table-row-group;
+    }
+    .product-spec-table-ui tr {
+        display: table-row;
+    }
+    .product-spec-table-ui th,
+    .product-spec-table-ui td {
+        display: table-cell;
+    }
+    .product-spec-mobile-label {
+        display: none;
     }
 }
 
@@ -635,7 +657,7 @@
     margin-right: 6px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 640px) {
     .product-spec-cluster-tools {
         flex-direction: column;
         align-items: stretch;

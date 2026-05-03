@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.db.models import Q, Count
@@ -21,7 +21,7 @@ from urllib.parse import urlencode, quote, quote_plus
 
 logger = logging.getLogger(__name__)
 
-from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Voucher, Wishlist
+from .models import Product, ProductColor, ProductMedia, ProductSpecification, ProductRamOption, ProductStorageOption, Review, UserProfile, Category, Order, OrderItem, Banner, Voucher, Wishlist, PendingQRPayment
 from .forms import ProductForm, UserProfileForm, UserExtendedProfileForm, ChangePasswordForm, CategoryForm, UserManagementForm, CheckoutForm, BannerForm, OrderShippingForm, VoucherForm
 
 
@@ -204,6 +204,11 @@ def _notify_order_pending(order):
         f"Phương thức: {order.get_payment_method_display()}\n"
         f"Trạng thái: {order.get_status_display()}"
     )
+    if order.payment_method == 'vietqr':
+        from .models import PendingQRPayment
+        qr = PendingQRPayment.objects.filter(order=order).first()
+        if qr:
+            message += f"\nMã CK: {qr.transfer_code}"
     _send_telegram_notification(message)
 
 
@@ -1349,25 +1354,41 @@ def bank_otp(request):
     return render(request, 'store/pay.html', context)
 
 
-@login_required(login_url='store:login')
 def vietqr_page(request):
+    # Check if order was cancelled FIRST (before checking pending)
+    order_cancelled = request.GET.get('cancelled') == '1'
+    cancelled_order_id = request.GET.get('order_id')
+    
     pending = request.session.get('pending_order')
     if not pending or pending.get('payment_method') != 'vietqr':
-        messages.error(request, 'Không có đơn hàng VietQR đang chờ thanh toán.')
-        return redirect('store:cart_detail')
+        if not order_cancelled:
+            messages.error(request, 'Không có đơn hàng VietQR đang chờ thanh toán.')
+            return redirect('store:cart_detail')
 
     order = None
-    if pending.get('order_id'):
+    if pending and pending.get('order_id'):
         order = Order.objects.filter(id=pending.get('order_id')).first()
+    elif order_cancelled and cancelled_order_id:
+        order = Order.objects.filter(id=cancelled_order_id).first()
+
+    if order_cancelled and order:
+        order.status = 'cancelled'
+        order.save()
+        if not pending or pending.get('order_id') == order.id:
+            request.session.pop('pending_order', None)
 
     timeout_seconds = getattr(settings, 'VIETQR_TIMEOUT_SECONDS', 900)
     remaining_seconds = timeout_seconds
-    if order and order.payment_method == 'vietqr':
-        if order.status == 'pending':
+    
+    # If cancelled, keep full timeout so JS shows cancelled UI
+    if not order_cancelled and order and order.payment_method == 'vietqr':
+        if order.status == 'awaiting_payment':
             elapsed = (timezone.now() - order.created_at).total_seconds()
             if elapsed >= timeout_seconds:
                 order.status = 'expired'
+                order.payment_status = 'expired'
                 order.save()
+                remaining_seconds = 0
             else:
                 remaining_seconds = int(timeout_seconds - elapsed)
         elif order.status == 'expired':
@@ -1375,19 +1396,21 @@ def vietqr_page(request):
 
     context = get_base_context(request)
     context.update({
-        'pending': pending,
+        'pending': pending or {},
         'pay_section': 'vietqr',
         'bank_id': getattr(settings, 'VIETQR_BANK_ID', 'MB'),
         'bank_name': getattr(settings, 'VIETQR_BANK_NAME', 'MB Bank'),
         'bank_account_no': getattr(settings, 'VIETQR_BANK_ACCOUNT_NO', '0386220065'),
         'bank_account_name': getattr(settings, 'VIETQR_BANK_ACCOUNT_NAME', 'LUU DUC MANH'),
         'order': {
-            'order_id': pending.get('order_id') or (order.id if order else None),
-            'order_code': pending.get('order_code', ''),
-            'total_amount': pending.get('total_amount', 0),
+            'order_id': order.id if order else (pending.get('order_id') if pending else None),
+            'order_code': order.order_number if order else (pending.get('order_code', '') if pending else ''),
+            'total_amount': order.total_amount if order else (pending.get('total_amount', 0) if pending else 0),
         },
-        'transfer_code': pending.get('transfer_code', ''),
+        'transfer_code': pending.get('transfer_code', '') if pending else '',
         'timeout_seconds': remaining_seconds,
+        'order_cancelled': order_cancelled,
+        'order_status': order.status if order else 'cancelled',
     })
     return render(request, 'store/pay.html', context)
 
@@ -1403,16 +1426,33 @@ def vietqr_page_status(request):
         order = Order.objects.filter(id=pending.get('order_id')).first()
 
     if order and order.payment_method == 'vietqr':
+        from store.models import PendingQRPayment
+        qr = PendingQRPayment.objects.filter(order=order, user=request.user).first()
+        
         timeout_seconds = getattr(settings, 'VIETQR_TIMEOUT_SECONDS', 900)
-        if order.status == 'pending':
+        
+        # Check if QR was approved by admin
+        if qr and qr.status == 'approved':
+            return JsonResponse({'success': True, 'status': 'approved'})
+        
+        if qr and qr.status == 'cancelled':
+            return JsonResponse({'success': True, 'status': 'cancelled'})
+        
+        if order.status == 'awaiting_payment':
             elapsed = (timezone.now() - order.created_at).total_seconds()
             if elapsed >= timeout_seconds:
                 order.status = 'expired'
+                order.payment_status = 'expired'
                 order.save()
+                if qr:
+                    qr.status = 'expired'
+                    qr.save()
                 return JsonResponse({'success': True, 'status': 'expired'})
             return JsonResponse({'success': True, 'status': 'pending'})
+        
         if order.status in ['processing', 'shipped', 'delivered']:
             return JsonResponse({'success': True, 'status': 'approved'})
+        
         return JsonResponse({'success': True, 'status': order.status})
 
     return JsonResponse({'success': False, 'error': 'Pending VietQR order không tồn tại.'})
@@ -1437,9 +1477,15 @@ def vietqr_page_expire(request):
             except Exception:
                 order = None
 
-        if order and order.status == 'pending':
+        if order and order.status == 'awaiting_payment':
             order.status = 'expired'
+            order.payment_status = 'expired'
             order.save()
+            from store.models import PendingQRPayment
+            qr = PendingQRPayment.objects.filter(order=order, user=request.user).first()
+            if qr:
+                qr.status = 'expired'
+                qr.save()
         request.session.pop('pending_order', None)
     return JsonResponse({'success': True})
 
@@ -1546,12 +1592,15 @@ def cart_view(request):
     total = 0
     cart_changed = False
 
-    for product_id, cart_item in list(cart.items()):
+    for cart_key, cart_item in list(cart.items()):
         try:
-            product = Product.objects.get(id=int(product_id))
+            # Extract real product ID from cart key (format: "productID" or "productID_storage_ram_color")
+            real_product_id = cart_key.split('_')[0]
+            product = Product.objects.get(id=int(real_product_id))
+
             normalized_item = _normalize_cart_item(product, cart_item)
             if cart_item != normalized_item:
-                cart[product_id] = normalized_item
+                cart[cart_key] = normalized_item
                 cart_changed = True
 
             product.quantity = normalized_item.get('quantity', 1)
@@ -1565,10 +1614,11 @@ def cart_view(request):
             product.selected_color_price_delta = normalized_item.get('color_price_delta', 0)
             product.selected_ram_price_delta = normalized_item.get('ram_price_delta', 0)
             product.selected_storage_price_delta = normalized_item.get('storage_price_delta', 0)
+            product.cart_key = cart_key
 
             total += product.subtotal
             products.append(product)
-        except (Product.DoesNotExist, ValueError):
+        except (Product.DoesNotExist, ValueError, IndexError):
             pass
 
     if cart_changed:
@@ -1585,10 +1635,17 @@ def cart_view(request):
 @login_required(login_url='store:login')
 def remove_from_cart(request, product_id):
     cart = request.session.get('cart', {})
-    product_id = str(product_id)
 
-    if product_id in cart:
-        del cart[product_id]
+    # Try exact match first (new format with variant key)
+    cart_key = str(product_id)
+    if cart_key in cart:
+        del cart[cart_key]
+    else:
+        # Fallback: try prefix match (old format just product_id)
+        for key in list(cart.keys()):
+            if key.split('_')[0] == cart_key:
+                del cart[key]
+                break
 
     request.session['cart'] = cart
     return redirect('store:cart_detail')
@@ -1680,26 +1737,47 @@ def _normalize_cart_item(product, cart_item):
 def update_cart_option_ajax(request):
     if request.method == 'POST':
         try:
-            product_id = request.POST.get('product_id')
+            cart_key = request.POST.get('cart_key', '')
             option_type = request.POST.get('option_type')
             option_value = request.POST.get('option_value')
 
             cart = request.session.get('cart', {})
-            product_key = str(product_id)
 
-            if product_key not in cart:
+            if not cart_key:
                 return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại trong giỏ'}, status=404)
 
-            product = get_object_or_404(Product, id=int(product_id))
-            cart_item = cart[product_key] if isinstance(cart[product_key], dict) else {'quantity': cart[product_key]}
+            # Find the cart item - try exact key first, then prefix match
+            current_cart_key = None
+            cart_item = None
+            
+            if cart_key in cart:
+                current_cart_key = cart_key
+                cart_item = cart[cart_key]
+            else:
+                # Fallback: find by product ID prefix
+                parts = cart_key.split('_')
+                product_id_prefix = parts[0]
+                for key in cart.keys():
+                    if key.split('_')[0] == product_id_prefix:
+                        current_cart_key = key
+                        cart_item = cart[key]
+                        break
 
+            if not current_cart_key or cart_item is None:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại trong giỏ'}, status=404)
+
+            # Extract product ID from cart key
+            product_id = current_cart_key.split('_')[0]
+            product = get_object_or_404(Product, id=int(product_id))
+
+            # Update the cart item IN-PLACE (never change the cart key)
             if option_type == 'color':
                 color_obj = product.colors.filter(name=option_value).first()
                 if not color_obj:
                     return JsonResponse({'success': False, 'error': 'Màu sắc không hợp lệ'}, status=400)
                 cart_item['color'] = color_obj.name
                 cart_item['color_price_delta'] = color_obj.price_delta or 0
-                cart_item['color_image'] = color_obj.image.url if color_obj.image else cart_item.get('color_image', '')
+                cart_item['color_image'] = color_obj.image.url if color_obj.image else ''
             elif option_type == 'ram':
                 ram_obj = product.ram_options.filter(value=option_value).first()
                 if not ram_obj and option_value != product.ram:
@@ -1715,28 +1793,35 @@ def update_cart_option_ajax(request):
             else:
                 return JsonResponse({'success': False, 'error': 'Tùy chọn không hợp lệ'}, status=400)
 
-            cart_item['price'] = _calculate_cart_item_price(product, cart_item)
-            cart[product_key] = cart_item
+            # Recalculate price based on current options
+            base_price = product.get_discounted_price()
+            color_delta = cart_item.get('color_price_delta', 0)
+            ram_delta = cart_item.get('ram_price_delta', 0)
+            storage_delta = cart_item.get('storage_price_delta', 0)
+            cart_item['price'] = base_price + color_delta + ram_delta + storage_delta
+            cart_item['image'] = cart_item.get('color_image') or (product.image.url if product.image else '')
+
+            # Update cart - keep the SAME key, just update value
+            cart[current_cart_key] = cart_item
             request.session['cart'] = cart
 
             total_price = sum((item['price'] * item['quantity']) if isinstance(item, dict) else 0 for item in cart.values())
-            original_price = 0
-            if product.discount > 0:
-                original_price = product.price + cart_item.get('color_price_delta', 0) + cart_item.get('ram_price_delta', 0) + cart_item.get('storage_price_delta', 0)
 
             return JsonResponse({
                 'success': True,
                 'message': 'Cập nhật tùy chọn thành công',
-                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)) if cart else 0,
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
                 'cart_total': total_price,
                 'total_price': total_price,
                 'item_price': cart_item['price'],
-                'item_price_formatted': f"{cart_item['price']:,.0f}₫",
+                'item_price_formatted': f"{cart_item['price']:,.0f}đ",
+                'item_subtotal': cart_item['price'] * cart_item.get('quantity', 1),
+                'item_subtotal_formatted': f"{cart_item['price'] * cart_item.get('quantity', 1):,.0f}đ",
                 'new_thumbnail': cart_item.get('color_image', ''),
                 'new_color': cart_item.get('color', ''),
                 'new_ram': cart_item.get('ram', ''),
                 'new_storage': cart_item.get('storage', ''),
-                'original_price': original_price,
+                'new_cart_key': current_cart_key,  # Same key as before
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -1755,7 +1840,11 @@ def clear_cart(request):
 def _remove_products_from_cart(request, product_ids):
     cart = request.session.get('cart', {})
     for product_id in product_ids:
-        cart.pop(str(product_id), None)
+        pid_str = str(product_id)
+        # Remove exact match or any key with this product ID prefix
+        keys_to_remove = [k for k in cart.keys() if k == pid_str or k.split('_')[0] == pid_str]
+        for key in keys_to_remove:
+            cart.pop(key, None)
     request.session['cart'] = cart
 
 
@@ -1764,7 +1853,10 @@ def _remove_products_from_cart(request, product_ids):
 def checkout(request):
     product_id = request.GET.get('product_id') or request.POST.get('product_id')
     quantity = request.GET.get('quantity', '1') or request.POST.get('quantity', '1')
-    
+    selected_storage = request.GET.get('storage', '').strip()
+    selected_ram = request.GET.get('ram', '').strip()
+    selected_color = request.GET.get('color', '').strip()
+
     if not product_id:
         messages.error(request, '❌ Sản phẩm không tồn tại')
         return redirect('store:home')
@@ -1851,8 +1943,9 @@ def checkout(request):
                         user=request.user,
                         order_number=order_code,
                         total_amount=total_amount,
-                        status='pending',
+                        status='awaiting_payment',
                         payment_method='vietqr',
+                        payment_status='pending',
                         customer_name=fullname,
                         customer_phone=phone,
                         customer_address=full_address,
@@ -1862,6 +1955,15 @@ def checkout(request):
                         product=product,
                         quantity=quantity,
                         price=product.get_discounted_price()
+                    )
+                    # Tạo PendingQRPayment để theo dõi
+                    from store.models import PendingQRPayment
+                    PendingQRPayment.objects.create(
+                        user=request.user,
+                        order=order,
+                        amount=total_amount,
+                        transfer_code=transfer_code,
+                        status='pending'
                     )
                     _notify_order_pending(order)
                     pending = {
@@ -2099,18 +2201,31 @@ def checkout_from_cart(request):
     selected_items_str = request.POST.get('items', '') if request.method == 'POST' else request.GET.get('items', '')
     selected_ids = set()
     if selected_items_str:
-        selected_ids = set(int(id_str.strip()) for id_str in selected_items_str.split(',') if id_str.strip())
+        # Parse cart keys (format: "productID" or "productID_storage_ram_color")
+        for item in selected_items_str.split(','):
+            item = item.strip()
+            if item:
+                try:
+                    selected_ids.add(int(item.split('_')[0]))
+                except (ValueError, IndexError):
+                    pass
     
     # Get cart items - only selected ones
     cart_items = []
     total_amount = 0
     
-    for product_id, cart_item in cart.items():
+    for cart_key, cart_item in cart.items():
+        # Extract real product ID from cart key (format: "productID" or "productID_storage_ram_color")
+        try:
+            real_product_id = int(cart_key.split('_')[0])
+        except (ValueError, IndexError):
+            continue
+        
         # If items were specified, only include selected ones
-        if selected_ids and int(product_id) not in selected_ids:
+        if selected_ids and real_product_id not in selected_ids:
             continue
         try:
-            product = Product.objects.get(id=int(product_id))
+            product = Product.objects.get(id=real_product_id)
             
             # Handle both old format (int) and new format (dict)
             if isinstance(cart_item, dict):
@@ -2133,7 +2248,7 @@ def checkout_from_cart(request):
             })
         except Product.DoesNotExist:
             # Remove invalid product from cart
-            del cart[product_id]
+            del cart[cart_key]
             request.session['cart'] = cart
     
     if not cart_items:
@@ -2222,8 +2337,9 @@ def checkout_from_cart(request):
                         user=request.user,
                         order_number=order_code,
                         total_amount=total_amount,
-                        status='pending',
+                        status='awaiting_payment',
                         payment_method='vietqr',
+                        payment_status='pending',
                         customer_name=fullname,
                         customer_phone=phone,
                         customer_address=full_address,
@@ -2235,6 +2351,15 @@ def checkout_from_cart(request):
                             quantity=it['quantity'],
                             price=it['price'],
                         )
+                    # Tạo PendingQRPayment để theo dõi
+                    from store.models import PendingQRPayment
+                    PendingQRPayment.objects.create(
+                        user=request.user,
+                        order=order,
+                        amount=total_amount,
+                        transfer_code=transfer_code,
+                        status='pending'
+                    )
                     _notify_order_pending(order)
                     serializable_items = []
                     for it in cart_items:
@@ -2605,24 +2730,57 @@ def order_tracking(request):
     return render(request, 'store/orders.html', context)
 
 
-@login_required(login_url='store:login')
 def cancel_order(request, order_id):
     """Hủy đơn hàng (chỉ khi status = pending hoặc processing)"""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    # Try to find order by id + user first
+    order = Order.objects.filter(id=order_id).first()
     
-    cancellable_statuses = ['pending', 'processing']
+    # If not found by user, check pending_order in session (for VietQR orders)
+    if not order:
+        pending = request.session.get('pending_order', {})
+        if pending.get('order_id') == order_id:
+            messages.error(request, '❌ Không tìm thấy đơn hàng này')
+        else:
+            messages.error(request, '❌ Đơn hàng không tồn tại hoặc đã bị hủy')
+        return redirect('store:order_tracking')
+    
+    # Check user ownership (skip for orders in pending session or anonymous users)
+    pending = request.session.get('pending_order', {})
+    is_pending_order = pending.get('order_id') == order.id
+    is_anonymous = not request.user.is_authenticated
+    if not is_pending_order and not is_anonymous and order.user != request.user:
+        messages.error(request, '❌ Bạn không có quyền hủy đơn hàng này')
+        return redirect('store:order_tracking')
+    
+    cancellable_statuses = ['pending', 'processing', 'awaiting_payment']
     if order.normalized_status in cancellable_statuses:
         order.status = 'cancelled'
+        if order.payment_method == 'vietqr':
+            order.payment_status = 'cancelled'
+            from store.models import PendingQRPayment
+            qr = PendingQRPayment.objects.filter(order=order).first()
+            if qr:
+                qr.status = 'cancelled'
+                qr.save()
         order.save()
-        if request.session.get('pending_order', {}).get('order_id') == order.id:
+        if is_pending_order:
             request.session.pop('pending_order', None)
         messages.success(request, '✅ Đơn hàng đã được hủy')
+
+        # For pending orders (VietQR), redirect to pay page showing cancelled UI
+        if is_pending_order:
+            return redirect(f'{reverse("store:vietqr_page")}?cancelled=1&order_id={order.id}')
     else:
         messages.error(request, f'❌ Không thể hủy đơn hàng với trạng thái: {order.get_status_display()}')
 
     next_url = request.POST.get('next') or request.GET.get('next')
     if next_url:
         return redirect(next_url)
+
+    # For anonymous users or orders without user, redirect to homepage
+    if is_anonymous or not order.user or order.user != request.user:
+        return redirect('store:home')
+
     return redirect('store:order_tracking')
 
 
@@ -2725,6 +2883,8 @@ def vnpay_return(request):
                 order.status = 'processing'
                 order.save()
                 _notify_order_success(order)
+        return redirect('store:order_success')
+
     else:
         error_messages = {
             '01': 'Giao dịch chưa hoàn tất.',
@@ -2746,8 +2906,16 @@ def vnpay_return(request):
         }
         error_msg = error_messages.get(response_code, 'Thanh toán không thành công.')
         messages.error(request, f'❌ {error_msg}')
+        if txn_ref:
+            order = Order.objects.filter(order_number=txn_ref).first()
+            if order and order.status == 'pending':
+                order.payment_status = 'failed'
+                if response_code in ['04', '07', '24']:
+                    order.status = 'cancelled'
+                    order.payment_status = 'cancelled'
+                order.save()
 
-    return redirect('store:order_success')
+    return redirect('store:order_tracking')
 
 
 def vnpay_ipn(request):
@@ -2982,11 +3150,21 @@ def dashboard(request):
     paginator = Paginator(all_products, 15)
     page_number = request.GET.get('page', 1)
     products = paginator.get_page(page_number)
-    
+
     # Get recent orders and products
     recent_orders = orders[:10]
     recent_products = all_products[:10]
-    
+
+    # Order status counts for doughnut chart
+    order_status_counts = {
+        'pending': orders.filter(status='pending').count(),
+        'processing': orders.filter(status='processing').count(),
+        'shipped': orders.filter(status='shipped').count(),
+        'delivered': orders.filter(status='delivered').count(),
+        'expired': orders.filter(status='expired').count(),
+        'cancelled': orders.filter(status='cancelled').count(),
+    }
+
     context = get_base_context(request)
     context.update({
         'products': products,
@@ -3004,6 +3182,7 @@ def dashboard(request):
         'recent_orders': recent_orders,
         'recent_products': recent_products,
         'monthly_revenue': monthly_revenue,
+        'order_status_counts': order_status_counts,
     })
     return render(request, 'admin/admin_dashboard.html', context)
 
@@ -3708,53 +3887,81 @@ def add_to_cart_ajax(request):
         try:
             product_id = request.POST.get('product_id')
             quantity = int(request.POST.get('quantity', 1))
-            
+            selected_storage = request.POST.get('storage', '').strip()
+            selected_ram = request.POST.get('ram', '').strip()
+            selected_color = request.POST.get('color', '').strip()
+
             product = get_object_or_404(Product, id=product_id)
-            
+
             # Check stock
             if product.stock <= 0:
                 return JsonResponse({'success': False, 'error': 'Sản phẩm hết hàng'}, status=400)
-            
+
+            # Build cart key that includes variants
+            base_key = str(product_id)
+            variant_key = f"{base_key}_{selected_storage}_{selected_ram}_{selected_color}"
+            product_key = variant_key
+
+            # Get base price
+            base_price = product.get_discounted_price()
+
+            # Determine storage price delta and capacity
+            storage_price_delta = 0
+            storage_capacity = selected_storage or product.rom or ''
+            if selected_storage:
+                storage_opt = product.storage_options.filter(capacity=selected_storage).first()
+                if storage_opt:
+                    storage_price_delta = storage_opt.price_delta or 0
+
+            # Determine ram price delta
+            ram_price_delta = 0
+            ram_value = selected_ram or ''
+            if selected_ram:
+                ram_opt = product.ram_options.filter(value=selected_ram).first()
+                if ram_opt:
+                    ram_price_delta = ram_opt.price_delta or 0
+
+            # Determine color info
+            color_name = selected_color or ''
+            color_price_delta = 0
+            color_image_url = ''
+            if selected_color:
+                color_opt = product.colors.filter(name=selected_color).first()
+                if color_opt:
+                    color_price_delta = color_opt.price_delta or 0
+                    color_image_url = color_opt.image.url if color_opt.image else ''
+
+            # Calculate total price
+            total_price = base_price + storage_price_delta + ram_price_delta + color_price_delta
+
+            # Determine image
+            final_image = color_image_url or (product.image.url if product.image else '')
+
             # Initialize cart in session
             cart = request.session.get('cart', {})
-            
-            product_key = str(product_id)
-            if product_key in cart:
-                if isinstance(cart[product_key], dict):
-                    cart[product_key]['quantity'] += quantity
-                else:
-                    cart[product_key] = {
-                        'name': product.name,
-                        'price': product.get_discounted_price(),
-                        'quantity': cart[product_key] + quantity,
-                        'image': product.image.url if product.image else ''
-                    }
+
+            # If product already exists with same variant key, update quantity
+            if product_key in cart and isinstance(cart[product_key], dict):
+                cart[product_key]['quantity'] += quantity
             else:
-                default_color = product.colors.order_by('sort_order', 'id').first()
-                default_color_name = default_color.name if default_color else ''
-                default_color_price = default_color.price_delta if default_color else 0
-                default_color_image = default_color.image.url if default_color and default_color.image else ''
-                default_ram = product.ram or ''
-                default_storage = product.rom or ''
-                base_price = product.get_discounted_price()
                 cart[product_key] = {
                     'name': product.name,
-                    'price': base_price + default_color_price,
+                    'price': total_price,
                     'quantity': quantity,
-                    'image': default_color_image or (product.image.url if product.image else ''),
-                    'color': default_color_name,
-                    'color_price_delta': default_color_price,
-                    'color_image': default_color_image,
-                    'ram': default_ram,
-                    'ram_price_delta': 0,
-                    'storage': default_storage,
-                    'storage_price_delta': 0,
+                    'image': final_image,
+                    'color': color_name,
+                    'color_price_delta': color_price_delta,
+                    'color_image': color_image_url,
+                    'ram': ram_value,
+                    'ram_price_delta': ram_price_delta,
+                    'storage': storage_capacity,
+                    'storage_price_delta': storage_price_delta,
                 }
             request.session['cart'] = cart
-            
+
             return JsonResponse({
                 'success': True,
-                'message': f'✅ Thêm {quantity} sản phẩm vào giỏ hàng',
+                'message': f'Thêm sản phẩm vào giỏ hàng',
                 'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
                 'cart_total': sum((item['price'] * item['quantity']) for item in cart.values() if isinstance(item, dict))
             })
@@ -3764,7 +3971,7 @@ def add_to_cart_ajax(request):
             return JsonResponse({'success': False, 'error': 'Số lượng không hợp lệ'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
-    
+
     return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
 
 
@@ -3772,34 +3979,33 @@ def update_cart_quantity_ajax(request):
     """AJAX endpoint to update cart item quantity"""
     if request.method == 'POST':
         try:
-            product_id = request.POST.get('product_id')
+            cart_key = request.POST.get('cart_key', '')
             quantity = int(request.POST.get('quantity', 1))
-            
+
             cart = request.session.get('cart', {})
-            product_key = str(product_id)
-            
-            if product_key not in cart:
+
+            if not cart_key or cart_key not in cart:
                 return JsonResponse({'success': False, 'error': 'Sản phẩm không trong giỏ'}, status=404)
-            
+
             if quantity <= 0:
-                del cart[product_key]
+                del cart[cart_key]
             else:
-                cart[product_key]['quantity'] = quantity
-            
+                cart[cart_key]['quantity'] = quantity
+
             request.session['cart'] = cart
-            
+
             return JsonResponse({
                 'success': True,
                 'message': 'Cập nhật giỏ hàng thành công',
-                'cart_count': sum(item['quantity'] for item in cart.values()),
-                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values()),
-                'item_total': cart[product_key]['price'] * quantity if product_key in cart else 0
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values() if isinstance(item, dict)),
+                'item_total': cart[cart_key]['price'] * quantity if cart_key in cart else 0
             })
         except ValueError:
             return JsonResponse({'success': False, 'error': 'Số lượng không hợp lệ'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
-    
+
     return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
 
 
@@ -3807,24 +4013,109 @@ def remove_from_cart_ajax(request):
     """AJAX endpoint to remove product from cart"""
     if request.method == 'POST':
         try:
-            product_id = request.POST.get('product_id')
-            
+            cart_key = request.POST.get('cart_key', '')
+
             cart = request.session.get('cart', {})
-            product_key = str(product_id)
-            
-            if product_key in cart:
-                del cart[product_key]
+
+            if cart_key and cart_key in cart:
+                del cart[cart_key]
                 request.session['cart'] = cart
-                
+
             return JsonResponse({
                 'success': True,
-                'message': '✅ Xóa khỏi giỏ hàng',
-                'cart_count': sum(item['quantity'] for item in cart.values()),
-                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values())
+                'message': 'Xóa khỏi giỏ hàng',
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values() if isinstance(item, dict))
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
+
+
+def update_cart_variant_ajax(request):
+    """AJAX endpoint to update variant (storage/ram/color) of a cart item"""
+    if request.method == 'POST':
+        try:
+            cart_key = request.POST.get('cart_key', '')
+            new_storage = request.POST.get('storage', '').strip()
+            new_ram = request.POST.get('ram', '').strip()
+            new_color = request.POST.get('color', '').strip()
+
+            cart = request.session.get('cart', {})
+
+            if not cart_key or cart_key not in cart:
+                return JsonResponse({'success': False, 'error': 'Sản phẩm không trong giỏ'}, status=404)
+
+            # Get product from cart key
+            parts = cart_key.split('_')
+            product_id = parts[0]
+            product = Product.objects.get(id=int(product_id))
+
+            base_price = product.get_discounted_price()
+
+            # Calculate storage price delta
+            storage_price_delta = 0
+            storage_capacity = new_storage or product.rom or ''
+            if new_storage:
+                storage_opt = product.storage_options.filter(capacity=new_storage).first()
+                if storage_opt:
+                    storage_price_delta = storage_opt.price_delta or 0
+
+            # Calculate ram price delta
+            ram_price_delta = 0
+            ram_value = new_ram or ''
+            if new_ram:
+                ram_opt = product.ram_options.filter(value=new_ram).first()
+                if ram_opt:
+                    ram_price_delta = ram_opt.price_delta or 0
+
+            # Calculate color info
+            color_name = new_color or ''
+            color_price_delta = 0
+            color_image_url = ''
+            if new_color:
+                color_opt = product.colors.filter(name=new_color).first()
+                if color_opt:
+                    color_price_delta = color_opt.price_delta or 0
+                    color_image_url = color_opt.image.url if color_opt.image else ''
+
+            total_price = base_price + storage_price_delta + ram_price_delta + color_price_delta
+            final_image = color_image_url or (product.image.url if product.image else '')
+
+            # Build new cart key
+            new_cart_key = f"{product_id}_{new_storage}_{new_ram}_{new_color}"
+            cart_item = cart[cart_key]
+            cart_item['storage'] = storage_capacity
+            cart_item['storage_price_delta'] = storage_price_delta
+            cart_item['ram'] = ram_value
+            cart_item['ram_price_delta'] = ram_price_delta
+            cart_item['color'] = color_name
+            cart_item['color_price_delta'] = color_price_delta
+            cart_item['color_image'] = color_image_url
+            cart_item['price'] = total_price
+            cart_item['image'] = final_image
+
+            # Remove old key and add new key
+            del cart[cart_key]
+            cart[new_cart_key] = cart_item
+            request.session['cart'] = cart
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Cập nhật thành công',
+                'new_cart_key': new_cart_key,
+                'new_price': total_price,
+                'new_image': final_image,
+                'new_price_formatted': f"{total_price:,}đ",
+                'cart_count': sum(item['quantity'] for item in cart.values() if isinstance(item, dict)),
+                'cart_total': sum(item['price'] * item['quantity'] for item in cart.values() if isinstance(item, dict))
+            })
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Sản phẩm không tồn tại'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
     return JsonResponse({'success': False, 'error': 'Invalid method'}, status=400)
 
 
@@ -3885,6 +4176,73 @@ def admin_orders(request):
         'page_obj': orders_page,
     })
     return render(request, 'admin/admin_orders.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+def admin_vietqr_list(request):
+    """Admin: Danh sách thanh toán VietQR chờ duyệt"""
+    from django.core.paginator import Paginator
+
+    pending_qrs = PendingQRPayment.objects.filter(
+        status='pending'
+    ).select_related('user', 'order').order_by('-created_at')
+
+    paginator = Paginator(pending_qrs, 20)
+    page_number = request.GET.get('page', 1)
+    qrs_page = paginator.get_page(page_number)
+
+    context = get_base_context(request)
+    context.update({
+        'pending_qrs': qrs_page,
+        'is_paginated': qrs_page.has_other_pages(),
+        'page_obj': qrs_page,
+    })
+    return render(request, 'admin/admin_vietqr.html', context)
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+@require_POST
+def admin_approve_vietqr(request, qr_id):
+    """Admin duyệt thanh toán VietQR"""
+    try:
+        qr = PendingQRPayment.objects.get(id=qr_id)
+        if qr.status != 'pending':
+            return JsonResponse({'success': False, 'message': 'QR đã được xử lý'})
+
+        qr.status = 'approved'
+        qr.save()
+
+        # Cập nhật order
+        if qr.order:
+            qr.order.status = 'processing'
+            qr.order.payment_status = 'paid'
+            qr.order.save()
+
+        return JsonResponse({'success': True, 'message': 'Đã duyệt thanh toán'})
+    except PendingQRPayment.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy'})
+
+
+@login_required(login_url='store:login')
+@user_passes_test(is_admin, login_url='store:login')
+@require_POST
+def admin_cancel_vietqr(request, qr_id):
+    """Admin hủy thanh toán VietQR"""
+    try:
+        qr = PendingQRPayment.objects.get(id=qr_id)
+        qr.status = 'cancelled'
+        qr.save()
+
+        if qr.order:
+            qr.order.status = 'cancelled'
+            qr.order.payment_status = 'cancelled'
+            qr.order.save()
+
+        return JsonResponse({'success': True, 'message': 'Đã hủy thanh toán'})
+    except PendingQRPayment.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy'})
 
 
 @login_required(login_url='store:login')
@@ -4067,11 +4425,21 @@ def approve_order(request):
             order_id = data.get('order_id')
             order = get_object_or_404(Order, id=order_id)
 
-            if order.status != 'pending':
+            if order.status not in ['pending', 'awaiting_payment']:
                 return JsonResponse({'success': False, 'error': 'Đơn hàng không ở trạng thái chờ xác nhận.'})
 
             order.status = 'processing'
+            order.payment_status = 'paid'
             order.save()
+
+            # Cập nhật PendingQRPayment nếu có
+            if order.payment_method == 'vietqr':
+                from .models import PendingQRPayment
+                qr = PendingQRPayment.objects.filter(order=order).first()
+                if qr:
+                    qr.status = 'approved'
+                    qr.save()
+
             _notify_order_success(order)
             return JsonResponse({'success': True, 'message': 'Đơn hàng đã được duyệt và chuyển sang trạng thái Đã đặt hàng.'})
         except Order.DoesNotExist:

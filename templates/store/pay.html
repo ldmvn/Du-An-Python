@@ -333,11 +333,12 @@
                                         <span></span><span></span><span></span>
                                     </div>
                                 </div>
+                                {% if order.order_id and not order_cancelled %}
                                 <form method="POST" action="{% url 'store:cancel_order' order.order_id %}" style="display:inline; margin:0;">
                                     {% csrf_token %}
-                                    <input type="hidden" name="next" value="{% url 'store:cart_detail' %}" />
                                     <button type="submit" class="ldm-vqr-btn-cancel" onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">Hủy đơn hàng</button>
                                 </form>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -353,6 +354,24 @@
                         </div>
                         <h2>HẾT THỜI GIAN THANH TOÁN</h2>
                         <p>Phiên thanh toán đã hết hạn (15 phút).<br>Đơn hàng đã bị huỷ. Vui lòng quay lại giỏ hàng và thử lại.</p>
+                    </div>
+                    <div class="ldm-vqr-expired-actions">
+                        <a href="{% url 'store:cart_detail' %}" class="ldm-vqr-btn primary">
+                            <i class="ri-shopping-cart-line"></i> Quay lại giỏ hàng
+                        </a>
+                        <a href="{% url 'store:home' %}" class="ldm-vqr-btn">
+                            <i class="ri-home-line"></i> Về trang chủ
+                        </a>
+                    </div>
+                </div>
+
+                <div class="ldm-vqr-expired" id="vqrCancelled" style="display:none;">
+                    <div class="ldm-vqr-expired-hero">
+                        <div class="ldm-vqr-expired-icon" style="color: #dc3545;">
+                            <i class="ri-close-circle-line"></i>
+                        </div>
+                        <h2>ĐƠN HÀNG ĐÃ BỊ HỦY</h2>
+                        <p>Đơn hàng của bạn đã bị hủy.<br>Vui lòng quay lại giỏ hàng nếu bạn muốn đặt hàng lại.</p>
                     </div>
                     <div class="ldm-vqr-expired-actions">
                         <a href="{% url 'store:cart_detail' %}" class="ldm-vqr-btn primary">
@@ -446,7 +465,9 @@
                     if (!data.success) return;
                     if (data.status === 'approved') {
                         onSuccess();
-                    } else if (data.status === 'cancelled' || data.status === 'expired') {
+                    } else if (data.status === 'cancelled') {
+                        onCancelled();
+                    } else if (data.status === 'expired') {
                         onExpired();
                     }
                 })
@@ -477,9 +498,25 @@
         if (window.ldmToast) ldmToast.show('Hết thời gian thanh toán. Đơn hàng đã bị huỷ.', 'error');
     }
 
-    function loadQR() { if (qrImgEl) qrImgEl.src = buildQrUrl(); }
-    loadQR();
-    if (remaining > 0) { startTimer(); startPolling(); } else { onExpired(); }
+    function onCancelled() {
+        stopAll();
+        if (pendingEl) pendingEl.style.display = 'none';
+        var cancelledEl = document.getElementById('vqrCancelled');
+        if (cancelledEl) cancelledEl.style.display = 'block';
+    }
+
+    // Check if order was cancelled on page load
+    {% if order_cancelled %}
+    if (pendingEl) pendingEl.style.display = 'none';
+    var cancelledEl = document.getElementById('vqrCancelled');
+    if (cancelledEl) cancelledEl.style.display = 'block';
+    {% elif timeout_seconds > 0 %}
+    if (qrImgEl) qrImgEl.src = buildQrUrl();
+    startTimer();
+    startPolling();
+    {% else %}
+    onExpired();
+    {% endif %}
 })();
 </script>
 {% endif %}

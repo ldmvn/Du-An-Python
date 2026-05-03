@@ -55,6 +55,7 @@ body {
     --ldm-radius: 12px;
     --ldm-radius-sm: 8px;
     --ldm-radius-lg: 16px;
+    --ldm-font: 'Signika', sans-serif;
 }
 
 /* ==================== BREADCRUMB NAVIGATION ==================== */
@@ -146,10 +147,17 @@ body {
 }
 
 body {
-    font-family: 'Signika', sans-serif;
+    font-family: var(--ldm-font);
     background-color: var(--ldm-bg);
     color: var(--ldm-text);
     line-height: 1.6;
+}
+
+input,
+button,
+select,
+textarea {
+    font-family: var(--ldm-font);
 }
 
 a {

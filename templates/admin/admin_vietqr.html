@@ -1,0 +1,196 @@
+{% extends 'admin/admin_base.html' %}
+{% load static %}
+
+{% block title %}Quản lý VietQR - Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+    .vietqr-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .vietqr-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .vietqr-badge.approved {
+        background: #d4edda;
+        color: #155724;
+    }
+    .vietqr-badge.cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .vietqr-badge.expired {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+    .action-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 4px;
+    }
+    .action-btn.approve {
+        background: #28a745;
+        color: white;
+    }
+    .action-btn.cancel {
+        background: #dc3545;
+        color: white;
+    }
+    .action-btn:hover {
+        opacity: 0.8;
+    }
+    .amount-cell {
+        font-weight: 600;
+        color: #d35400;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ldm-content-header">
+    <h1 class="ldm-page-title">Quản lý thanh toán VietQR</h1>
+</div>
+
+<div class="ldm-card">
+    <div class="ldm-card-header">
+        <h3>Danh sách chờ duyệt</h3>
+    </div>
+    <div class="ldm-card-body">
+        {% if pending_qrs %}
+        <table class="ldm-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Người dùng</th>
+                    <th>Mã đơn hàng</th>
+                    <th>Mã chuyển khoản</th>
+                    <th>Số tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for qr in pending_qrs %}
+                <tr id="qr-row-{{ qr.id }}">
+                    <td>{{ qr.id }}</td>
+                    <td>{{ qr.user.username }}</td>
+                    <td>
+                        {% if qr.order %}
+                            {{ qr.order.order_number }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td><code>{{ qr.transfer_code }}</code></td>
+                    <td class="amount-cell">{{ qr.amount|default:qr.order.total_amount|floatformat:0 }}đ</td>
+                    <td>
+                        <span class="vietqr-badge {{ qr.status }}">{{ qr.get_status_display }}</span>
+                    </td>
+                    <td>{{ qr.created_at|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if qr.status == 'pending' %}
+                        <button class="action-btn approve" onclick="approveQR({{ qr.id }})">
+                            <i class="ri-check-line"></i> Duyệt
+                        </button>
+                        <button class="action-btn cancel" onclick="cancelQR({{ qr.id }})">
+                            <i class="ri-close-line"></i> Hủy
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if is_paginated %}
+        <div class="ldm-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="ldm-pagination-btn">« Trước</a>
+            {% endif %}
+            <span class="ldm-pagination-info">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="ldm-pagination-btn">Sau »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="ldm-empty-state">
+            <i class="ri-checkbox-circle-line" style="font-size: 48px; color: #28a745;"></i>
+            <p>Không có thanh toán VietQR nào đang chờ duyệt</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function approveQR(qrId) {
+    if (!confirm('Xác nhận duyệt thanh toán này?')) return;
+    
+    fetch(`/dashboard/admin/vietqr/approve/${qrId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Đã duyệt thanh toán!');
+            location.reload();
+        } else {
+            alert('Lỗi: ' + data.message);
+        }
+    });
+}
+
+function cancelQR(qrId) {
+    if (!confirm('Hủy thanh toán này?')) return;
+    
+    fetch(`/dashboard/admin/vietqr/cancel/${qrId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Đã hủy thanh toán!');
+            location.reload();
+        } else {
+            alert('Lỗi: ' + data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

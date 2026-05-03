@@ -4427,7 +4427,7 @@
 .ldm-ot-table td.code {
     color: #3b82f6;
     font-weight: 600;
-    font-family: monospace;
+    font-family: var(--ldm-font);
     font-size: 13px;
     white-space: nowrap;
 }
@@ -11569,7 +11569,7 @@
 
 /* ========== Additional Product Detail Styles ========== */
 .pd-shell {
-    font-family: "Times New Roman", Times, serif;
+    font-family: var(--ldm-font);
 }
 
 /* Thu nho cot phai (thong tin mua hang) */
@@ -11723,7 +11723,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    font-family: "Times New Roman", Times, serif;
+    font-family: var(--ldm-font);
 }
 
 .pd-spec-modal-header {

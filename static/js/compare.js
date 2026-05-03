@@ -189,29 +189,20 @@ function filterSpecs(mode) {
     });
 }
 
-/* ========== Xóa sản phẩm và tải lại trang ========== */
-/**
- * Xóa sản phẩm khỏi so sánh và tải lại trang
- * @param {number} productId - ID sản phẩm cần xóa
- */
-function removeAndReload(productId) {
-    LDMCompare.removeFromCompare(productId);
-    const items = LDMCompare.getItems();
-    if (items.length < 2) {
-        window.location.href = '/';
-    } else {
-        const ids = items.map(i => i.id).join(',');
-        window.location.href = '/compare/?ids=' + ids;
-    }
-}
-
 /* ========== Event Listeners for Remove Buttons ========== */
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.ldm-compare-col-remove').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const productId = this.getAttribute('data-product-id');
             if (productId) {
-                removeAndReload(productId);
+                LDMCompare.removeFromCompare(productId);
+                const items = LDMCompare.getItems();
+                if (items.length < 2) {
+                    window.location.href = '/';
+                } else {
+                    const ids = items.map(i => i.id).join(',');
+                    window.location.href = '/compare/?ids=' + ids;
+                }
             }
         });
     });

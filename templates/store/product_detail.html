@@ -394,7 +394,7 @@
                                     <div class="pd-comment-top">
                                         <strong>{{ review.user.username }}</strong>
                                         <div class="pd-comment-stars">
-                                            {% for _ in "12345"|slice:":" %}
+                                            {% for _ in "12345"|slice:":5" %}
                                             {% if forloop.counter <= review.rating %}
                                             <span class="is-filled">★</span>
                                             {% else %}
@@ -871,14 +871,49 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.btn-add-cart').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            addToCartAjax(this.dataset.productId, 1);
+
+            // Get selected storage
+            var activeStorage = document.querySelector('#storage-options .pd-option-card.is-active');
+            var storageValue = activeStorage ? activeStorage.dataset.capacity : '';
+
+            // Get selected ram
+            var activeRam = document.querySelector('#ram-options .pd-option-card.is-active');
+            var ramValue = activeRam ? activeRam.dataset.ram : '';
+
+            // Get selected color
+            var activeColor = document.querySelector('#color-options .pd-color-card.is-active');
+            var colorName = activeColor ? activeColor.dataset.colorName : '';
+
+            addToCartAjax(this.dataset.productId, 1, {
+                storage: storageValue,
+                ram: ramValue,
+                color: colorName
+            });
         });
     });
 
     document.querySelectorAll('.btn-buy-now').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            window.location.href = `{% url 'store:checkout' %}?product_id=${this.dataset.productId}&quantity=1`;
+
+            var activeStorage = document.querySelector('#storage-options .pd-option-card.is-active');
+            var storageValue = activeStorage ? activeStorage.dataset.capacity : '';
+
+            var activeRam = document.querySelector('#ram-options .pd-option-card.is-active');
+            var ramValue = activeRam ? activeRam.dataset.ram : '';
+
+            var activeColor = document.querySelector('#color-options .pd-color-card.is-active');
+            var colorName = activeColor ? activeColor.dataset.colorName : '';
+
+            var params = new URLSearchParams({
+                product_id: this.dataset.productId,
+                quantity: 1
+            });
+            if (storageValue) params.set('storage', storageValue);
+            if (ramValue) params.set('ram', ramValue);
+            if (colorName) params.set('color', colorName);
+
+            window.location.href = '{% url "store:checkout" %}?' + params.toString();
         });
     });
 

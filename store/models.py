@@ -174,6 +174,7 @@ class ProductStorageOption(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Chờ xác nhận'),
+        ('awaiting_payment', 'Chờ thanh toán'),
         ('processing', 'Đã đặt hàng'),
         ('shipped', 'Đang giao'),
         ('delivered', 'Đã giao hàng'),
@@ -213,6 +214,11 @@ class Order(models.Model):
     customer_phone = models.CharField(max_length=20, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_status = models.CharField(
+        max_length=20,
+        default='pending',
+        blank=True
+    )
 
     @property
     def normalized_status(self):
@@ -242,6 +248,32 @@ class OrderItem(models.Model):
     def get_total(self):
         """Tính tổng giá của item (price * quantity)"""
         return self.price * self.quantity
+
+
+class PendingQRPayment(models.Model):
+    """Theo dõi thanh toán VietQR - chờ admin duyệt"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.IntegerField()
+    transfer_code = models.CharField(max_length=50)
+    status = models.CharField(
+        max_length=20,
+        default='pending',
+        choices=[
+            ('pending', 'Chờ duyệt'),
+            ('approved', 'Đã duyệt'),
+            ('cancelled', 'Đã hủy'),
+            ('expired', 'Hết hạn'),
+        ]
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"QR Payment {self.transfer_code} - {self.amount}đ"
 
 
 class Review(models.Model):

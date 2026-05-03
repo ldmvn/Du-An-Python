@@ -4,134 +4,526 @@
 {% block title %}Dashboard - Admin Panel{% endblock %}
 {% block page_title %}Bảng điều khiển{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ====== DASHBOARD LAYOUT ====== */
+.ldm-dashboard-wrap {
+    padding: 24px;
+    background: #f8fafc;
+    min-height: calc(100vh - 60px);
+}
+
+/* ====== STAT CARDS GRID ====== */
+.ldm-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ldm-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ldm-stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.ldm-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.ldm-stat-card.card-blue::before { background: #3b82f6; }
+.ldm-stat-card.card-green::before { background: #10b981; }
+.ldm-stat-card.card-orange::before { background: #f59e0b; }
+.ldm-stat-card.card-red::before { background: #ef4444; }
+.ldm-stat-card.card-purple::before { background: #8b5cf6; }
+.ldm-stat-card.card-cyan::before { background: #06b6d4; }
+
+.ldm-stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.ldm-stat-card h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 14px 0;
+}
+
+.ldm-stat-card .ldm-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.ldm-stat-card.card-blue .ldm-stat-icon { background: #eff6ff; color: #3b82f6; }
+.ldm-stat-card.card-green .ldm-stat-icon { background: #ecfdf5; color: #10b981; }
+.ldm-stat-card.card-orange .ldm-stat-icon { background: #fffbeb; color: #f59e0b; }
+.ldm-stat-card.card-red .ldm-stat-icon { background: #fef2f2; color: #ef4444; }
+.ldm-stat-card.card-purple .ldm-stat-icon { background: #f5f3ff; color: #8b5cf6; }
+.ldm-stat-card.card-cyan .ldm-stat-icon { background: #ecfeff; color: #06b6d4; }
+
+.ldm-stat-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+
+.ldm-stat-card .ldm-stat-subtext {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.ldm-stat-value-sm { font-size: 20px !important; }
+
+/* ====== CHARTS GRID ====== */
+.ldm-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.ldm-chart-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f1f5f9;
+}
+
+.ldm-chart-section.doughnut-chart {
+    display: flex;
+    flex-direction: column;
+}
+
+.ldm-chart-wrap {
+    position: relative;
+    height: 300px;
+}
+
+.ldm-chart-wrap.doughnut {
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ldm-doughnut-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.ldm-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.ldm-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ldm-legend-item .ldm-legend-count {
+    margin-left: auto;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.ldm-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.ldm-chart-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.ldm-chart-badge {
+    background: #eff6ff;
+    color: #3b82f6;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.ldm-chart-wrap {
+    position: relative;
+    height: 300px;
+}
+
+.ldm-dashboard-chart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ====== SPLIT SECTIONS ====== */
+.ldm-dashboard-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.ldm-dashboard-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f1f5f9;
+}
+
+.ldm-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.ldm-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.ldm-section-link {
+    font-size: 13px;
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ldm-section-link:hover { text-decoration: underline; }
+
+/* ====== TABLES ====== */
+.ldm-table-wrap { overflow-x: auto; }
+
+.ldm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.ldm-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.ldm-table tbody tr {
+    border-bottom: 1px solid #f8fafc;
+    transition: background 0.15s;
+}
+
+.ldm-table tbody tr:hover { background: #f8fafc; }
+
+.ldm-table tbody td {
+    padding: 12px;
+    color: #334155;
+}
+
+.ldm-table tbody td strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* ====== BADGES ====== */
+.ldm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.ldm-badge-success { background: #ecfdf5; color: #059669; }
+.ldm-badge-warning { background: #fffbeb; color: #d97706; }
+.ldm-badge-info { background: #eff6ff; color: #2563eb; }
+.ldm-badge-danger { background: #fef2f2; color: #dc2626; }
+
+/* ====== STOCK ====== */
+.ldm-stock-good { color: #059669; font-weight: 600; }
+.ldm-stock-warn { color: #d97706; font-weight: 600; }
+.ldm-stock-bad { color: #dc2626; font-weight: 600; }
+
+/* ====== EMPTY STATE ====== */
+.ldm-empty-table-sm {
+    text-align: center;
+    color: #94a3b8;
+    padding: 24px;
+    font-size: 13px;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 1200px) {
+    .ldm-stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .ldm-charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .ldm-stats-grid { grid-template-columns: repeat(2, 1fr); padding: 0 16px; }
+    .ldm-dashboard-split { grid-template-columns: 1fr; }
+    .ldm-stat-card .value { font-size: 22px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="ldm-stats-grid">
-    <div class="ldm-stat-card">
-        <h3>Đơn hàng hôm nay</h3>
-        <div class="value">{{ today_orders|default:0 }}</div>
-        <div class="ldm-stat-subtext">Chỉ tiêu hôm nay</div>
-    </div>
-    <div class="ldm-stat-card">
-        <h3>Đơn hàng tháng này</h3>
-        <div class="value ldm-stat-value-green">{{ month_orders|default:0 }}</div>
-        <div class="ldm-stat-subtext">Chỉ tiêu tháng</div>
-    </div>
-    <div class="ldm-stat-card">
-        <h3>Doanh thu hôm nay</h3>
-        <div class="value ldm-stat-value-sm">{{ today_revenue|default:"0₫" }}</div>
-        <div class="ldm-stat-subtext">Tổng doanh thu</div>
-    </div>
-    <div class="ldm-stat-card">
-        <h3>Giá trị đơn TB</h3>
-        <div class="value ldm-stat-value-sm">{{ aov|default:"0₫" }}</div>
-        <div class="ldm-stat-subtext">Average Order Value</div>
-    </div>
-    <div class="ldm-stat-card">
-        <h3>Tổng sản phẩm</h3>
-        <div class="value ldm-stat-value-purple">{{ total_products|default:0 }}</div>
-        <div class="ldm-stat-subtext">Sản phẩm đang bán</div>
-    </div>
-    <div class="ldm-stat-card">
-        <h3>Tổng khách hàng</h3>
-        <div class="value ldm-stat-value-orange">{{ total_users|default:0 }}</div>
-        <div class="ldm-stat-subtext">Khách hàng đã đăng ký</div>
-    </div>
-</div>
-
-<div class="ldm-section">
-    <div class="ldm-section-header">
-        <h2 class="ldm-section-title">Doanh thu tháng này</h2>
-        <div class="ldm-toolbar">
-            <button class="ldm-button ldm-button-secondary" onclick="exportRevenueData()">
-                <i class="ri-download-line"></i> Xuất Excel
-            </button>
+<div class="ldm-dashboard-wrap">
+    {# ====== STAT CARDS ====== #}
+    <div class="ldm-stats-grid">
+        <div class="ldm-stat-card card-blue">
+            <h3>Đơn hàng hôm nay</h3>
+            <div class="ldm-stat-header">
+                <div class="value">{{ today_orders|default:0 }}</div>
+                <div class="ldm-stat-icon">📦</div>
+            </div>
+            <div class="ldm-stat-subtext">Chỉ tiêu hôm nay</div>
         </div>
-    </div>
-    <div class="ldm-chart-wrap">
-        <canvas id="revenueChart" class="ldm-dashboard-chart"></canvas>
-    </div>
-</div>
 
-<div class="ldm-dashboard-split">
-    <div class="ldm-section">
-        <div class="ldm-section-header">
-            <h2 class="ldm-section-title">Đơn hàng gần đây</h2>
-            <a href="{% url 'store:admin_orders' %}" class="ldm-section-link">Xem tất cả →</a>
+        <div class="ldm-stat-card card-green">
+            <h3>Đơn hàng tháng này</h3>
+            <div class="ldm-stat-header">
+                <div class="value">{{ month_orders|default:0 }}</div>
+                <div class="ldm-stat-icon">📊</div>
+            </div>
+            <div class="ldm-stat-subtext">Chỉ tiêu tháng</div>
         </div>
-        <div class="ldm-table-wrap">
-            <table class="ldm-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Khách hàng</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in recent_orders %}
-                    <tr>
-                        <td><strong>#{{ order.id }}</strong></td>
-                        <td>{{ order.customer_name|default:"N/A" }}</td>
-                        <td>{{ order.total_amount|intcomma }}₫</td>
-                        <td>
-                            {% if order.status == 'delivered' %}
-                            <span class="ldm-badge ldm-badge-success">✅ Hoàn thành</span>
-                            {% elif order.status == 'pending' %}
-                            <span class="ldm-badge ldm-badge-warning">⏳ Chờ xác nhận</span>
-                            {% else %}
-                            <span class="ldm-badge ldm-badge-info">{{ order.get_status_display }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="ldm-empty-table-sm">Chưa có đơn hàng nào</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <div class="ldm-stat-card card-cyan">
+            <h3>Doanh thu hôm nay</h3>
+            <div class="ldm-stat-header">
+                <div class="value ldm-stat-value-sm">{{ today_revenue|default:"0" }}đ</div>
+                <div class="ldm-stat-icon">💰</div>
+            </div>
+            <div class="ldm-stat-subtext">Tổng doanh thu</div>
+        </div>
+
+        <div class="ldm-stat-card card-purple">
+            <h3>Giá trị đơn TB</h3>
+            <div class="ldm-stat-header">
+                <div class="value ldm-stat-value-sm">{{ aov|default:"0" }}đ</div>
+                <div class="ldm-stat-icon">🧾</div>
+            </div>
+            <div class="ldm-stat-subtext">Average Order Value</div>
+        </div>
+
+        <div class="ldm-stat-card card-orange">
+            <h3>Tổng sản phẩm</h3>
+            <div class="ldm-stat-header">
+                <div class="value">{{ total_products|default:0 }}</div>
+                <div class="ldm-stat-icon">📱</div>
+            </div>
+            <div class="ldm-stat-subtext">Sản phẩm đang bán</div>
+        </div>
+
+        <div class="ldm-stat-card card-red">
+            <h3>Tổng khách hàng</h3>
+            <div class="ldm-stat-header">
+                <div class="value">{{ total_users|default:0 }}</div>
+                <div class="ldm-stat-icon">👥</div>
+            </div>
+            <div class="ldm-stat-subtext">Khách hàng đã đăng ký</div>
         </div>
     </div>
 
-    <div class="ldm-section">
-        <div class="ldm-section-header">
-            <h2 class="ldm-section-title">Sản phẩm mới nhất</h2>
-            <a href="{% url 'store:admin_products' %}" class="ldm-section-link">Xem tất cả →</a>
+    {# ====== CHARTS ====== #}
+    <div class="ldm-charts-grid">
+        {# Line chart - Revenue #}
+        <div class="ldm-chart-section">
+            <div class="ldm-chart-header">
+                <h2 class="ldm-chart-title">Doanh thu 12 tháng</h2>
+                <span class="ldm-chart-badge">Năm 2026</span>
+            </div>
+            <div class="ldm-chart-wrap">
+                <canvas id="revenueChart" class="ldm-dashboard-chart"></canvas>
+            </div>
         </div>
-        <div class="ldm-table-wrap">
-            <table class="ldm-table">
-                <thead>
-                    <tr>
-                        <th>Sản phẩm</th>
-                        <th>Giá</th>
-                        <th>Kho</th>
-                        <th>Đã bán</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for product in recent_products %}
-                    <tr>
-                        <td><strong>{{ product.name }}</strong></td>
-                        <td>{{ product.price|intcomma }}₫</td>
-                        <td>
-                            {% if product.stock > 20 %}
-                            <span class="ldm-stock-good">{{ product.stock }}</span>
-                            {% elif product.stock > 5 %}
-                            <span class="ldm-stock-warn">{{ product.stock }}</span>
-                            {% else %}
-                            <span class="ldm-stock-bad">{{ product.stock }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ product.sold_count|default:0 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="ldm-empty-table-sm">Chưa có sản phẩm nào</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        {# Doughnut chart - Order status #}
+        <div class="ldm-chart-section doughnut-chart">
+            <div class="ldm-chart-header">
+                <h2 class="ldm-chart-title">Đơn hàng theo trạng thái</h2>
+                <span class="ldm-chart-badge">{{ total_orders }} đơn</span>
+            </div>
+            <div class="ldm-chart-wrap doughnut">
+                <canvas id="statusChart" class="ldm-dashboard-chart"></canvas>
+            </div>
+            <div class="ldm-doughnut-legend">
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#f59e0b;"></span>
+                    <span>Chờ xác nhận</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.pending|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#3b82f6;"></span>
+                    <span>Đã đặt hàng</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.processing|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#8b5cf6;"></span>
+                    <span>Đang xử lý</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.processing|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#3b82f6;"></span>
+                    <span>Đã đặt hàng</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.processing|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#06b6d4;"></span>
+                    <span>Đang giao</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.shipped|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#10b981;"></span>
+                    <span>Hoàn thành</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.delivered|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#64748b;"></span>
+                    <span>Hết hạn</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.expired|default:0 }}</span>
+                </div>
+                <div class="ldm-legend-item">
+                    <span class="ldm-legend-dot" style="background:#ef4444;"></span>
+                    <span>Hủy đơn</span>
+                    <span class="ldm-legend-count">{{ order_status_counts.cancelled|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ====== SPLIT: ORDERS + PRODUCTS ====== #}
+    <div class="ldm-dashboard-split">
+        <div class="ldm-dashboard-section">
+            <div class="ldm-section-header">
+                <h2 class="ldm-section-title">Đơn hàng gần đây</h2>
+                <a href="{% url 'store:admin_orders' %}" class="ldm-section-link">Xem tất cả →</a>
+            </div>
+            <div class="ldm-table-wrap">
+                <table class="ldm-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>{{ order.customer_name|default:"N/A" }}</td>
+                            <td>{{ order.total_amount|intcomma }}đ</td>
+                            <td>
+                                {% if order.status == 'delivered' %}
+                                <span class="ldm-badge ldm-badge-success">Hoàn thành</span>
+                                {% elif order.status == 'pending' %}
+                                <span class="ldm-badge ldm-badge-warning">Chờ xác nhận</span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="ldm-badge ldm-badge-danger">Đã hủy</span>
+                                {% else %}
+                                <span class="ldm-badge ldm-badge-info">{{ order.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="ldm-empty-table-sm">Chưa có đơn hàng nào</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="ldm-dashboard-section">
+            <div class="ldm-section-header">
+                <h2 class="ldm-section-title">Sản phẩm mới nhất</h2>
+                <a href="{% url 'store:admin_products' %}" class="ldm-section-link">Xem tất cả →</a>
+            </div>
+            <div class="ldm-table-wrap">
+                <table class="ldm-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Kho</th>
+                            <th>Đã bán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in recent_products %}
+                        <tr>
+                            <td><strong>{{ product.name|truncatechars:25 }}</strong></td>
+                            <td>{{ product.price|intcomma }}đ</td>
+                            <td>
+                                {% if product.stock > 20 %}
+                                <span class="ldm-stock-good">{{ product.stock }}</span>
+                                {% elif product.stock > 5 %}
+                                <span class="ldm-stock-warn">{{ product.stock }}</span>
+                                {% else %}
+                                <span class="ldm-stock-bad">{{ product.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.sold_count|default:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="ldm-empty-table-sm">Chưa có sản phẩm nào</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -139,141 +531,181 @@
 <script type="application/json" id="dashboardData">
 {{ monthly_revenue|safe }}
 </script>
+<script type="application/json" id="orderStatusData">
+{
+    "pending": {{ order_status_counts.pending|default:0 }},
+    "processing": {{ order_status_counts.processing|default:0 }},
+    "shipped": {{ order_status_counts.shipped|default:0 }},
+    "delivered": {{ order_status_counts.delivered|default:0 }},
+    "expired": {{ order_status_counts.expired|default:0 }},
+    "cancelled": {{ order_status_counts.cancelled|default:0 }}
+}
+</script>
 
 <script>
-const monthlyRevenueData = JSON.parse(document.getElementById('dashboardData').textContent);
+(function() {
+    var monthlyRevenueData = [];
+    try {
+        monthlyRevenueData = JSON.parse(document.getElementById('dashboardData').textContent);
+    } catch(e) { monthlyRevenueData = []; }
 
-function destroyRevenueChart() {
-    const revenueCanvas = document.getElementById('revenueChart');
-    if (!revenueCanvas) return;
+    var orderStatusData = {};
+    try {
+        orderStatusData = JSON.parse(document.getElementById('orderStatusData').textContent);
+    } catch(e) { orderStatusData = {}; }
 
-    if (window.revenueChartInstance) {
-        try {
-            window.revenueChartInstance.destroy();
-        } catch(e) {
-            console.log('Error destroying chart instance:', e.message);
+    function destroyRevenueChart() {
+        var revenueCanvas = document.getElementById('revenueChart');
+        if (!revenueCanvas) return;
+        if (window.revenueChartInstance) {
+            try { window.revenueChartInstance.destroy(); } catch(e) {}
+            window.revenueChartInstance = null;
         }
-        window.revenueChartInstance = null;
-    }
-
-    if (revenueCanvas.__chartjs__) {
-        try {
-            revenueCanvas.__chartjs__.destroy();
-            delete revenueCanvas.__chartjs__;
-        } catch(e) {
-            console.log('Error destroying canvas.__chartjs__:', e.message);
-        }
-    }
-
-    const ctx = revenueCanvas.getContext('2d');
-    if (ctx) {
-        ctx.clearRect(0, 0, revenueCanvas.width, revenueCanvas.height);
-    }
-
-    const width = revenueCanvas.width;
-    const height = revenueCanvas.height;
-    revenueCanvas.width = 1;
-    revenueCanvas.height = 1;
-    revenueCanvas.width = width;
-    revenueCanvas.height = height;
-
-    if (window.Chart && Array.isArray(window.Chart.instances)) {
-        for (let i = window.Chart.instances.length - 1; i >= 0; i--) {
-            if (window.Chart.instances[i] && window.Chart.instances[i].canvas === revenueCanvas) {
-                try {
-                    window.Chart.instances[i].destroy();
-                    window.Chart.instances.splice(i, 1);
-                } catch(e) {
-                    console.log('Error destroying chart from registry:', e.message);
+        if (window.Chart && Array.isArray(window.Chart.instances)) {
+            for (var i = window.Chart.instances.length - 1; i >= 0; i--) {
+                if (window.Chart.instances[i] && window.Chart.instances[i].canvas === revenueCanvas) {
+                    try { window.Chart.instances[i].destroy(); } catch(e) {}
                 }
             }
         }
     }
-}
 
-function initRevenueChart() {
-    const revenueCtx = document.getElementById('revenueChart');
-    if (!revenueCtx) return;
+    function destroyStatusChart() {
+        var statusCanvas = document.getElementById('statusChart');
+        if (!statusCanvas) return;
+        if (window.statusChartInstance) {
+            try { window.statusChartInstance.destroy(); } catch(e) {}
+            window.statusChartInstance = null;
+        }
+        if (window.Chart && Array.isArray(window.Chart.instances)) {
+            for (var i = window.Chart.instances.length - 1; i >= 0; i--) {
+                if (window.Chart.instances[i] && window.Chart.instances[i].canvas === statusCanvas) {
+                    try { window.Chart.instances[i].destroy(); } catch(e) {}
+                }
+            }
+        }
+    }
 
-    destroyRevenueChart();
+    function initRevenueChart() {
+        var revenueCtx = document.getElementById('revenueChart');
+        if (!revenueCtx) return;
+        destroyRevenueChart();
 
-    window.revenueChartInstance = new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
-            datasets: [{
-                label: 'Doanh thu (VND)',
-                data: monthlyRevenueData,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#3b82f6',
-                pointBorderColor: 'white',
-                pointBorderWidth: 2,
-                pointHoverRadius: 6,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        font: { family: "'Signika', sans-serif", size: 14 },
-                        usePointStyle: true,
-                        padding: 20
+        window.revenueChartInstance = new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+                datasets: [{
+                    label: 'Doanh thu (VND)',
+                    data: monthlyRevenueData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var val = context.raw;
+                                if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M đ';
+                                if (val >= 1000) return (val / 1000).toFixed(0) + 'K đ';
+                                return val + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                                return value;
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function initStatusChart() {
+        var statusCtx = document.getElementById('statusChart');
+        if (!statusCtx) return;
+        destroyStatusChart();
+
+        window.statusChartInstance = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Chờ xác nhận', 'Đã đặt hàng', 'Đang giao', 'Hoàn thành', 'Hết hạn', 'Hủy đơn'],
+                datasets: [{
+                    data: [
+                        orderStatusData.pending || 0,
+                        orderStatusData.processing || 0,
+                        orderStatusData.shipped || 0,
+                        orderStatusData.delivered || 0,
+                        orderStatusData.expired || 0,
+                        orderStatusData.cancelled || 0
+                    ],
+                    backgroundColor: [
+                        '#f59e0b',
+                        '#3b82f6',
+                        '#06b6d4',
+                        '#10b981',
+                        '#64748b',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.label + ': ' + context.raw + ' đơn';
+                            }
+                        }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { font: { family: "'Signika', sans-serif" } }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: "'Signika', sans-serif" } }
-                }
             }
-        }
-    });
-}
-
-function exportRevenueData() {
-    const data = {
-        'Tháng': ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
-        'Doanh thu': monthlyRevenueData
-    };
-
-    const ws = XLSX.utils.aoa_to_sheet([
-        Object.keys(data),
-        ...Object.values(data)[0].map((_, i) => Object.keys(data).map(k => data[k][i]))
-    ]);
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Doanh thu");
-    XLSX.writeFile(wb, "doanh_thu_" + new Date().toISOString().split('T')[0] + ".xlsx");
-}
-
-function startChartInit() {
-    if (typeof Chart === 'undefined') {
-        console.log('Chart.js not ready, retrying...');
-        setTimeout(startChartInit, 100);
-        return;
+        });
     }
 
-    initRevenueChart();
-}
+    function startChartInit() {
+        if (typeof Chart === 'undefined') {
+            setTimeout(startChartInit, 100);
+            return;
+        }
+        initRevenueChart();
+        initStatusChart();
+    }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startChartInit);
-} else {
-    startChartInit();
-}
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startChartInit);
+    } else {
+        startChartInit();
+    }
+})();
 </script>
 {% endblock %}

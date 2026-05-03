@@ -62,6 +62,9 @@
         <a href="{% url 'store:admin_orders' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}">
             <i class="ri-shopping-cart-line"></i> Đơn hàng
         </a>
+        <a href="{% url 'store:admin_vietqr_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'admin_vietqr_list' %}active{% endif %}">
+            <i class="ri-qr-code-line"></i> VietQR
+        </a>
 
         <div class="ldm-sidebar-group-title ldm-sidebar-group-spaced">NỘI DUNG</div>
         <a href="{% url 'store:banner_admin_list' %}" class="ldm-sidebar-item {% if request.resolver_match.url_name == 'banner_admin_list' %}active{% endif %}">

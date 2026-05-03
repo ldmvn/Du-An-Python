@@ -164,33 +164,6 @@
     startAutoplay();
 })();
 
-// Wishlist toggle functionality
-function toggleWishlist(productId, event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const icon = document.getElementById('wishlist-' + productId);
-    const button = event.currentTarget;
-    
-    // Send request to toggle wishlist
-    fetch(`/wishlist/toggle/?product_id=${productId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'added') {
-                icon.style.color = '#dc3545';
-                button.style.transform = 'scale(1.1)';
-            } else {
-                icon.style.color = '#ddd';
-                button.style.transform = 'scale(1)';
-            }
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-                // Reload page to show/update wishlist section
-                location.reload();
-            }, 500);
-        })
-        .catch(error => console.error('Error:', error));
-}
-
 // Initialize wishlist icons on page load
 document.addEventListener('DOMContentLoaded', function() {
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');

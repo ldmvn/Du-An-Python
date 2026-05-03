@@ -4,11 +4,15 @@
  */
 
 // Add to cart via AJAX
-function addToCartAjax(productId, quantity = 1) {
+function addToCartAjax(productId, quantity = 1, params) {
+    params = params || {};
     const loginUrl = window.AUTH_ENDPOINTS && window.AUTH_ENDPOINTS.login;
     const formData = new FormData();
     formData.append('product_id', productId);
     formData.append('quantity', quantity);
+    if (params.storage) formData.append('storage', params.storage);
+    if (params.ram) formData.append('ram', params.ram);
+    if (params.color) formData.append('color', params.color);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
     fetch(window.API_ENDPOINTS.addToCart, {
@@ -20,7 +24,7 @@ function addToCartAjax(productId, quantity = 1) {
         if (data.success) {
             showToast(data.message, 'success');
             updateCartUI(data.cart_count, data.cart_total);
-        } else if (status === 401 || data.login_required || !ok) {
+        } else if (status === 401 || data.login_required) {
             showToast(data.error || 'Vui lòng đăng nhập để thêm vào giỏ hàng', 'error');
             if (loginUrl) {
                 window.location.href = data.login_url || loginUrl;
@@ -35,10 +39,10 @@ function addToCartAjax(productId, quantity = 1) {
     });
 }
 
-// Update cart quantity via AJAX  
-function updateCartQuantityAjax(productId, quantity) {
+// Update cart quantity via AJAX
+function updateCartQuantityAjax(cartKey, quantity) {
     const formData = new FormData();
-    formData.append('product_id', productId);
+    formData.append('cart_key', cartKey);
     formData.append('quantity', quantity);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
@@ -52,9 +56,9 @@ function updateCartQuantityAjax(productId, quantity) {
             showToast(data.message, 'success');
             updateCartUI(data.cart_count, data.cart_total);
             // Update row total if in cart page
-            const itemTotal = document.querySelector(`[data-product-id="${productId}"] .item-total`);
+            const itemTotal = document.querySelector(`[data-cart-key="${cartKey}"] .item-total`);
             if (itemTotal) {
-                itemTotal.textContent = formatPrice(data.item_total)  ;
+                itemTotal.textContent = formatPrice(data.item_total);
             }
         } else {
             showToast(data.error, 'error');
@@ -67,11 +71,11 @@ function updateCartQuantityAjax(productId, quantity) {
 }
 
 // Remove from cart via AJAX
-function removeFromCartAjax(productId) {
+function removeFromCartAjax(cartKey) {
     if (!confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) return;
 
     const formData = new FormData();
-    formData.append('product_id', productId);
+    formData.append('cart_key', cartKey);
     formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
     fetch(window.API_ENDPOINTS.removeFromCart, {
@@ -84,16 +88,10 @@ function removeFromCartAjax(productId) {
             showToast(data.message, 'success');
             updateCartUI(data.cart_count, data.cart_total);
             // Remove row from cart page
-            const row = document.querySelector(`[data-product-id="${productId}"]`);
+            const row = document.querySelector(`[data-cart-key="${cartKey}"]`);
             if (row) {
                 row.style.opacity = '0.5';
-                setTimeout(() => {
-                    row.remove();
-                    // Reload if cart is empty
-                    if (document.querySelectorAll('[data-product-id]').length === 0) {
-                        location.reload();
-                    }
-                }, 300);
+                setTimeout(() => { row.remove(); }, 300);
             }
         } else {
             showToast(data.error, 'error');
@@ -160,9 +158,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Quantity input change
     document.querySelectorAll('.cart-quantity-input').forEach(input => {
         input.addEventListener('change', function() {
-            const productId = this.dataset.productId;
-            const quantity = parseInt(this.value) ||1;
-            updateCartQuantityAjax(productId, quantity);
+            const cartKey = this.dataset.cartKey;
+            const quantity = parseInt(this.value) || 1;
+            updateCartQuantityAjax(cartKey, quantity);
         });
     });
 
@@ -170,8 +168,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-remove-cart').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            const productId = this.dataset.productId;
-            removeFromCartAjax(productId);
+            const cartKey = this.dataset.cartKey;
+            removeFromCartAjax(cartKey);
         });
     });
 });
