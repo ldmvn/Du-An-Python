@@ -222,14 +222,22 @@ EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_USE_SSL = False
 
-# Email credentials (optional in debug mode)
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'admin@localhost' if DEBUG else None)
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'password' if DEBUG else None)
+# Email credentials - REQUIRED for production
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
-if not EMAIL_HOST_USER and not DEBUG:
-    raise ValueError("EMAIL_HOST_USER environment variable is not set. Please add it to your .env file")
-if not EMAIL_HOST_PASSWORD and not DEBUG:
-    raise ValueError("EMAIL_HOST_PASSWORD environment variable is not set. Please add it to your .env file")
+# Validation: Email credentials required in production
+if not DEBUG:
+    if not EMAIL_HOST_USER:
+        raise ValueError("EMAIL_HOST_USER environment variable is not set. Please add it to your .env file")
+    if not EMAIL_HOST_PASSWORD:
+        raise ValueError("EMAIL_HOST_PASSWORD environment variable is not set. Please add it to your .env file")
+
+# Development fallback
+if DEBUG and not EMAIL_HOST_USER:
+    EMAIL_HOST_USER = 'admin@localhost'
+if DEBUG and not EMAIL_HOST_PASSWORD:
+    EMAIL_HOST_PASSWORD = 'password'
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'admin@localhost'
 SERVER_EMAIL = EMAIL_HOST_USER or 'admin@localhost'
