@@ -17,8 +17,49 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file in project root
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables
+# Priority: .env.local (local override) > .env (production default)
+ENV_LOCAL = BASE_DIR / '.env.local'
+ENV_PROD = BASE_DIR / '.env'
+
+# Check environment mode directly from file (before loading)
+_env_mode = None
+if ENV_LOCAL.exists():
+    with open(ENV_LOCAL, encoding='utf-8') as f:
+        for line in f:
+            if line.startswith('ENVIRONMENT='):
+                _env_mode = line.split('=', 1)[1].strip().lower()
+                break
+
+# Also check .env if mode not found in .env.local
+if not _env_mode and ENV_PROD.exists():
+    with open(ENV_PROD, encoding='utf-8') as f:
+        for line in f:
+            if line.startswith('ENVIRONMENT='):
+                _env_mode = line.split('=', 1)[1].strip().lower()
+                break
+
+# If mode is local/development, only load .env.local
+# Otherwise load production first, then local to override
+if _env_mode in ('local', 'development'):
+    # Local development: only load .env.local
+    if ENV_LOCAL.exists():
+        load_dotenv(ENV_LOCAL)
+elif ENV_LOCAL.exists():
+    load_dotenv(ENV_PROD)  # Load production defaults first (may not exist on server)
+    load_dotenv(ENV_LOCAL, override=True)  # Then override with local settings
+elif ENV_PROD.exists():
+    load_dotenv(ENV_PROD)
+
+# DEBUG must be determined AFTER loading env to check if in local mode
+# If in development mode and DEBUG not explicitly set, default to True
+DEBUG = os.getenv('DEBUG')
+if DEBUG is not None:
+    DEBUG = DEBUG.lower() == 'true'
+elif _env_mode in ('local', 'development'):
+    DEBUG = True
+else:
+    DEBUG = False
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,17 +68,16 @@ load_dotenv(BASE_DIR / '.env')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError(
-        "SECRET_KEY environment variable is not set. "
-        "Please add it to your .env file: SECRET_KEY=your-secret-key"
-    )
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-dev-key-for-testing-only'
+    else:
+        raise ValueError(
+            "SECRET_KEY environment variable is not set. "
+            "Please add it to your .env file: SECRET_KEY=your-secret-key"
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*'] # wildcard only for tests
-
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 # Application definition
 
@@ -148,53 +188,36 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Google OAuth Configuration
+# Google OAuth Configuration (optional in debug mode)
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
-if not SOCIAL_AUTH_GOOGLE_OAUTH2_KEY:
-    raise ValueError(
-        "GOOGLE_OAUTH2_CLIENT_ID environment variable is not set. "
-        "Please add it to your .env file"
-    )
-
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
-if not SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET:
-    raise ValueError(
-        "GOOGLE_OAUTH2_CLIENT_SECRET environment variable is not set. "
-        "Please add it to your .env file"
-    )
-
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['email', 'profile']
 SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['id', 'email', 'name', 'picture']
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = os.getenv(
     'GOOGLE_OAUTH2_REDIRECT_URI',
-    'http://160.187.229.147/oauth/complete/google-oauth2/'
+    'http://127.0.0.1:8000/oauth/complete/google-oauth2/' if DEBUG
+    else 'http://160.187.229.147/oauth/complete/google-oauth2/'
 )
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
 # ==================== EMAIL CONFIGURATION ====================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_USE_SSL = False
 
-# Email credentials - MUST be set in environment
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-if not EMAIL_HOST_USER:
-    raise ValueError(
-        "EMAIL_HOST_USER environment variable is not set. "
-        "Please add it to your .env file"
-    )
+# Email credentials (optional in debug mode)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'admin@localhost' if DEBUG else None)
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'password' if DEBUG else None)
 
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-if not EMAIL_HOST_PASSWORD:
-    raise ValueError(
-        "EMAIL_HOST_PASSWORD environment variable is not set. "
-        "Please add it to your .env file"
-    )
+if not EMAIL_HOST_USER and not DEBUG:
+    raise ValueError("EMAIL_HOST_USER environment variable is not set. Please add it to your .env file")
+if not EMAIL_HOST_PASSWORD and not DEBUG:
+    raise ValueError("EMAIL_HOST_PASSWORD environment variable is not set. Please add it to your .env file")
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'admin@localhost'
+SERVER_EMAIL = EMAIL_HOST_USER or 'admin@localhost'
 
 VIETQR_BANK_ID = os.getenv('VIETQR_BANK_ID', 'MB')
 VIETQR_BANK_NAME = os.getenv('VIETQR_BANK_NAME', 'MB Bank')
@@ -202,28 +225,58 @@ VIETQR_BANK_ACCOUNT_NO = os.getenv('VIETQR_BANK_ACCOUNT_NO', '0386220065')
 VIETQR_BANK_ACCOUNT_NAME = os.getenv('VIETQR_BANK_ACCOUNT_NAME', 'LUU DUC MANH')
 VIETQR_TIMEOUT_SECONDS = int(os.getenv('VIETQR_TIMEOUT_SECONDS', '900'))
 
-# VNPAY sandbox configuration
-VNPAY_TMN_CODE = os.getenv('VNPAY_TMN_CODE')
-if not VNPAY_TMN_CODE:
-    raise ValueError(
-        "VNPAY_TMN_CODE environment variable is not set. "
-        "Please add it to your .env file"
-    )
+# VNPAY configuration
+# Sandbox: https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html
+# Production: https://pay.vnpay.vn/vpcpay.html
+VNPAY_TMN_CODE = os.getenv('VNPAY_TMN_CODE', 'TEST' if _env_mode in ('local', 'development') else None)
+VNPAY_HASH_SECRET = os.getenv('VNPAY_HASH_SECRET', 'SECRET' if _env_mode in ('local', 'development') else None)
 
-VNPAY_HASH_SECRET = os.getenv('VNPAY_HASH_SECRET')
-if not VNPAY_HASH_SECRET:
-    raise ValueError(
-        "VNPAY_HASH_SECRET environment variable is not set. "
-        "Please add it to your .env file"
-    )
+if not VNPAY_TMN_CODE and _env_mode not in ('local', 'development'):
+    raise ValueError("VNPAY_TMN_CODE environment variable is not set. Please add it to your .env file")
+if not VNPAY_HASH_SECRET and _env_mode not in ('local', 'development'):
+    raise ValueError("VNPAY_HASH_SECRET environment variable is not set. Please add it to your .env file")
 
-VNPAY_URL = os.getenv('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
-VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'https://idvn.io.vn/vnpay/return/')
-VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'https://idvn.io.vn/vnpay/ipn/')
-VNPAY_PAYMENT_METHOD_URL = os.getenv(
-    'VNPAY_PAYMENT_METHOD_URL',
-    'https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentMethod.html'
-)
+# VNPay URLs - chọn sandbox hoặc production dựa trên ENVIRONMENT mode
+VNPAY_SANDBOX_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'
+VNPAY_PRODUCTION_URL = 'https://pay.vnpay.vn/vpcpay.html'
+VNPAY_URL = os.getenv('VNPAY_URL', VNPAY_SANDBOX_URL if _env_mode in ('local', 'development') else VNPAY_PRODUCTION_URL)
+
+# Return URL - chỉ override nếu chưa có trong env
+if not os.getenv('VNPAY_RETURN_URL'):
+    if _env_mode in ('local', 'development'):
+        VNPAY_RETURN_URL = 'http://127.0.0.1:8000/vnpay/return/'
+    else:
+        VNPAY_RETURN_URL = 'https://idvn.io.vn/vnpay/return/'
+else:
+    VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL')
+
+if not os.getenv('VNPAY_IPN_URL'):
+    if _env_mode in ('local', 'development'):
+        VNPAY_IPN_URL = 'http://127.0.0.1:8000/vnpay/ipn/'
+    else:
+        VNPAY_IPN_URL = 'https://idvn.io.vn/vnpay/ipn/'
+else:
+    VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL')
+
+VNPAY_API_URL = os.getenv('VNPAY_API_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html' if _env_mode in ('local', 'development') else 'https://pay.vnpay.vn/vpcpay.html')
+
+# MOMO sandbox configuration (optional in debug mode)
+MOMO_PARTNER_CODE = os.getenv('MOMO_PARTNER_CODE', 'MOMO' if DEBUG else None)
+MOMO_ACCESS_KEY = os.getenv('MOMO_ACCESS_KEY', 'ACCESS_KEY' if DEBUG else None)
+MOMO_SECRET_KEY = os.getenv('MOMO_SECRET_KEY', 'SECRET_KEY' if DEBUG else None)
+
+if not MOMO_PARTNER_CODE and not DEBUG:
+    raise ValueError("MOMO_PARTNER_CODE environment variable is not set. Please add it to your .env file")
+if not MOMO_ACCESS_KEY and not DEBUG:
+    raise ValueError("MOMO_ACCESS_KEY environment variable is not set. Please add it to your .env file")
+if not MOMO_SECRET_KEY and not DEBUG:
+    raise ValueError("MOMO_SECRET_KEY environment variable is not set. Please add it to your .env file")
+
+MOMO_ENDPOINT = os.getenv('MOMO_ENDPOINT', 'https://test-payment.momo.vn/v2/gateway/api/create')
+MOMO_RETURN_URL = os.getenv('MOMO_RETURN_URL', 'http://127.0.0.1:8000/momo/return/')
+MOMO_IPN_URL = os.getenv('MOMO_IPN_URL', 'http://127.0.0.1:8000/momo/ipn/')
+MOMO_REQUEST_TYPE = os.getenv('MOMO_REQUEST_TYPE', 'payWithATM')
+MOMO_TIMEOUT_SECONDS = int(os.getenv('MOMO_TIMEOUT_SECONDS', '900'))
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8625948551:AAGO2A4emtPJOH555z21vsO14if5F-vwuVs')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '3756857984')

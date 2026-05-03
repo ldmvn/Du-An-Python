@@ -12,11 +12,12 @@ from django.db.models import Q, Count
 from django.urls import reverse
 from django.core.paginator import Paginator
 import os
+import json
 import requests
 import hashlib
 import hmac
 import logging
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote, quote_plus
 
 logger = logging.getLogger(__name__)
 
@@ -83,23 +84,30 @@ def _get_client_ip(request):
 
 def _build_vnpay_payment_url(request, order_number, amount):
     """Build VNPAY redirect URL for an order."""
+    # Tự động lấy base URL từ request (works cho cả local và production)
+    base_url = request.build_absolute_uri('/').rstrip('/')
+
     params = {
         'vnp_Version': '2.1.0',
         'vnp_Command': 'pay',
         'vnp_TmnCode': settings.VNPAY_TMN_CODE,
-        'vnp_Amount': str(int(amount) * 100),
+        'vnp_Amount': str(int(amount) * 100),  # VNPay yêu cầu amount * 100
         'vnp_CurrCode': 'VND',
         'vnp_TxnRef': order_number,
         'vnp_OrderInfo': f'Thanh toan don hang {order_number}',
         'vnp_OrderType': 'other',
         'vnp_Locale': 'vn',
-        'vnp_ReturnUrl': settings.VNPAY_RETURN_URL,
+        'vnp_ReturnUrl': f'{base_url}/vnpay/return/',
         'vnp_IpAddr': _get_client_ip(request),
         'vnp_CreateDate': timezone.now().strftime('%Y%m%d%H%M%S'),
     }
 
+    # Build hash data (sorted by key, excluding SecureHash and SecureHashType)
+    # Quan trọng: dùng quote_plus thay vì quote (space -> + thay vì %20)
     sorted_items = sorted(params.items())
-    hash_data = '&'.join(f"{k}={v}" for k, v in sorted_items)
+    hash_data = '&'.join(f"{k}={quote_plus(v)}" for k, v in sorted_items)
+
+    # Calculate secure hash với HMAC SHA512
     secure_hash = hmac.new(
         settings.VNPAY_HASH_SECRET.encode('utf-8'),
         hash_data.encode('utf-8'),
@@ -109,14 +117,39 @@ def _build_vnpay_payment_url(request, order_number, amount):
     params['vnp_SecureHashType'] = 'SHA512'
     params['vnp_SecureHash'] = secure_hash
 
-    # If a token-based payment endpoint is configured, return it with the secure hash as token.
-    # This builds URLs like: https://.../Transaction/PaymentMethod.html?token=<secure_hash>
-    payment_method_url = getattr(settings, 'VNPAY_PAYMENT_METHOD_URL', None)
-    if payment_method_url:
-        return f"{payment_method_url}?token={secure_hash}"
+    # Return URL đầy đủ với query params (dùng quote_plus để encode)
+    query_parts = []
+    for k, v in sorted(params.items()):
+        query_parts.append(f"{k}={quote_plus(v)}")
+    return f"{settings.VNPAY_URL}?{'&'.join(query_parts)}"
 
-    # Fallback to legacy vpcpay URL with query params
-    return f"{settings.VNPAY_URL}?{urlencode(params)}"
+
+def _build_momo_payment_url(request, order_number, amount):
+    """Build MoMo redirect URL for an order."""
+    from store.momo_utils import MoMoUtil
+    import json
+
+    order_info = f'Thanh toan don hang {order_number}'
+    extra_data = json.dumps({'order_number': order_number})
+
+    momo = MoMoUtil()
+    result = momo.create_payment(
+        amount=str(int(amount)),
+        order_id=order_number,
+        order_info=order_info,
+        extra_data=''  # MoMo rejects non-empty extraData in sandbox
+    )
+
+    if result.get('error'):
+        logger.error(f"MoMo Payment Error: {result.get('message')}")
+        raise Exception(f"MoMo Payment Error: {result.get('message')}")
+
+    pay_url = result.get('payUrl')
+    if not pay_url:
+        logger.error(f"MoMo API Error: {result.get('message', 'Unknown error')}")
+        raise Exception(f"MoMo API Error: {result.get('message', 'Unknown error')}")
+
+    return pay_url
 
 
 def _send_telegram_notification(message):
@@ -184,7 +217,9 @@ def _notify_order_success(order):
         f"Phương thức: {order.get_payment_method_display()}\n"
         f"Trạng thái: {order.get_status_display()}"
     )
-    _send_telegram_notification(message)
+    logger.info(f"[TELEGRAM] Sending notification for order {order.order_number}")
+    result = _send_telegram_notification(message)
+    logger.info(f"[TELEGRAM] Notification result: {result}")
 
 
 def _get_next_banner_id():
@@ -1766,13 +1801,13 @@ def checkout(request):
                 voucher, voucher_error = _validate_voucher_code(voucher_code)
                 if voucher_error:
                     subtotal = product.get_discounted_price() * quantity
-                    total_amount = max(subtotal + 30000, 0)
+                    total_amount = max(subtotal + 0, 0)
                     context = get_base_context(request)
                     context.update({
                         'product': product,
                         'quantity': quantity,
                         'subtotal': subtotal,
-                        'shipping_cost': 30000,
+                        'shipping_cost': 0,
                         'total_amount': total_amount,
                         'discount_amount': 0,
                         'voucher_code': voucher_code,
@@ -1798,7 +1833,7 @@ def checkout(request):
                         'address': full_address,
                         'voucher_code': voucher_code,
                         'discount_amount': discount_amount,
-                        'total_amount': max(product.get_discounted_price() * quantity + 30000 - discount_amount, 0),
+                        'total_amount': max(product.get_discounted_price() * quantity + 0 - discount_amount, 0),
                         'payment_method': payment_method,
                     }
                     request.session['pending_order'] = pending
@@ -1811,7 +1846,7 @@ def checkout(request):
                     transfer_code = f"ldm{random.randint(10000, 99999)}"
                     subtotal = product.get_discounted_price() * quantity
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
                     order = Order.objects.create(
                         user=request.user,
                         order_number=order_code,
@@ -1854,7 +1889,7 @@ def checkout(request):
                     order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     subtotal = product.get_discounted_price() * quantity
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
                     order = Order.objects.create(
                         user=request.user,
                         order_number=order_number,
@@ -1875,13 +1910,39 @@ def checkout(request):
                     _remove_products_from_cart(request, [product.id])
                     return redirect(_build_vnpay_payment_url(request, order_number, total_amount))
 
+                if payment_method == 'momo':
+                    from datetime import datetime
+                    order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    subtotal = product.get_discounted_price() * quantity
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='momo',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        quantity=quantity,
+                        price=product.get_discounted_price()
+                    )
+                    _notify_order_pending(order)
+                    _remove_products_from_cart(request, [product.id])
+                    return redirect(_build_momo_payment_url(request, order_number, total_amount))
+
                 if payment_method == 'cash':
                     # Handle Cash On Delivery (COD) payment
                     from datetime import datetime
                     order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     subtotal = product.get_discounted_price() * quantity
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
                     order = Order.objects.create(
                         user=request.user,
                         order_number=order_number,
@@ -1924,7 +1985,7 @@ def checkout(request):
 
                 subtotal = product.get_discounted_price() * quantity
                 discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                total_amount = max(subtotal + 30000 - discount_amount, 0)
+                total_amount = max(subtotal + 0 - discount_amount, 0)
             
                 order = Order.objects.create(
                     user=request.user,
@@ -1969,13 +2030,13 @@ def checkout(request):
             except Exception as e:
                 messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
                 subtotal = product.get_discounted_price() * quantity
-                total_amount = max(subtotal + 30000 - discount_amount, 0)
+                total_amount = max(subtotal + 0 - discount_amount, 0)
                 context = get_base_context(request)
                 context.update({
                     'product': product,
                     'quantity': quantity,
                     'subtotal': subtotal,
-                    'shipping_cost': 30000,
+                    'shipping_cost': 0,
                     'total_amount': total_amount,
                     'discount_amount': discount_amount,
                     'voucher_code': voucher_code,
@@ -1986,13 +2047,13 @@ def checkout(request):
         else:
             # Form validation failed - display errors
             subtotal = product.get_discounted_price() * quantity
-            total_amount = max(subtotal + 30000 - discount_amount, 0)
+            total_amount = max(subtotal + 0 - discount_amount, 0)
             context = get_base_context(request)
             context.update({
                 'product': product,
                 'quantity': quantity,
                 'subtotal': subtotal,
-                'shipping_cost': 30000,
+                'shipping_cost': 0,
                 'total_amount': total_amount,
                 'discount_amount': discount_amount,
                 'voucher_code': voucher_code,
@@ -2009,12 +2070,12 @@ def checkout(request):
     
     context = get_base_context(request)
     subtotal = product.get_discounted_price() * quantity
-    total_amount = subtotal + 30000
+    total_amount = subtotal + 0
     context.update({
         'product': product,
         'quantity': quantity,
         'subtotal': subtotal,
-        'shipping_cost': 30000,
+        'shipping_cost': 0,
         'total_amount': total_amount,
         'discount_amount': 0,
         'voucher_code': '',
@@ -2101,12 +2162,12 @@ def checkout_from_cart(request):
                 voucher, voucher_error = _validate_voucher_code(voucher_code)
                 if voucher_error:
                     subtotal = total_amount
-                    final_total = max(subtotal + 30000, 0)
+                    final_total = max(subtotal + 0, 0)
                     context = get_base_context(request)
                     context.update({
                         'cart_items': cart_items,
                         'subtotal': subtotal,
-                        'shipping_cost': 30000,
+                        'shipping_cost': 0,
                         'total_amount': final_total,
                         'discount_amount': 0,
                         'voucher_code': voucher_code,
@@ -2139,7 +2200,7 @@ def checkout_from_cart(request):
                         'cart_items': serializable_items,
                         'voucher_code': voucher_code,
                         'discount_amount': discount_amount,
-                        'total_amount': max(subtotal + 30000 - discount_amount, 0),
+                        'total_amount': max(subtotal + 0 - discount_amount, 0),
                         'fullname': fullname,
                         'email': email,
                         'phone': phone,
@@ -2156,7 +2217,7 @@ def checkout_from_cart(request):
                     transfer_code = f"ldm{random.randint(10000, 99999)}"
                     subtotal = total_amount
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
                     order = Order.objects.create(
                         user=request.user,
                         order_number=order_code,
@@ -2204,7 +2265,7 @@ def checkout_from_cart(request):
                 if payment_method == 'vnpay':
                     subtotal = total_amount
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    total_amount = max(subtotal + 30000 - discount_amount, 0)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
                     order_number = f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}"
                     order = Order.objects.create(
                         user=request.user,
@@ -2227,13 +2288,39 @@ def checkout_from_cart(request):
                     _remove_products_from_cart(request, [it['product'].id for it in cart_items])
                     return redirect(_build_vnpay_payment_url(request, order_number, total_amount))
 
+                if payment_method == 'momo':
+                    subtotal = total_amount
+                    discount_amount = _calculate_voucher_discount(subtotal, voucher)
+                    total_amount = max(subtotal + 0 - discount_amount, 0)
+                    order_number = f"ORD-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+                    order = Order.objects.create(
+                        user=request.user,
+                        order_number=order_number,
+                        total_amount=total_amount,
+                        status='pending',
+                        payment_method='momo',
+                        customer_name=fullname,
+                        customer_phone=phone,
+                        customer_address=full_address,
+                    )
+                    for it in cart_items:
+                        OrderItem.objects.create(
+                            order=order,
+                            product=it['product'],
+                            quantity=it['quantity'],
+                            price=it['price'],
+                        )
+                    _notify_order_pending(order)
+                    _remove_products_from_cart(request, [it['product'].id for it in cart_items])
+                    return redirect(_build_momo_payment_url(request, order_number, total_amount))
+
                 if payment_method == 'cash':
                     # Handle Cash On Delivery (COD) payment for cart checkout
                     from datetime import datetime
                     order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                     subtotal = total_amount
                     discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                    final_total = max(subtotal + 30000 - discount_amount, 0)
+                    final_total = max(subtotal + 0 - discount_amount, 0)
                     
                     order = Order.objects.create(
                         user=request.user,
@@ -2280,7 +2367,7 @@ def checkout_from_cart(request):
                 order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}"
                 subtotal = total_amount
                 discount_amount = _calculate_voucher_discount(subtotal, voucher)
-                final_total = max(subtotal + 30000 - discount_amount, 0)
+                final_total = max(subtotal + 0 - discount_amount, 0)
 
                 order = Order.objects.create(
                     user=request.user,
@@ -2326,12 +2413,12 @@ def checkout_from_cart(request):
             except Exception as e:
                 messages.error(request, f'❌ Lỗi: {str(e)}. Vui lòng thử lại!')
                 subtotal = total_amount
-                final_total = max(subtotal + 30000 - discount_amount, 0)
+                final_total = max(subtotal + 0 - discount_amount, 0)
                 context = get_base_context(request)
                 context.update({
                     'cart_items': cart_items,
                     'subtotal': subtotal,
-                    'shipping_cost': 30000,
+                    'shipping_cost': 0,
                     'total_amount': final_total,
                     'discount_amount': discount_amount,
                     'voucher_code': voucher_code,
@@ -2343,12 +2430,12 @@ def checkout_from_cart(request):
         else:
             # Form validation failed - display errors
             subtotal = total_amount
-            final_total = max(subtotal + 30000 - discount_amount, 0)
+            final_total = max(subtotal + 0 - discount_amount, 0)
             context = get_base_context(request)
             context.update({
                 'cart_items': cart_items,
                 'subtotal': subtotal,
-                'shipping_cost': 30000,
+                'shipping_cost': 0,
                 'total_amount': final_total,
                 'discount_amount': discount_amount,
                 'voucher_code': voucher_code,
@@ -2365,12 +2452,12 @@ def checkout_from_cart(request):
         form = CheckoutForm(initial=initial_data)
     
     subtotal = total_amount
-    final_total = subtotal + 30000
+    final_total = subtotal + 0
     context = get_base_context(request)
     context.update({
         'cart_items': cart_items,
         'subtotal': subtotal,
-        'shipping_cost': 30000,
+        'shipping_cost': 0,
         'total_amount': final_total,
         'discount_amount': 0,
         'voucher_code': '',
@@ -2520,10 +2607,11 @@ def order_tracking(request):
 
 @login_required(login_url='store:login')
 def cancel_order(request, order_id):
-    """Hủy đơn hàng (chỉ khi status = pending)"""
+    """Hủy đơn hàng (chỉ khi status = pending hoặc processing)"""
     order = get_object_or_404(Order, id=order_id, user=request.user)
     
-    if order.normalized_status == 'pending':
+    cancellable_statuses = ['pending', 'processing']
+    if order.normalized_status in cancellable_statuses:
         order.status = 'cancelled'
         order.save()
         if request.session.get('pending_order', {}).get('order_id') == order.id:
@@ -2601,11 +2689,36 @@ def order_success(request):
 
 def vnpay_return(request):
     """Handle return from VNPAY after payment completion."""
-    txn_ref = request.GET.get('vnp_TxnRef') or request.GET.get('vnp_TransactionNo')
-    response_code = request.GET.get('vnp_ResponseCode')
+    # Lấy tất cả params bắt đầu bằng vnp_
+    vnp_params = {k: v for k, v in request.GET.items() if k.startswith('vnp_')}
 
+    # Lấy các thông tin quan trọng
+    txn_ref = vnp_params.get('vnp_TxnRef') or vnp_params.get('vnp_TransactionNo')
+    response_code = vnp_params.get('vnp_ResponseCode')
+    secure_hash = vnp_params.get('vnp_SecureHash')
+    hash_type = vnp_params.get('vnp_SecureHashType', 'SHA512')
+
+    # Verify checksum
+    if secure_hash:
+        # Loại bỏ SecureHash khỏi params để tính lại hash
+        # Quan trọng: dùng quote_plus thay vì quote (space -> + thay vì %20)
+        params_for_hash = {k: v for k, v in vnp_params.items() if k not in ('vnp_SecureHash', 'vnp_SecureHashType')}
+        sorted_items = sorted(params_for_hash.items())
+        hash_data = '&'.join(f"{k}={quote_plus(v)}" for k, v in sorted_items)
+
+        expected_hash = hmac.new(
+            settings.VNPAY_HASH_SECRET.encode('utf-8'),
+            hash_data.encode('utf-8'),
+            hashlib.sha512
+        ).hexdigest()
+
+        if secure_hash != expected_hash:
+            messages.error(request, '❌ Xác minh checksum thất bại!')
+            return redirect('store:cart')
+
+    # Xử lý response code
     if response_code == '00':
-        messages.success(request, '✅ Thanh toán VNPAY đã thành công. Cảm ơn bạn!')
+        messages.success(request, 'Thanh toán VNPAY đã thành công. Cảm ơn bạn!')
         if txn_ref:
             order = Order.objects.filter(order_number=txn_ref).first()
             if order and order.status == 'pending':
@@ -2613,14 +2726,155 @@ def vnpay_return(request):
                 order.save()
                 _notify_order_success(order)
     else:
-        messages.error(request, '❌ Thanh toán VNPAY chưa thành công hoặc đã bị hủy. Vui lòng kiểm tra lại.')
+        error_messages = {
+            '01': 'Giao dịch chưa hoàn tất.',
+            '02': 'Giao dịch bị lỗi.',
+            '04': 'Giao dịch bị hủy.',
+            '05': 'Giao dịch thất bại.',
+            '06': 'OTP xác thực không đúng.',
+            '07': 'Khách hàng hủy giao dịch.',
+            '09': 'Thẻ không đủ số dư.',
+            '10': 'Xác thực thông tin thẻ không đúng.',
+            '11': 'Đã hết hạn thanh toán.',
+            '12': 'Thẻ bị khóa.',
+            '13': 'Sai mật khẩu OTP.',
+            '24': 'Khách hàng hủy giao dịch.',
+            '51': 'Tài khoản không đủ số dư.',
+            '65': 'Tài khoản đã vượt quá hạn mức.',
+            '75': 'Ngân hàng đang bảo trì.',
+            '99': 'Có lỗi không xác định.',
+        }
+        error_msg = error_messages.get(response_code, 'Thanh toán không thành công.')
+        messages.error(request, f'❌ {error_msg}')
 
     return redirect('store:order_success')
 
 
 def vnpay_ipn(request):
-    """Placeholder endpoint for VNPAY IPN notifications."""
-    return JsonResponse({'message': 'VNPAY IPN nhận thành công'})
+    """Handle IPN (Instant Payment Notification) from VNPAY."""
+    if request.method != 'GET':
+        return JsonResponse({'RspCode': '99', 'Message': 'Invalid request method'}, status=400)
+
+    vnp_params = {k: v for k, v in request.GET.items() if k.startswith('vnp_')}
+    secure_hash = vnp_params.get('vnp_SecureHash')
+
+    # Verify checksum
+    if secure_hash:
+        # Quan trọng: dùng quote_plus thay vì quote (space -> + thay vì %20)
+        params_for_hash = {k: v for k, v in vnp_params.items() if k not in ('vnp_SecureHash', 'vnp_SecureHashType')}
+        sorted_items = sorted(params_for_hash.items())
+        hash_data = '&'.join(f"{k}={quote_plus(v)}" for k, v in sorted_items)
+
+        expected_hash = hmac.new(
+            settings.VNPAY_HASH_SECRET.encode('utf-8'),
+            hash_data.encode('utf-8'),
+            hashlib.sha512
+        ).hexdigest()
+
+        if secure_hash != expected_hash:
+            return JsonResponse({'RspCode': '97', 'Message': 'Invalid checksum'})
+
+    response_code = vnp_params.get('vnp_ResponseCode')
+    txn_ref = vnp_params.get('vnp_TxnRef')
+
+    if response_code == '00' and txn_ref:
+        try:
+            order = Order.objects.get(order_number=txn_ref)
+            if order.status == 'pending':
+                order.status = 'processing'
+                order.save()
+            return JsonResponse({'RspCode': '00', 'Message': 'Confirmed'})
+        except Order.DoesNotExist:
+            return JsonResponse({'RspCode': '01', 'Message': 'Order not found'})
+
+    return JsonResponse({'RspCode': response_code or '99', 'Message': 'Transaction failed'})
+
+
+def momo_return(request):
+    """Handle return from MoMo after payment completion."""
+    from store.momo_utils import MoMoUtil
+
+    result_code = request.GET.get('resultCode')
+    order_id = request.GET.get('orderId')
+    signature = request.GET.get('signature')
+
+    logger.info(f"[MoMo Return] resultCode={result_code}, orderId={order_id}")
+
+    # Verify signature
+    if signature:
+        callback_data = {
+            'partnerCode': request.GET.get('partnerCode'),
+            'accessKey': request.GET.get('accessKey'),
+            'amount': request.GET.get('amount'),
+            'orderId': order_id,
+            'orderInfo': request.GET.get('orderInfo'),
+            'orderType': request.GET.get('orderType'),
+            'partnerName': request.GET.get('partnerName'),
+            'requestId': request.GET.get('requestId'),
+            'transId': request.GET.get('transId'),
+            'resultCode': result_code,
+            'message': request.GET.get('message'),
+            'responseTime': request.GET.get('responseTime'),
+            'extraData': request.GET.get('extraData'),
+            'signature': signature
+        }
+
+        if not MoMoUtil().verify_signature(callback_data):
+            logger.warning(f"[MoMo Return] Invalid signature for order {order_id}")
+            messages.error(request, '❌ Xác minh chữ ký MoMo thất bại!')
+            return redirect('store:cart')
+
+    if result_code == '0':
+        messages.success(request, '✅ Thanh toán MoMo đã thành công. Cảm ơn bạn!')
+        if order_id:
+            order = Order.objects.filter(order_number=order_id).first()
+            if order and order.status == 'pending':
+                order.status = 'processing'
+                order.save()
+                _notify_order_success(order)
+    else:
+        error_messages = {
+            '1': 'Giao dịch bị từ chối.',
+            '7': 'Giao dịch bị hủy bởi người dùng.',
+            '10': 'Giao dịch thất bại.',
+            '1001': 'Giao dịch bị hủy do xác thực thất bại.',
+        }
+        error_msg = error_messages.get(str(result_code), f'Thanh toán không thành công (mã lỗi: {result_code}).')
+        messages.error(request, f'❌ {error_msg}')
+
+    return redirect('store:order_success')
+
+
+def momo_ipn(request):
+    """Handle IPN notifications from MoMo."""
+    from store.momo_utils import MoMoUtil
+    import json
+
+    try:
+        data = json.loads(request.body)
+        result_code = data.get('resultCode')
+        order_id = data.get('orderId')
+        signature = data.get('signature')
+
+        logger.info(f"[MoMo IPN] resultCode={result_code}, orderId={order_id}")
+
+        # Verify signature
+        if signature and not MoMoUtil().verify_signature(data):
+            logger.warning(f"[MoMo IPN] Invalid signature for order {order_id}")
+            return JsonResponse({'status': 'ERROR', 'message': 'Invalid signature'}, status=400)
+
+        if result_code == 0 or result_code == '0':  # Payment successful
+            order = Order.objects.filter(order_number=order_id).first()
+            if order and order.status == 'pending':
+                order.status = 'processing'
+                order.save()
+                _notify_order_success(order)
+                logger.info(f"[MoMo IPN] Order {order_id} updated to processing")
+
+        return JsonResponse({'status': 'OK'})
+    except Exception as e:
+        logger.error(f"MoMo IPN Error: {str(e)}")
+        return JsonResponse({'status': 'ERROR', 'message': str(e)}, status=400)
 
 
 @login_required(login_url='store:login')

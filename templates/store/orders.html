@@ -1,4 +1,4 @@
-﻿{% extends "store/base.html" %}
+{% extends "store/base.html" %}
 {% load static humanize %}
 
 {% block title %}{{ page_title|default:"Đơn hàng" }} - MOBILE STORE{% endblock %}
@@ -276,7 +276,7 @@
 
     <div class="ldm-od-actions">
         <a href="{% url 'store:order_tracking' %}" class="ldm-od-btn ldm-od-btn-secondary">← Quay lại</a>
-        {% if order.normalized_status == 'pending' %}
+        {% if order.normalized_status == 'pending' or order.normalized_status == 'processing' %}
         <form method="POST" action="{% url 'store:cancel_order' order.id %}" style="flex: 1;">
             {% csrf_token %}
             <button type="submit" class="ldm-od-btn ldm-od-btn-secondary" onclick="return confirm('Bạn có chắc muốn hủy đơn này?')" style="width: 100%;">

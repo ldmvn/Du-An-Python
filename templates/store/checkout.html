@@ -276,7 +276,7 @@
                 </div>
                 <div class="order-summary-row">
                     <span>Phí vận chuyển</span>
-                    <strong class="order-summary-value">30.000 đ</strong>
+                    <strong class="order-summary-value">0 đ (Miễn phí)</strong>
                 </div>
 
                 {% if product %}
@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateSummary(discountAmount, voucherCode) {
         const subtotal = parseInt(summaryCard?.dataset.subtotal || '0', 10) || 0;
-        const shipping = 30000;
+        const shipping = 0;
         const finalTotal = Math.max(subtotal + shipping - discountAmount, 0);
         if (voucherAppliedText) voucherAppliedText.textContent = voucherCode || '-';
         if (discountAmountText) discountAmountText.textContent = formatCurrency(discountAmount);

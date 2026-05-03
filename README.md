@@ -129,25 +129,88 @@ Du-An-Python/
 ---
 
 ## 8. Hướng dẫn chạy dự án
-```bash
- Bước 1: Clone project
-git clone https://github.com/ldmnv/Du-An-Python.git
-cd Du-An-Python
 
-Bước 2: Tạo và kích hoạt môi trường ảo
-python -m venv venv
-venv\Scripts\activate
+### 🚀 Quick Start (Khuyến nghị)
 
-Bước 3: Cài đặt thư viện
-pip install django
+#### Cho Windows:
+1. **Chạy file setup tự động**:
+   ```cmd
+   # Double-click setup.bat hoặc chạy trong Command Prompt
+   setup.bat
+   ```
+   Chọn `1` cho local development hoặc `2` cho production.
 
-Bước 4: Migrate database
-python manage.py migrate
+#### Cho Linux/Mac:
+1. **Chạy script setup tự động**:
+   ```bash
+   python setup.py
+   ```
+   Chọn `local` cho development hoặc `production` cho deployment.
 
-Bước 5: Tạo tài khoản admin
-python manage.py createsuperuser
+#### Tất cả nền tảng:
+2. **Chạy server**:
+   ```bash
+   python run.py
+   ```
 
-Bước 6: Chạy server
+3. **Truy cập ứng dụng**:
+   - Local: http://127.0.0.1:8000
+   - Production: https://idvn.io.vn
+
+### 🔧 Setup thủ công (Manual Setup)
+
+1. **Clone project**
+   ```bash
+   git clone <repository-url>
+   cd shop-dien-thoai
+   ```
+
+2. **Cài đặt thư viện**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Cấu hình environment**
+   ```bash
+   cp .env.example .env.local  # Cho local development
+   # Hoặc
+   cp .env.example .env.production  # Cho production
+   ```
+
+4. **Cập nhật environment variables**
+   Chỉnh sửa file `.env` với thông tin thực tế.
+
+5. **Chạy database migrations**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+
+6. **Tạo tài khoản admin**
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+7. **Collect static files (chỉ production)**
+   ```bash
+   python manage.py collectstatic
+   ```
+
+### 🌐 Production Deployment
+
+1. **Upload code lên server production**
+2. **Chạy script deployment**:
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+### 📋 Thông tin tài khoản mặc định
+- **Username**: admin
+- **Password**: admin123
+- **Email**: admin@example.com
+
+⚠️ **Quan trọng**: Hãy đổi mật khẩu admin mặc định sau lần đầu đăng nhập!
 python manage.py runserver
 
 Bước 7: Truy cập hệ thống
