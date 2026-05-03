@@ -141,6 +141,63 @@
                 </div>
                 {% endfor %}
             </div>
+
+            <!-- Pagination / Phân trang -->
+            {% if page_obj.has_other_pages %}
+            <nav class="ldm-pagination" aria-label="Phân trang">
+                <ul class="ldm-pagination-list">
+                    <!-- Previous button -->
+                    {% if page_obj.has_previous %}
+                    <li class="ldm-pagination-item">
+                        <a href="?page=1{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_brand != 'all' %}&brand={{ selected_brand|urlencode }}{% endif %}{% if sort_by %}&sort_by={{ sort_by|urlencode }}{% endif %}" class="ldm-pagination-link" aria-label="Trang đầu">
+                            «
+                        </a>
+                    </li>
+                    <li class="ldm-pagination-item">
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_brand != 'all' %}&brand={{ selected_brand|urlencode }}{% endif %}{% if sort_by %}&sort_by={{ sort_by|urlencode }}{% endif %}" class="ldm-pagination-link" aria-label="Trang trước">
+                            ‹
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Page numbers -->
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number|add:'-3' <= num and num <= page_obj.number|add:'3' %}
+                            {% if num == page_obj.number %}
+                            <li class="ldm-pagination-item active">
+                                <span class="ldm-pagination-link" aria-current="page">{{ num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="ldm-pagination-item">
+                                <a href="?page={{ num }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_brand != 'all' %}&brand={{ selected_brand|urlencode }}{% endif %}{% if sort_by %}&sort_by={{ sort_by|urlencode }}{% endif %}" class="ldm-pagination-link">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
+                        <li class="ldm-pagination-item">
+                            <span class="ldm-pagination-ellipsis">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Next button -->
+                    {% if page_obj.has_next %}
+                    <li class="ldm-pagination-item">
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_brand != 'all' %}&brand={{ selected_brand|urlencode }}{% endif %}{% if sort_by %}&sort_by={{ sort_by|urlencode }}{% endif %}" class="ldm-pagination-link" aria-label="Trang sau">
+                            ›
+                        </a>
+                    </li>
+                    <li class="ldm-pagination-item">
+                        <a href="?page={{ paginator.num_pages }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if selected_brand != 'all' %}&brand={{ selected_brand|urlencode }}{% endif %}{% if sort_by %}&sort_by={{ sort_by|urlencode }}{% endif %}" class="ldm-pagination-link" aria-label="Trang cuối">
+                            »
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
             {% else %}
             <div class="ldm-no-products">
                 <p>Chưa có sản phẩm. Vui lòng quay lại sau!</p>

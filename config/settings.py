@@ -218,8 +218,12 @@ if not VNPAY_HASH_SECRET:
     )
 
 VNPAY_URL = os.getenv('VNPAY_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html')
-VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'http://idvn.io.vn/vnpay/return/')
-VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'http://idvn.io.vn/vnpay/ipn/')
+VNPAY_RETURN_URL = os.getenv('VNPAY_RETURN_URL', 'https://idvn.io.vn/vnpay/return/')
+VNPAY_IPN_URL = os.getenv('VNPAY_IPN_URL', 'https://idvn.io.vn/vnpay/ipn/')
+VNPAY_PAYMENT_METHOD_URL = os.getenv(
+    'VNPAY_PAYMENT_METHOD_URL',
+    'https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentMethod.html'
+)
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8625948551:AAGO2A4emtPJOH555z21vsO14if5F-vwuVs')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '3756857984')

@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.core.files.base import ContentFile
 from django.db.models import Q, Count
 from django.urls import reverse
+from django.core.paginator import Paginator
 import os
 import requests
 import hashlib
@@ -107,6 +108,14 @@ def _build_vnpay_payment_url(request, order_number, amount):
 
     params['vnp_SecureHashType'] = 'SHA512'
     params['vnp_SecureHash'] = secure_hash
+
+    # If a token-based payment endpoint is configured, return it with the secure hash as token.
+    # This builds URLs like: https://.../Transaction/PaymentMethod.html?token=<secure_hash>
+    payment_method_url = getattr(settings, 'VNPAY_PAYMENT_METHOD_URL', None)
+    if payment_method_url:
+        return f"{payment_method_url}?token={secure_hash}"
+
+    # Fallback to legacy vpcpay URL with query params
     return f"{settings.VNPAY_URL}?{urlencode(params)}"
 
 
@@ -933,9 +942,16 @@ def home(request):
     ram_options = sorted(list(set([p.ram for p in Product.objects.all() if p.ram] + list(ProductRamOption.objects.values_list('value', flat=True)))))
     storage_options = sorted(list(set([p.rom for p in Product.objects.all() if p.rom] + list(ProductStorageOption.objects.values_list('capacity', flat=True)))))
 
+    # Apply pagination: 15 products per page (5 columns x 3 rows)
+    paginator = Paginator(products, 15)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
     context = get_base_context(request)
     context.update({
-        'products': products,
+        'products': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'categories': categories,
         'selected_brand': brand or 'all',
         'search_query': q,
