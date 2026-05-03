@@ -699,7 +699,26 @@
         height: 36px;
         padding: 0 4px;
     }
-    }
+}
+
+/* Ensure no bullets and horizontal layout across browsers */
+.ldm-pagination {
+    text-align: center !important;
+}
+.ldm-pagination-list {
+    list-style: none !important;
+    padding-left: 0 !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+.ldm-pagination-list li {
+    list-style: none !important;
+    display: inline-block !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 @media (max-width: 768px) {
