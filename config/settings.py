@@ -40,16 +40,15 @@ if not _env_mode and ENV_PROD.exists():
                 break
 
 # If mode is local/development, only load .env.local
-# Otherwise load production first, then local to override
+# Otherwise load production defaults only
 if _env_mode in ('local', 'development'):
-    # Local development: only load .env.local
     if ENV_LOCAL.exists():
         load_dotenv(ENV_LOCAL)
-elif ENV_LOCAL.exists():
-    load_dotenv(ENV_PROD)  # Load production defaults first (may not exist on server)
-    load_dotenv(ENV_LOCAL, override=True)  # Then override with local settings
-elif ENV_PROD.exists():
-    load_dotenv(ENV_PROD)
+else:
+    if ENV_PROD.exists():
+        load_dotenv(ENV_PROD)
+    if ENV_LOCAL.exists() and os.getenv('USE_LOCAL_DOTENV', '').lower() in ('1', 'true', 'yes'):
+        load_dotenv(ENV_LOCAL, override=True)
 
 # DEBUG must be determined AFTER loading env to check if in local mode
 # If in development mode and DEBUG not explicitly set, default to True
