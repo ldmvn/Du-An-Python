@@ -705,6 +705,8 @@
 .ldm-pagination {
     text-align: center !important;
 }
+
+/* pagination list reset & layout */
 .ldm-pagination-list {
     list-style: none !important;
     padding-left: 0 !important;
@@ -712,13 +714,75 @@
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
+    align-items: center !important;
 }
-.ldm-pagination-list li {
+
+/* ensure legacy markers are hidden */
+.ldm-pagination-list li,
+.ldm-pagination-list li::marker {
     list-style: none !important;
     display: inline-block !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+
+/* Page link visual */
+.ldm-pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    background: #ffffff;
+    color: #374151;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+}
+
+.ldm-pagination-link[aria-label="Trang trước"],
+.ldm-pagination-link[aria-label="Trang sau"],
+.ldm-pagination-link[aria-label="Trang đầu"],
+.ldm-pagination-link[aria-label="Trang cuối"] {
+    min-width: 36px;
+}
+
+.ldm-pagination-link:hover {
+    transform: translateY(-2px);
+    background: #eef2ff;
+    color: #1e3a8a;
+    border-color: rgba(99, 102, 241, 0.28);
+}
+
+.ldm-pagination-item.active .ldm-pagination-link,
+.ldm-pagination-item.active span.ldm-pagination-link {
+    background: #4f46e5;
+    color: #fff;
+    border-color: #4f46e5;
+    box-shadow: 0 6px 18px rgba(79,70,229,0.12);
+    transform: none;
+}
+
+.ldm-pagination-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 8px;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .ldm-pagination-list { gap: 6px !important; }
+    .ldm-pagination-link { min-width: 34px; height: 34px; font-size: 13px; }
+    .ldm-pagination-ellipsis { height: 34px; padding: 0 6px; }
 }
 
 @media (max-width: 768px) {
